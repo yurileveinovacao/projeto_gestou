@@ -1,0 +1,34 @@
+/* CSS PARA TODOS OS COMPONENTES */
+* {
+    padding: 0;
+    margin: 0;
+}
+
+@media all and (orientation: portrait) {
+
+    /* MOBILE */
+
+
+    /* NAVBAR */
+
+    
+
+
+    /* FIM NAVBAR */
+
+
+
+
+}
+
+@media (min-width: 600px) and (orientation: landscape) {
+
+    /*DESKTOP*/
+
+    /* NAVBAR */
+
+
+
+    /* FIM NAVBAR */
+
+}

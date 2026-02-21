@@ -1,0 +1,7 @@
+<?php
+$conn = pg_connect('host=SEU_HOST port=5432 dbname=SEU_BANCO user=SEU_USUARIO password=SUA_SENHA');
+if (!$conn) {
+    die('Erro ao conectar com o banco PGSQL');
+}
+
+?>

@@ -1,0 +1,78 @@
+# ========================================
+# CREDENCIAIS E CONFIGURACOES SENSIVEIS
+# ========================================
+conexao.php
+conexao_pdo.php
+.env
+.env.*
+
+# ========================================
+# UPLOADS DE USUARIOS E DADOS DINAMICOS
+# ========================================
+upload/
+admin/uploads/
+downloads/
+
+# ========================================
+# DEPENDENCIAS EXTERNAS (VENDOR)
+# ========================================
+**/vendor/
+**/vendor_*/
+node_modules/
+
+# ========================================
+# MIDIA PESADA
+# ========================================
+*.mp4
+*.mov
+*.avi
+img/gallery/
+img/images_email/
+*.apk
+
+# ========================================
+# BACKUPS E DUMPS
+# ========================================
+*.sql
+*.dump
+*.backup
+*.tar.xz
+*.zip
+*.tar
+*.rar
+*.gz
+
+# ========================================
+# ARQUIVOS TEMPORARIOS E CACHE
+# ========================================
+*.log
+logs/
+cache/
+tmp/
+temp/
+sessions/
+*.tmp
+*.bak
+
+# ========================================
+# RISCO DE SEGURANCA
+# ========================================
+phpinfo*.php
+
+# ========================================
+# ARQUIVOS DE BACKUP/COPIA
+# ========================================
+index copy.php
+
+# ========================================
+# ARQUIVOS DE IDE E SISTEMA
+# ========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+.project
+*.swp
+*.swo
+*~

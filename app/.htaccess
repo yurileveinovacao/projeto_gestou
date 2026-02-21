@@ -1,0 +1,14 @@
+# CONFIGURAR UTILIZAÇÃO DO HTTPS
+
+#HABILITA REGRAVAÇÃO DE URL
+RewriteEngine On
+
+#REGRA SEMPRE UTILIZAR HTTPS://
+RewriteCond %{HTTP_HOST} !^www\.gestou\.com\.br
+RewriteRule ^(.*)$ https://www.gestou.com.br/app/$1 [R=301,L]
+
+
+#DESATIVAR EXTESOES .PHP
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.*)$ $1.php

@@ -1,0 +1,260 @@
+<?php
+
+require_once '../../restrito.php';
+require_once '../../iuds_pdo.php';
+require_once '../../util.php';
+require_once '../vendor_fpdi/autoload.php';
+
+use setasign\Fpdi\Fpdi;
+
+// echo $_SESSION["text_vis"];
+
+$processamento = uniqidReal();
+// $descricao_recibo = $_SESSION['descricao'];
+$origem = $_SESSION['nomepdf'];
+
+$cnpj_completo = str_replace(".", "", str_replace("/", "", str_replace("-", "", $cnpj_completo)));
+
+$erro_1 = '../../erro/erro_1'; //erro generico
+$erro_3 = '../../erro/erro_3'; //erro arquivo anexado
+
+$nomearquivo = '../../uploads/' . $raiz_cnpj . '.pdf';
+
+$text_vis = str_replace("Á", "A", str_replace("Í", "I", $_SESSION["text_vis"]));
+
+// Atribuição da variavel base
+$json_base = json_decode($text_vis);
+
+// echo $_SESSION["text_vis"];
+
+// Foreach para realizar o loop das páginas
+foreach ($json_base->analyzeResult->readResults as $key) {
+    // echo "Página:" . $key->page . "<br>";
+
+    $page_number = $key->page;
+
+    // Foreach para realizar o loop do conteudo de cada pagina
+    foreach ($key->lines as $key2) {
+
+        // Atribuição de variavel texto global
+        $var_text = $key2->text;
+
+        // Verifica e identifica o CODEMP, caso enconte numera o registro
+        // if (preg_match('/[0-9]{5}/i', $var_text)) {
+
+        //     $nro_registro = $nro_registro + 1;
+        // }
+
+        // // If para interpretar somente os registros impares
+        // if ($nro_registro % 2 != 0) {
+        // } else {
+
+        // Exibição da variavel texto gobal em loop
+        // echo "<br>Valores Registro:" . $var_text . "<br>";
+
+        // Atribuicao de variavel somente quando o registro for impar
+        $text =  $var_text;
+
+        // Identificar CNPJ
+        if (preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/i', $text)) {
+
+            if ($encontra_cnpj == 0) {
+
+                $cnpj = $text;
+                $cnpj = str_replace(".", "", str_replace("/", "", str_replace("-", "", $cnpj)));
+                // echo "<br>CNPJ:" . $cnpj . "<br>";
+
+                $encontra_cnpj = 1;
+            }
+        }
+
+        // Identificar CPF
+        if (preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}/i', $text)) {
+
+            if ($encontra_cpf == 0) {
+
+                $cpf = $text;
+                $cpf = str_replace(".", "", str_replace("/", "", str_replace("-", "", $cpf)));
+                $cpf = preg_replace("/[^0-9]/i", "", $cpf);
+                // echo "<br>CPF:" . $cpf . "<br>";
+
+                $encontra_cpf = 1;
+            }
+        }
+
+        if ($encontra_exercicio == 1) {
+
+            if (preg_match('/[0-9]{4}/i', $text)) {
+
+                $anoexe = $text;
+
+                // echo "<br>Exercício de:" . $anoexe . "<br>";
+            }
+            unset($encontra_exercicio);
+        }
+
+        // Identificar Exercício de
+        if (preg_match('/EXERCICIO:/i', $text)) {
+
+            $encontra_exercicio = 1;
+        }
+
+        if ($encontra_anocalendario == 1) {
+
+            if (preg_match('/[0-9]{4}/i', $text)) {
+
+                $anocal = $text;
+
+                // echo "<br>Ano-calendário de:" . $anocal . "<br>";
+            }
+            unset($encontra_anocalendario);
+        }
+
+        // Identificar Ano-calendário de
+        if (preg_match('/ANO-CALENDARIO:/i', $text)) {
+
+            $encontra_anocalendario = 1;
+        }
+
+        // // Identificar competencia
+        // if (preg_match('/[0-9]{2}\/[0-9]{2}\/[0-9]{4}\s[a-z A-Z]\s[0-9]{2}\/[0-9]{2}\/[0-9]{4}/i', $text)) {
+        //     $competencia = $text;
+
+        //     echo "<br>Competência:" . $competencia . "<br>";
+        // }
+
+        // // Identificar código do usuario e nome
+        // if (preg_match('/[0-9]{6}\s(\w+\s)+/i', $text)) {
+
+        //     preg_match('/[0-9]{6}/i', $text, $codusu);
+        //     // preg_match('/([a-z]+\s)+/i', $text, $nomeusu);
+
+        //     echo "<br>Cód. Usuario:" . $codusu[0] . "<br>";
+        //     // echo "<br>Nomeusu:" . $nomeusu[0] . "<br>";
+
+        //     $cod_integracao = $codusu[0];
+        // }
+        //}
+    }
+
+    if ($cnpj == $cnpj_completo) {
+
+        // echo "Cnpj ok<br><br>";
+
+        //SELECT PARA VERIFICAR CADASTRO DE USUARIO
+        $tabela_usu = 'public."GESUSU"';
+        foreach (selectGESUSU_LAYOUT_id_cpf($tabela_usu, $cpf, $id_emp_default) as $select_tabela) {
+            $id_usu = $select_tabela['id_usu'];
+            $nome = $select_tabela['nome'];
+            $cargo = $select_tabela['funcao'];
+        }
+
+        // echo "tabela_usu: " . $tabela_usu . "<br>";
+        // echo "id_usu: " . $id_usu . "<br>";
+        // echo "id_emp_default: " . $id_emp_default . "<br>";
+
+
+        if (!empty($id_usu)) {
+            //     //echo 'Leu Página=' . $pageNo . '<br><br>';
+            //     //-------------------------------------------------------------------------
+            //CRIAR ID_VALIDADOR
+            $val1 = uniqid();
+            $val2 = uniqidReal();
+            $validador = $raiz_cnpj . $val1 . $val2;
+            $validador = $validador;
+            //-------------------------------------------------------------------------
+            $arquivo = $validador . '.pdf';
+            //---------------------------------------------------------------------------------------------------------------------------------------------------------------
+            $tabela = 'public."GESIRR_' . $raiz_cnpj . '"';
+            $situac = 0;
+            //-------------------------------------------------------------------------
+
+            // //  echo '$pageNo=========='.$pageNo.'---<br>';
+            // echo '$tabela===========' . $tabela . '---<br>';
+            // echo '$id_emp_default===' . $id_emp_default . '---<br>';
+            // echo '$competencia======' . $competencia . '---<br>';
+            // echo '$nome=============' . $nome . '---<br>';
+            // echo '$cargo============' . $cargo . '---<br>';
+            // echo '$situac===========' . $situac . '---<br>';
+            // echo '$id_usu===========' . $id_usu . '---<br>';
+            // echo '$datinc===========' . $datinc . '---<br>';
+            // echo '$id_usa===========' . $id_usa . '---<br>';
+            // echo '$descricao_recibo=' . $descricao_recibo . '---<br>';
+            // echo '$validador========' . $validador . '---<br>';
+            // echo '$processamento====' . $processamento . '---<br>';
+            // echo '$origem===========' . $origem . '---<br>';
+            // echo '$arquivo==========' . $arquivo . '---<br>';
+
+            try {
+                $insert_tabela1 = insertGESIRR_arquivo(
+                    $tabela,
+                    $anoexe,
+                    $anocal,
+                    $situac,
+                    $id_usu,
+                    $id_emp_default,
+                    $datinc,
+                    $processamento,
+                    $id_usa_default,
+                    $origem,
+                    $arquivo
+                );
+
+                $id_irr = $insert_tabela1['pk'];
+            } catch (PDOException $erro) {
+                die(($_SESSION["erro_importação"] = '1 - ' . $erro) . (header('Location:' . $erro_1)));
+            }
+
+            // ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+            // initiate FPDI
+            $pdf = new FPDI();
+            // add a page
+            $pdf->AddPage();
+            // set the source file
+            $pdf->setSourceFile($nomearquivo);
+            // import page 1
+
+            $tplIdx = $pdf->importPage($page_number);
+            // use the imported page and place it at point 10,10 with a width of 100 mm
+            $pdf->useTemplate($tplIdx);
+
+            $pdf->Output('F', '../../../upload/beneficios/irrf/' . $raiz_cnpj . '/' . $validador . '.pdf');
+        }
+    } else {
+        ($_SESSION['erro_importação'] = 'O arquivo selecionado não corresponde a essa empresa!') . (header('Location:' . $erro_1));
+    }
+
+    // Limpa as váriaveis utilizadas para fazer a busca nas strings
+    unset($encontra_cnpj);
+    unset($encontra_cpf);
+    unset($encontra_exercicio);
+    unset($encontra_anocalendario);
+    // echo "<br>----------------------------------------------------------<br>";
+}
+
+echo "<script language=javascript>
+         location.href = '../../lotes_processados';
+         </script>";
+
+function uniqidReal($lenght = 13)
+{
+    // uniqid gives 13 chars, but you could adjust it to your needs.
+    if (function_exists('random_bytes')) {
+        $bytes = random_bytes(ceil($lenght / 2));
+    } elseif (function_exists('openssl_random_pseudo_bytes')) {
+        $bytes = openssl_random_pseudo_bytes(ceil($lenght / 2));
+    } else {
+        throw new Exception('no cryptographically secure random function available');
+    }
+
+    return substr(bin2hex($bytes), 0, $lenght);
+}
+
+// function count_pages($pdfname)
+// {
+//     $pdftext = file_get_contents($pdfname);
+//     $num = preg_match_all("/\/Page\W/", $pdftext, $dummy);
+
+//     return $num;
+// }
