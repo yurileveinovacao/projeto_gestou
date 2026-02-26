@@ -31,7 +31,7 @@
         "Nenhum arquivo em admin/vendor/ ou admin/vendor_* foi alterado"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Existem ~68 arquivos PHP em admin/. Cuidado com profundidades diferentes: admin/*.php, admin/controller/*.php, admin/layout/holerite/*.php, admin/layout/irrf/*.php, admin/layout/ponto/*.php, admin/antigo/*.php, admin/doc/*.php. NUNCA alterar vendor/ ou vendor_*."
     },
     {

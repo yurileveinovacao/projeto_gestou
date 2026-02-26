@@ -33,3 +33,26 @@ Started: 2026-02-26
   - Formato PDO usa DSN: "pgsql:host=X;port=X;dbname=X"
   - O sistema original separava conexões em 2 arquivos (conexao.php e conexao_pdo.php), agora unificado em 1
 ---
+
+## 2026-02-26 - MIG-002 - Migrar conexões do módulo admin/ para config centralizado
+- Substituídos todos os require/require_once de conexao.php e conexao_pdo.php em 68 arquivos do admin/
+- Paths __DIR__ por nível de diretório:
+  - admin/*.php → `__DIR__.'/../config/database.php'`
+  - admin/antigo/*.php → `__DIR__.'/../../config/database.php'`
+  - admin/doc/*.php → `__DIR__.'/../../config/database.php'`
+  - admin/layout/backup/*.php → `__DIR__.'/../../../config/database.php'`
+  - admin/layout/holerite/antigo/*.php → `__DIR__.'/../../../../config/database.php'`
+  - admin/layout/irrf/antigo/*.php → `__DIR__.'/../../../../config/database.php'`
+- admin/controller/ não tinha referências a conexao — recebe conexão via iuds_pdo.php
+- Linhas comentadas (// require) também foram atualizadas para não aparecerem no grep
+- **Verificações:**
+  - grep conexao.php admin/ (excl vendor/): PASS (zero resultados)
+  - grep conexao_pdo.php admin/ (excl vendor/): PASS (zero resultados)
+  - admin/iuds_pdo.php linha 10 com __DIR__: PASS
+  - Nenhum vendor/ alterado: PASS
+- **Learnings:**
+  - admin/controller/ não usa conexao.php diretamente — herda via iuds_pdo.php (DAL)
+  - Arquivos ativos em admin/layout/ (83 templates OCR) NÃO usam conexao.php — apenas os em antigo/ e backup/
+  - Padrão de re-require: muitos arquivos fazem require de conexao.php múltiplas vezes em diferentes blocos (require_once garante que não há problema)
+  - Usar sed -E com regex `require(_once)? ['\"]conexao\.php['\"];` captura todas as variações (require/require_once, aspas simples/duplas)
+---
