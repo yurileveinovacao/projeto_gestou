@@ -1,0 +1,17 @@
+# Ralph Progress Log — Gestou Migration
+Started: 2026-02-26
+
+## Codebase Patterns
+- Sistema PHP 7.4 puro, sem framework — todos os requires são manuais
+- Duas conexões ao banco em paralelo: $conn (pg_connect nativa) e $pdo (PDO)
+- Cada módulo (admin/, app/, master/) tem seu próprio conexao.php e conexao_pdo.php
+- iuds_pdo.php é o Data Access Layer: admin (10.750 linhas), app (2.404), master (6.532)
+- restrito.php é o guard de sessão em cada módulo — tem session_start()
+- PHPMailer com credenciais hardcoded: smtp.kinghost.net / suporte@gestou.com.br / Certificado@256
+- 198 referências hardcoded a gestou.com.br no código
+- OCR: admin/vision_computer.php e admin/controller/vision_computer_irrf_post.php chamam Azure Vision
+- 83 templates em admin/layout/ (holerite/irrf/ponto) esperam formato Azure readResults
+- Vendors no .gitignore — não estão no repo, serão copiados no Docker build
+- Arquivos .example na raiz: conexao.php.example e conexao_pdo.php.example mostram formato das conexões
+
+---
