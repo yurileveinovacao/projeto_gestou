@@ -3,6 +3,7 @@
 # ========================================
 conexao.php
 conexao_pdo.php
+config/database.php
 .env
 .env.*
 

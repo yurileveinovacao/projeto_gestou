@@ -15,3 +15,21 @@ Started: 2026-02-26
 - Arquivos .example na raiz: conexao.php.example e conexao_pdo.php.example mostram formato das conexões
 
 ---
+
+## 2026-02-26 - MIG-001 - Criar config centralizado de banco de dados
+- Criado diretório config/
+- Criado config/database.php: lê DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS via getenv() com fallbacks para dev local
+- Cria $conn (pg_connect) e $pdo (PDO) — mantendo ambas conexões como o sistema espera
+- Criado config/database.php.example com placeholders (SEU_HOST, SEU_BANCO, etc.)
+- Adicionado config/database.php ao .gitignore
+- **Verificações:**
+  - config/database.php existe: PASS
+  - pg_connect e PDO presentes: PASS
+  - config/database.php.example existe: PASS
+  - config/database.php no .gitignore: PASS
+  - grep -c 'getenv' config/database.php = 5: PASS (>= 5)
+- **Learnings:**
+  - Formato pg_connect usa string única: "host=X port=X dbname=X user=X password=X"
+  - Formato PDO usa DSN: "pgsql:host=X;port=X;dbname=X"
+  - O sistema original separava conexões em 2 arquivos (conexao.php e conexao_pdo.php), agora unificado em 1
+---

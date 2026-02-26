@@ -15,7 +15,7 @@
         "Verificar: grep -c 'getenv' config/database.php retorna >= 5"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Consultar conexao.php.example e conexao_pdo.php.example na raiz para ver o formato atual das conexões. O sistema usa DUAS conexões em paralelo."
     },
     {

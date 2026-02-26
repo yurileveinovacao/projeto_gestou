@@ -1,0 +1,30 @@
+<?php
+/**
+ * Configuração centralizada de banco de dados — Gestou
+ * Copie para database.php e configure as variáveis de ambiente ou altere os fallbacks.
+ */
+
+$db_host = getenv('DB_HOST') ?: 'SEU_HOST';
+$db_port = getenv('DB_PORT') ?: '5432';
+$db_name = getenv('DB_NAME') ?: 'SEU_BANCO';
+$db_user = getenv('DB_USER') ?: 'SEU_USUARIO';
+$db_pass = getenv('DB_PASS') ?: 'SUA_SENHA';
+
+// Conexão pg_connect (usada pelo sistema legado)
+$conn = pg_connect("host={$db_host} port={$db_port} dbname={$db_name} user={$db_user} password={$db_pass}");
+if (!$conn) {
+    die('Erro ao conectar com o banco PGSQL');
+}
+
+// Conexão PDO (usada pelo DAL iuds_pdo.php)
+try {
+    $pdo = new PDO(
+        "pgsql:host={$db_host};port={$db_port};dbname={$db_name}",
+        $db_user,
+        $db_pass
+    );
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    echo 'Mensagem erro: ' . $e->getMessage();
+    die('Erro conexão');
+}
