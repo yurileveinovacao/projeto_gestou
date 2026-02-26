@@ -1,7 +1,7 @@
 <?php
 
 require_once 'restrito.php';
-require_once 'conexao.php';
+require_once __DIR__.'/../../config/database.php';
 // require_once 'raiz_cnpj_pdo.php';
 require_once 'util.php';
 require_once 'iuds_pdo.php';
@@ -1613,7 +1613,7 @@ if (isset($_REQUEST['ha'])) {
 if (isset($_REQUEST['btn-excluir'])) {
     try {
         // echo 'entrou try';
-        require 'conexao.php';
+        require_once __DIR__.'/../../config/database.php';
 
         $id_usuario;
 

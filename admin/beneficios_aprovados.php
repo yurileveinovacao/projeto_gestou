@@ -1,7 +1,7 @@
 <?php
 
 require_once 'restrito.php';
-require_once 'conexao.php';
+require_once __DIR__.'/../config/database.php';
 require_once 'util.php';
 require_once 'iuds_pdo.php';
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -374,7 +374,7 @@ $res_eventos = pg_exec($conn, $sql_eventos);
 if (isset($_REQUEST['btn-excluir'])) {
     echo '<br>entrou no excluir';
     try {
-        require 'conexao.php';
+        require_once __DIR__.'/../config/database.php';
 
         $id_GESIM1;
 
@@ -413,13 +413,13 @@ if (isset($_REQUEST['btn-excluir'])) {
 }
 
 if (isset($_REQUEST['btn-salvar'])) {
-    require 'conexao.php';
+    require_once __DIR__.'/../config/database.php';
 
     $sql_eventos3 = 'SELECT * FROM public."GESEVE" where id_emp = '.$idemp.' ';
     $res_eventos3 = pg_exec($conn, $sql_eventos3);
 
     while ($row_eventos3 = pg_fetch_assoc($res_eventos3)) {
-        require 'conexao.php';
+        require_once __DIR__.'/../config/database.php';
         $nomeevento = "'".$_REQUEST['comboEvento']."'";
         $codevento = "'".$_REQUEST['Evento']."'";
 

@@ -1324,7 +1324,7 @@ if(empty($_SESSION["colaborador_filtro_situac"])){
 // if (isset($_REQUEST['btn-excluir'])) {
 //     try {
 //         // echo 'entrou try';
-//         require 'conexao.php';
+//         require_once __DIR__.'/../../config/database.php';
 
 //         $id_usuario;
 

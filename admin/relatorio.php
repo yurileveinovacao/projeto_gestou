@@ -8,7 +8,7 @@ require 'restrito.php';
 <?php
 
 //abre conexao
-require_once 'conexao.php';
+require_once __DIR__.'/../config/database.php';
 
 //VERIFICA SE HA VALOR NA VARIAVEL E REALIZA UNSET
 if (isset($_SESSION["situac_filtro"])) {

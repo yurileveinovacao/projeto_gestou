@@ -7,7 +7,7 @@
  **Versão do arquivo IUDS_PDO: 2021-12-16-0846
  **/
 
-require_once 'conexao_pdo.php';
+require_once __DIR__.'/../config/database.php';
 
 //SELECT VW_ADMIN_GACESSO - revisado em 22/01/2022 09:14
 function selectVW_ADMIN_GACESSO($email)

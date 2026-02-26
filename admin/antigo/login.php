@@ -115,7 +115,7 @@ session_start();
 <?php
 
     //abre conexao
-    require_once 'conexao.php';
+    require_once __DIR__.'/../../config/database.php';
 
     try {
         // ********AÇÃO EXECUTADA APENAS QUANDO CLICAR NO BOTÃO

@@ -4,8 +4,8 @@
 require 'restrito.php';
 
 // //abre conexao
-// require_once 'conexao.php';
-// require_once "conexao_pdo.php";
+// require_once __DIR__.'/../../config/database.php';
+// require_once __DIR__.'/../../config/database.php';
 
 //FUNÇÕES INSERT, UPDATE, DELETE E SELECT
 require_once "iuds_pdo.php";

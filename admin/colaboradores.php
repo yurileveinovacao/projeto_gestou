@@ -1515,7 +1515,7 @@ unset($_SESSION['alterar_colaborador']['token']);
 // if (isset($_REQUEST['btn-excluir'])) {
 //     try {
 //         // echo 'entrou try';
-//         require 'conexao.php';
+//         require_once __DIR__.'/../config/database.php';
 
 //         $id_usuario;
 

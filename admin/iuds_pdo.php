@@ -7,7 +7,7 @@
  **Versão do arquivo IUDS_PDO: 2021-12-16-0846
  **/
 
-require_once 'conexao_pdo.php';
+require_once __DIR__.'/../config/database.php';
 
 //Tabela GESCON update - revisado em 04/01/2022 10:19
 function updateGESCON(
@@ -526,7 +526,7 @@ function selectGESDOC()
 //Tabela GESDOC select
 function selectGESDOC_grupo($grupo)
 {
-    require_once 'conexao_pdo.php';
+    require_once __DIR__.'/../config/database.php';
     $query = 'SELECT id_doc,grupo,titulo,conteudo FROM public."GESDOC" WHERE publicado = 1 and grupo =:grupo ORDER BY grupo';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':grupo', $grupo, PDO::PARAM_STR);

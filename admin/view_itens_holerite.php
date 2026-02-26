@@ -1,7 +1,7 @@
 <?php
 
 require_once 'restrito.php';
-require_once 'conexao.php';
+require_once __DIR__.'/../config/database.php';
 require_once 'raiz_cnpj_pdo.php';
 require_once 'iuds_pdo.php';
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -15,7 +15,7 @@ $tabela1 = 'public."GESIM1_'.$raiz_cnpj.'"';
 
 if (isset($_REQUEST['al'])) {
     try {
-        require 'conexao.php';
+        require_once __DIR__.'/../config/database.php';
 
         $id = $_REQUEST["al"];
         

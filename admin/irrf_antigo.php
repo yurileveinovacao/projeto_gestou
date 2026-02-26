@@ -1,6 +1,6 @@
 <?php
 require 'restrito.php';
-require_once 'conexao.php';
+require_once __DIR__.'/../config/database.php';
 //-------------------------------------------------------------------------
 $id_emp_default = $_SESSION['id_emp_default'];
 

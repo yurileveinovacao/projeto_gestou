@@ -1015,7 +1015,7 @@ require_once "util.php";
 // if (isset($_REQUEST['btn-excluir'])) {
 //     try {
 
-//         // require 'conexao.php';
+//         // require_once __DIR__.'/../config/database.php';
 
 //         $id_im1_excluir;
 

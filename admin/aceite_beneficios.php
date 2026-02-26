@@ -1,7 +1,7 @@
 <?php
 
 require_once 'restrito.php';
-require_once 'conexao.php';
+require_once __DIR__.'/../config/database.php';
 require_once 'util.php';
 require_once 'iuds_pdo.php';
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -380,7 +380,7 @@ $id_emp_default = $_SESSION['id_emp_default'];
 if (isset($_REQUEST['btn-excluir'])) {
     echo '<br>entrou no excluir';
     try {
-        require 'conexao.php';
+        require_once __DIR__.'/../config/database.php';
 
         $id_GESIM1;
 
@@ -419,13 +419,13 @@ if (isset($_REQUEST['btn-excluir'])) {
 }
 
 if (isset($_REQUEST['btn-salvar'])) {
-    require 'conexao.php';
+    require_once __DIR__.'/../config/database.php';
 
     $sql_eventos3 = 'SELECT * FROM public."GESEVE" where id_emp = ' . $idemp . ' ';
     $res_eventos3 = pg_exec($conn, $sql_eventos3);
 
     while ($row_eventos3 = pg_fetch_assoc($res_eventos3)) {
-        require 'conexao.php';
+        require_once __DIR__.'/../config/database.php';
         $nomeevento = "'" . $_REQUEST['comboEvento'] . "'";
         $codevento = "'" . $_REQUEST['Evento'] . "'";
 
@@ -465,7 +465,7 @@ if (isset($_REQUEST['btn-enviados'])) {
 
 if (isset($_REQUEST['btn-processar'])) {
     try {
-        require 'conexao.php';
+        require_once __DIR__.'/../config/database.php';
 
         if ($contagem_eventos > 0) {
             echo "<script language=javascript>
@@ -475,7 +475,7 @@ if (isset($_REQUEST['btn-processar'])) {
         } else {
             echo '<br>entrou no processar';
             try {
-                require 'conexao.php';
+                require_once __DIR__.'/../config/database.php';
 
                 $id_GESIM1;
 
@@ -524,7 +524,7 @@ if (isset($_REQUEST['btn-processar'])) {
 
 if (isset($_REQUEST['btn-recusar'])) {
     try {
-        require 'conexao.php';
+        require_once __DIR__.'/../config/database.php';
 
         if ($contagem_eventos > 0) {
             echo "<script language=javascript>
@@ -534,7 +534,7 @@ if (isset($_REQUEST['btn-recusar'])) {
         } else {
             echo '<br>entrou no cancelar';
             try {
-                require 'conexao.php';
+                require_once __DIR__.'/../config/database.php';
 
                 $id_GESIM1;
 

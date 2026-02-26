@@ -2,7 +2,7 @@
 
 //Faz a requisição da Sessão
 require 'restrito.php';
-require 'conexao.php';
+require_once __DIR__.'/../config/database.php';
 require_once 'iuds_pdo.php';
 
 $id_usa = $_SESSION['id_usa'];

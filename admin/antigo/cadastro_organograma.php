@@ -6,7 +6,7 @@ require 'restrito.php';
 <?php
 
 //abre conexao
-require_once 'conexao.php';
+require_once __DIR__.'/../../config/database.php';
 
 require_once "util.php";
 global $nivel_consulta;
@@ -277,7 +277,7 @@ global $nivel_consulta;
                 if (isset($_REQUEST['btn-submit'])) {
                     try {
 
-                        require 'conexao.php';
+                        require_once __DIR__.'/../../config/database.php';
 
 
                         $nivel_comparacao = "'" . $_REQUEST["inputPai"] . "'";
@@ -337,7 +337,7 @@ location.href='cadastro_organograma.php';
                 if (isset($_REQUEST['salvar'])) {
                     try {
 
-                        require 'conexao.php';
+                        require_once __DIR__.'/../../config/database.php';
 
                         $id_org = $_REQUEST["updateID"];
                         $descricao = $_REQUEST["updateDescricao"];
@@ -360,7 +360,7 @@ location.href='cadastro_organograma.php';
                 if (isset($_REQUEST['ex'])) {
                     try {
 
-                        require 'conexao.php';
+                        require_once __DIR__.'/../../config/database.php';
 
                         $nivel = $_REQUEST["ex"];
 

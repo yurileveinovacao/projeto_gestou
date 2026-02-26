@@ -1,7 +1,7 @@
 <?php
 
 require_once 'restrito.php';
-require_once 'conexao.php';
+require_once __DIR__.'/../../config/database.php';
 require_once 'util.php';
 require_once 'iuds_pdo.php';
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -208,7 +208,7 @@ $id_emp_default = $_SESSION['id_emp_default'];
 
 if (isset($_REQUEST['btn-excluir'])) {
     try {
-        require 'conexao.php';
+        require_once __DIR__.'/../../config/database.php';
 
         $id_GESPON1;
 
@@ -258,9 +258,9 @@ if (isset($_REQUEST['btn-enviados'])) {
 
 if (isset($_REQUEST['btn-processar'])) {
     try {
-        require 'conexao.php';
+        require_once __DIR__.'/../../config/database.php';
         try {
-            require 'conexao.php';
+            require_once __DIR__.'/../../config/database.php';
 
             $id_GESPON1;
 
