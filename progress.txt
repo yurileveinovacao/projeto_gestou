@@ -280,3 +280,31 @@ Started: 2026-02-26
   - Google Vision files:annotate aceita parâmetro pages[] (1-indexed) para especificar quais páginas processar
   - Azure API key estava hardcoded no código (1e62c619e8d24934aca329709a979b60) — agora removida e substituída por env var
 ---
+
+## 2026-02-26 - MIG-010 - Criar documentação de setup GCP
+- Criado diretório docs/ e arquivo docs/gcp-setup.md
+- Documentação cobre 11 seções de setup:
+  1. Configuração inicial (variáveis de ambiente do projeto)
+  2. Habilitar APIs (sqladmin, run, artifactregistry, secretmanager, vpcaccess, storage, vision, compute, cloudbuild)
+  3. Criar Cloud SQL (PostgreSQL 17, db-f1-micro, southamerica-east1, IP privado) + tabela php_sessions
+  4. Criar bucket Cloud Storage (Standard, CORS configurado, acesso público de leitura)
+  5. Criar Artifact Registry (repositório Docker)
+  6. Configurar Secret Manager (16 secrets: DB, SMTP, App, Storage, Vision) + permissões para service account
+  7. Criar VPC Connector (para Cloud Run acessar Cloud SQL via IP privado)
+  8. Build e push da imagem Docker (local e via Cloud Build)
+  9. Deploy no Cloud Run (min 0, max 3, 1GB RAM, --set-secrets para todas as env vars)
+  10. Mapear domínio gestou.leveinovacao.com.br (Opção A: domain-mapping direto, Opção B: Load Balancer com SSL gerenciado)
+  11. Permissões do service account (storage.objectAdmin no bucket)
+- Tabela de estimativa de custos detalhada por serviço (~US$ 25-60/mês sem LB, ~US$ 45-85/mês com LB)
+- Seção de otimizações de custo (Cloud SQL Auth Proxy, alertas de billing, lifecycle policies)
+- Arquivos criados: docs/gcp-setup.md
+- **Verificações:**
+  - docs/gcp-setup.md existe: PASS
+  - Contém comandos para habilitar APIs, Cloud SQL, bucket, Artifact Registry, Secret Manager, VPC Connector, Cloud Run deploy: PASS
+  - Contém instrução para mapear domínio gestou.leveinovacao.com.br: PASS (6 referências)
+  - Contém notas sobre estimativa de custos: PASS (tabela detalhada + otimizações)
+- **Learnings:**
+  - Cloud Run --set-secrets mapeia secrets do Secret Manager para env vars automaticamente — elimina necessidade de ler secrets no código
+  - VPC Connector é necessário para Cloud Run acessar Cloud SQL via IP privado (~US$ 15-20/mês fixo); alternativa é Cloud SQL Auth Proxy como sidecar
+  - Domain mapping direto no Cloud Run é mais simples mas Load Balancer oferece mais controle (CDN, WAF, múltiplos backends)
+---

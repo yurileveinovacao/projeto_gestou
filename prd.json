@@ -167,7 +167,7 @@
         "Contém notas sobre estimativa de custos"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "Região: southamerica-east1. Cloud SQL: db-f1-micro, PostgreSQL 17. Cloud Run: min 0, max 3, 1GB RAM."
     },
     {
