@@ -5,7 +5,7 @@ RewriteEngine On
 
 #REGRA SEMPRE UTILIZAR HTTPS://
 RewriteCond %{HTTP_HOST} !^www\.gestou\.com\.br
-RewriteRule ^(.*)$ https://www.gestou.com.br/app/$1 [R=301,L]
+RewriteRule ^(.*)$ /app/$1 [R=301,L]
 
 
 #DESATIVAR EXTESOES .PHP
