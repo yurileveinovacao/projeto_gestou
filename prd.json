@@ -65,7 +65,7 @@
         "Nenhum arquivo em vendor/ ou vendor_* foi alterado"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "24 arquivos: admin/ (12: email_ajuda, email_aprovacao_foto, email_aviso_importacao, email_beneficios, email_colaborador_aprovado, email_mural_avisos, email_notificacoes, email_ouvidoria, email_relatorio_recibo_pagamento, email_solicitacoes, esqueci_email, esqueci_email_senha_alterada), app/ (6: email_aprovacao_foto, email_minhas_solicitacoes, email_ouvidoria, esqueci_email, esqueci_email_empresa, esqueci_email_senha_alterada), master/ (4: controller/email_token, email_resposta_chamado, email_token, services/email_aniversario), raiz/ (2: envia_email_agende_demonstracao, envia_email_fale_conosco)."
     },
     {

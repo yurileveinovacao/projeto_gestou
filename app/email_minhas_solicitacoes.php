@@ -6,25 +6,16 @@ use PHPMailer\PHPMailer\SMTP;
 
 // Carregar o autoloader do composer
 require 'vendor_envio_email/autoload.php';
+require_once __DIR__.'/../config/mail.php';
 require_once "iuds_app.php";
 
 // Instância da classe
 $mail = new PHPMailer(true);
 
 try {
-  // Configurações do servidor
-  $mail->isSMTP();        //Devine o uso de SMTP no envio
-  $mail->SMTPAuth = true; //Habilita a autenticação SMTP
-  $mail->CharSet = "UTF-8";
-  $mail->Username   = 'suporte@gestou.com.br';
-  $mail->Password   = 'Certificado@256';
+  configureMailer($mail);
 
-  // Criptografia do envio SSL e tls também é aceito
-  $mail->SMTPSecure = 'SSL';
 
-  // Informações específicadas pelo Google
-  $mail->Host = 'smtp.kinghost.net';
-  $mail->Port = 587;
 
   //IMPORTAÇÃO DAS IMAGENS
   $mail->AddEmbeddedImage('../../img/images_email/facebook.png', 'facebook');
@@ -33,8 +24,6 @@ try {
   $mail->AddEmbeddedImage('../../img/images_email/youtube.png', 'youtube');
   $mail->AddEmbeddedImage('../../img/images_email/solicitacoes.png', 'topo');
 
-  // Define o remetente
-  $mail->setFrom('suporte@gestou.com.br', 'GESTOU');
 
   // Define o destinatário
   $mail->addAddress("$email_email", "$nome_email");

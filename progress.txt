@@ -7,7 +7,7 @@ Started: 2026-02-26
 - Cada módulo (admin/, app/, master/) tem seu próprio conexao.php e conexao_pdo.php
 - iuds_pdo.php é o Data Access Layer: admin (10.750 linhas), app (2.404), master (6.532)
 - restrito.php é o guard de sessão em cada módulo — tem session_start()
-- PHPMailer com credenciais hardcoded: smtp.kinghost.net / suporte@gestou.com.br / Certificado@256
+- PHPMailer centralizado em config/mail.php com configureMailer(&$mail) — lê SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_FROM_NAME via getenv()
 - 198 referências hardcoded a gestou.com.br no código
 - OCR: admin/vision_computer.php e admin/controller/vision_computer_irrf_post.php chamam Azure Vision
 - 83 templates em admin/layout/ (holerite/irrf/ponto) esperam formato Azure readResults
@@ -79,4 +79,38 @@ Started: 2026-02-26
   - master/services/*.php usava `require '../conexao.php'` (path relativo com ../) — regex com `[\.\/]*` captura esse padrão
   - app/controller/ herda conexão via iuds_app.php (mesmo padrão do admin/controller/ via iuds_pdo.php)
   - Existem arquivos "copy" no app/ (in2dex copy.php, menu_superior copy.php) — provavelmente backups, mas foram migrados também
+---
+
+## 2026-02-26 - MIG-004 - Criar config centralizado de email e migrar SMTP
+- Criado config/mail.php com função configureMailer(&$mail)
+- configureMailer lê 6 variáveis: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_FROM_NAME via getenv()
+- Defaults: SMTP_HOST=smtp-relay.gmail.com, SMTP_FROM=contato@leveinovacao.com.br, SMTP_FROM_NAME=GESTOU
+- Migrados 24 arquivos de email em 4 módulos:
+  - admin/ (12 arquivos): email_ajuda, email_aprovacao_foto, email_aviso_importacao, email_beneficios, email_colaborador_aprovado, email_mural_avisos, email_notificacoes, email_ouvidoria, email_relatorio_recibo_pagamento, email_solicitacoes, esqueci_email, esqueci_email_senha_alterada
+  - app/ (6 arquivos): email_aprovacao_foto, email_minhas_solicitacoes, email_ouvidoria, esqueci_email, esqueci_email_empresa, esqueci_email_senha_alterada
+  - master/ (4 arquivos): email_token, email_resposta_chamado, controller/email_token, services/email_aniversario
+  - raiz/ (2 arquivos): envia_email_agende_demonstracao, envia_email_fale_conosco
+- Removidas credenciais hardcoded: smtp.kinghost.net, suporte@gestou.com.br, Certificado@256
+- Também corrigidas 2 referências não-SMTP a suporte@gestou.com.br: app/controller/esqueci_senha_post.php (fallback email) e faq.php (link mailto)
+- Paths __DIR__ por nível de diretório:
+  - raiz/*.php → `__DIR__.'/config/mail.php'`
+  - admin/*.php, app/*.php, master/*.php → `__DIR__.'/../config/mail.php'`
+  - master/controller/*.php, master/services/*.php → `__DIR__.'/../../config/mail.php'`
+- **Verificações:**
+  - config/mail.php existe com configureMailer(&$mail): PASS
+  - getenv count = 6 (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_FROM_NAME): PASS
+  - Default SMTP_HOST = smtp-relay.gmail.com: PASS
+  - Default SMTP_FROM = contato@leveinovacao.com.br: PASS
+  - grep smtp.kinghost.net (excl vendor/): PASS (zero resultados)
+  - grep suporte@gestou.com.br (excl vendor/): PASS (zero resultados)
+  - grep Certificado@256 (excl vendor/): PASS (zero resultados)
+  - 24 arquivos com require_once config/mail.php: PASS
+  - 24 arquivos com configureMailer(): PASS
+  - Nenhum vendor/ alterado: PASS
+- **Learnings:**
+  - Padrão SMTP 100% consistente em todos 24 arquivos — mesmo bloco de código clonado
+  - SMTPSecure varia entre 'tls' (maioria) e 'SSL' (master/email_token, master/controller/email_token, master/email_resposta_chamado)
+  - vendor_envio_email/ é o diretório PHPMailer (não vendor/ padrão) — path varia por profundidade
+  - suporte@gestou.com.br também aparece fora do SMTP: como fallback email em app/controller/ e como link mailto em faq.php
+  - sed com GNU sed: `/pattern/a text` funciona para adicionar linhas; `s|pattern|replacement|` com `\1` para capturar indentação
 ---

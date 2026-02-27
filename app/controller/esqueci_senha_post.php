@@ -39,7 +39,7 @@ if (isset($_POST['btn_submit'])) {
 
                         if (empty($email_cpf["email"])) {
 
-                            $email_resp_rh = "suporte@gestou.com.br";
+                            $email_resp_rh = getenv('SMTP_FROM') ?: 'contato@leveinovacao.com.br';
                         } else {
                             $email_resp_rh = $email_cpf["email"];
                         }

@@ -335,7 +335,7 @@
                     <div id="accordion-13" class="accordion-section-content">
                       <p>
                         Para cancelar o serviço, você precisa mandar um e-mail para
-                        <a class="email_faq" href="mailto:suporte@gestou.com.br">suporte@gestou.com.br</a>
+                        <a class="email_faq" href="mailto:contato@leveinovacao.com.br">contato@leveinovacao.com.br</a>
                         solicitando o cancelamento dos serviços.
                       </p>
                     </div>
