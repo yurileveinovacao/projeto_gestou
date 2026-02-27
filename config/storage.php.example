@@ -1,0 +1,215 @@
+<?php
+/**
+ * Storage abstraction layer - Gestou
+ *
+ * Suporta filesystem local e Google Cloud Storage (GCS).
+ * Exporta: storageUpload(), storageDelete(), storageUrl(), storageExists()
+ *
+ * Variáveis de ambiente:
+ *   STORAGE_DRIVER  - 'local' (default) ou 'gcs'
+ *   GCS_BUCKET      - Nome do bucket no Google Cloud Storage
+ *
+ * Copie este arquivo para storage.php e configure as variáveis de ambiente.
+ */
+
+$storageDriver = getenv('STORAGE_DRIVER') ?: 'local';
+$gcsBucket = getenv('GCS_BUCKET') ?: 'SEU_BUCKET_GCS';
+
+/**
+ * Upload de arquivo para o storage.
+ *
+ * @param string $sourcePath      Caminho local do arquivo de origem
+ * @param string $destinationPath Caminho relativo de destino
+ * @return bool Sucesso
+ */
+function storageUpload($sourcePath, $destinationPath)
+{
+    global $storageDriver, $gcsBucket;
+
+    if ($storageDriver === 'gcs') {
+        return _gcsUpload($sourcePath, $destinationPath, $gcsBucket);
+    }
+
+    $dir = dirname($destinationPath);
+    if (!file_exists($dir)) {
+        mkdir($dir, 0755, true);
+    }
+
+    if (is_uploaded_file($sourcePath)) {
+        return move_uploaded_file($sourcePath, $destinationPath);
+    }
+
+    return copy($sourcePath, $destinationPath);
+}
+
+/**
+ * Deletar arquivo do storage.
+ *
+ * @param string $path Caminho relativo do arquivo
+ * @return bool Sucesso
+ */
+function storageDelete($path)
+{
+    global $storageDriver, $gcsBucket;
+
+    if ($storageDriver === 'gcs') {
+        return _gcsDelete($path, $gcsBucket);
+    }
+
+    if (file_exists($path)) {
+        return unlink($path);
+    }
+
+    return false;
+}
+
+/**
+ * Obter URL pública para um arquivo no storage.
+ *
+ * @param string $path Caminho relativo do arquivo
+ * @return string URL ou caminho local
+ */
+function storageUrl($path)
+{
+    global $storageDriver, $gcsBucket;
+
+    if ($storageDriver === 'gcs') {
+        return 'https://storage.googleapis.com/' . $gcsBucket . '/' . ltrim($path, '/');
+    }
+
+    return $path;
+}
+
+/**
+ * Verificar se um arquivo existe no storage.
+ *
+ * @param string $path Caminho relativo do arquivo
+ * @return bool
+ */
+function storageExists($path)
+{
+    global $storageDriver, $gcsBucket;
+
+    if ($storageDriver === 'gcs') {
+        return _gcsExists($path, $gcsBucket);
+    }
+
+    return file_exists($path);
+}
+
+// ============================================================
+// Funções internas para Google Cloud Storage (API REST + cURL)
+// ============================================================
+
+function _gcsGetAccessToken()
+{
+    $url = 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token';
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Metadata-Flavor: Google'));
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode !== 200) {
+        return false;
+    }
+
+    $data = json_decode($response, true);
+    return isset($data['access_token']) ? $data['access_token'] : false;
+}
+
+function _gcsUpload($sourcePath, $destinationPath, $bucket)
+{
+    $token = _gcsGetAccessToken();
+    if (!$token) {
+        return false;
+    }
+
+    $objectName = ltrim($destinationPath, '/');
+    $url = 'https://storage.googleapis.com/upload/storage/v1/b/'
+        . urlencode($bucket)
+        . '/o?uploadType=media&name=' . urlencode($objectName);
+
+    $fileContent = file_get_contents($sourcePath);
+    if ($fileContent === false) {
+        return false;
+    }
+
+    $mimeType = function_exists('mime_content_type')
+        ? (mime_content_type($sourcePath) ?: 'application/octet-stream')
+        : 'application/octet-stream';
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $fileContent);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        'Authorization: Bearer ' . $token,
+        'Content-Type: ' . $mimeType,
+        'Content-Length: ' . strlen($fileContent)
+    ));
+    curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+
+    curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    return $httpCode === 200;
+}
+
+function _gcsDelete($path, $bucket)
+{
+    $token = _gcsGetAccessToken();
+    if (!$token) {
+        return false;
+    }
+
+    $objectName = ltrim($path, '/');
+    $url = 'https://storage.googleapis.com/storage/v1/b/'
+        . urlencode($bucket)
+        . '/o/' . urlencode($objectName);
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        'Authorization: Bearer ' . $token
+    ));
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+    curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    return $httpCode === 204;
+}
+
+function _gcsExists($path, $bucket)
+{
+    $token = _gcsGetAccessToken();
+    if (!$token) {
+        return false;
+    }
+
+    $objectName = ltrim($path, '/');
+    $url = 'https://storage.googleapis.com/storage/v1/b/'
+        . urlencode($bucket)
+        . '/o/' . urlencode($objectName);
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_NOBODY, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        'Authorization: Bearer ' . $token
+    ));
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+    curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    return $httpCode === 200;
+}

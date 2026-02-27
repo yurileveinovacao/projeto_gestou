@@ -213,3 +213,31 @@ Started: 2026-02-26
   - config/database.php.example também usa getenv() — funciona como fallback para Docker builds sem o arquivo real
   - docker-entrypoint-initdb.d do postgres:17 executa .sql automaticamente — ideal para criar php_sessions
 ---
+
+## 2026-02-26 - MIG-008 - Criar camada de abstração de storage
+- Criado config/storage.php com camada de abstração de storage (filesystem local e Google Cloud Storage)
+- Exporta 4 funções públicas: storageUpload(), storageDelete(), storageUrl(), storageExists()
+- Lê STORAGE_DRIVER (default: 'local') e GCS_BUCKET via getenv()
+- Modo 'local': usa move_uploaded_file/copy, unlink, file_exists nativos do PHP
+- Modo 'gcs': usa Google Cloud Storage REST API via cURL com autenticação automática via metadata server (Cloud Run)
+  - Upload: POST para storage.googleapis.com/upload/storage/v1/b/{bucket}/o
+  - Delete: DELETE para storage.googleapis.com/storage/v1/b/{bucket}/o/{object}
+  - Exists: HEAD request para o mesmo endpoint
+  - URL: https://storage.googleapis.com/{bucket}/{object}
+- Criado config/storage.php.example com placeholder SEU_BUCKET_GCS
+- Arquivos criados: config/storage.php, config/storage.php.example
+- Nenhum arquivo existente alterado (apenas criação da camada — refatoração dos arquivos de upload será em story futura)
+- **Verificações:**
+  - config/storage.php existe: PASS
+  - 4 funções exportadas (storageUpload, storageDelete, storageUrl, storageExists): PASS
+  - STORAGE_DRIVER via getenv (default 'local'): PASS
+  - Modo local usa filesystem (move_uploaded_file, copy, unlink, file_exists): PASS
+  - Modo gcs usa GCS com GCS_BUCKET (storage.googleapis.com): PASS
+  - config/storage.php.example existe: PASS
+- **Learnings:**
+  - Upload patterns no codebase: move_uploaded_file (arquivos HTTP), file_put_contents (base64 croppie), copy (aprovação fotos), rename (lixeira)
+  - storageUpload() cobre move_uploaded_file + copy; base64 e rename precisarão de adaptação nos callers
+  - GCS REST API não precisa de library PHP — cURL + metadata server token é suficiente no Cloud Run
+  - Diretórios de upload por tenant: upload/{CNPJ}/..., upload/beneficios/.../{RAIZ_CNPJ}/, admin/uploads/
+  - Permissões de mkdir variam: 0755 (cursos) vs 0777 (benefícios) — storageUpload() usa 0755 por padrão
+---

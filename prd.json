@@ -133,7 +133,7 @@
         "Arquivo /config/storage.php.example existe"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "NÃO refatorar os arquivos que usam upload ainda — apenas criar a camada de abstração. Uploads são usados em: upload/beneficios/, upload/cadastro/, upload/empresa/, upload/colaboradores/, admin/uploads/."
     },
     {
