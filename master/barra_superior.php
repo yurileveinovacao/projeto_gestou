@@ -1,6 +1,6 @@
 <?php
 
-require_once "conexao.php";
+require_once __DIR__.'/../config/database.php';
 
 ?>
 
@@ -210,7 +210,7 @@ $_SESSION["id_usa"] = $linha['id_usa'];
     <?php
 // if (isset($_REQUEST['alterar'])) {
 // try {
-// require 'conexao.php';
+// require_once __DIR__.'/../config/database.php';
 // $id_emp2 = $_REQUEST['alterar'];
 // $_SESSION['id_emp_default'] = $id_emp2;
 

@@ -9,7 +9,7 @@ require 'util.php';
 <?php
 
 //abre conexao
-require_once 'conexao.php';
+require_once __DIR__.'/../config/database.php';
 
 // VARIAVEL DE COMPARACAO MOBILE
 $pagina = "H";

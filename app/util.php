@@ -3,7 +3,7 @@
 //Faz o START da Sessão
 session_start();
 
-require 'conexao.php';
+require_once __DIR__.'/../config/database.php';
 require_once 'iuds_app.php';
 
 $id_usu = $_SESSION['id_usu_app'];

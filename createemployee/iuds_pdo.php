@@ -7,7 +7,7 @@
  **Versão do arquivo IUDS_PDO: 2021-12-16-0846
  **/
 
-require_once 'conexao_pdo.php';
+require_once __DIR__.'/../config/database.php';
 
 
 //View VW_CIDADE select - revisado em 09/06/2023 13:56

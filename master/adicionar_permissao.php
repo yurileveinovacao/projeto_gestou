@@ -377,7 +377,7 @@ if (isset($_POST["id_mpr"]) && isset($_POST["situac"])) {
 // if (isset($_REQUEST['btn-liberar'])) {
 //     try {
 //         echo "entrou try";
-//         require 'conexao.php';
+//         require_once __DIR__.'/../config/database.php';
 
 //         $id_mpr;
 

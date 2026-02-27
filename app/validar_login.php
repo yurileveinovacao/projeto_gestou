@@ -3,7 +3,7 @@
 session_start();
 
 //abre conexao
-require_once 'conexao_pdo.php';
+require_once __DIR__.'/../config/database.php';
 require_once 'util.php';
 
 ?>

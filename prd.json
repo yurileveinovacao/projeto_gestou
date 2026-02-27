@@ -46,7 +46,7 @@
         "Nenhum arquivo em */vendor/ ou */vendor_* foi alterado"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "app/ tem ~30 arquivos, master/ ~14, createemployee/ ~1 (iuds_pdo.php), createaccount/ ~1, controller/ ~1. master/services/*.php usa '../conexao.php'. NUNCA alterar vendor/ ou vendor_*."
     },
     {

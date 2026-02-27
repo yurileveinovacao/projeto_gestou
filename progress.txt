@@ -56,3 +56,27 @@ Started: 2026-02-26
   - Padrão de re-require: muitos arquivos fazem require de conexao.php múltiplas vezes em diferentes blocos (require_once garante que não há problema)
   - Usar sed -E com regex `require(_once)? ['\"]conexao\.php['\"];` captura todas as variações (require/require_once, aspas simples/duplas)
 ---
+
+## 2026-02-26 - MIG-003 - Migrar conexões de app/, master/, createemployee/, createaccount/, controller/
+- Substituídos todos os require/require_once de conexao.php e conexao_pdo.php em 47 arquivos
+- Paths __DIR__ por nível de diretório:
+  - app/*.php → `__DIR__.'/../config/database.php'` (30 arquivos, incluindo iuds_app.php e validar_login.php)
+  - app/antigo/*.php → `__DIR__.'/../../config/database.php'` (5 arquivos)
+  - master/*.php → `__DIR__.'/../config/database.php'` (12 arquivos, incluindo iuds_pdo.php)
+  - master/services/*.php → `__DIR__.'/../../config/database.php'` (2 arquivos: menu_lateral.php, barra_superior.php)
+  - createemployee/iuds_pdo.php → `__DIR__.'/../config/database.php'`
+  - createaccount/iuds_pdo.php → `__DIR__.'/../config/database.php'`
+  - controller/iuds_pdo.php → `__DIR__.'/../config/database.php'`
+- Linhas comentadas (// require) também foram atualizadas para não aparecerem no grep
+- app/controller/ e createemployee/controller/ e createaccount/controller/ não tinham referências a conexao
+- **Verificações:**
+  - grep conexao.php (excl vendor/): PASS (zero resultados)
+  - grep conexao_pdo.php (excl vendor/): PASS (zero resultados)
+  - app/iuds_app.php linha 10 com __DIR__: PASS
+  - master/iuds_pdo.php linha 10 com __DIR__: PASS
+  - Nenhum vendor/ alterado: PASS
+- **Learnings:**
+  - master/services/*.php usava `require '../conexao.php'` (path relativo com ../) — regex com `[\.\/]*` captura esse padrão
+  - app/controller/ herda conexão via iuds_app.php (mesmo padrão do admin/controller/ via iuds_pdo.php)
+  - Existem arquivos "copy" no app/ (in2dex copy.php, menu_superior copy.php) — provavelmente backups, mas foram migrados também
+---

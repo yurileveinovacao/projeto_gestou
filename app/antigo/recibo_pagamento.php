@@ -13,7 +13,7 @@ unset($_SESSION["id_validador_holerite"]);
 <?php
 
 //abre conexao
-require_once 'conexao.php';
+require_once __DIR__.'/../../config/database.php';
 
 ?>
 
