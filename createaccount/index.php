@@ -35,7 +35,7 @@ require_once "iuds_pdo.php";
         <nav class="navbar navbar-expand-lg navbar-light py-3">
             <div class="container">
                 <!-- Navbar Brand -->
-                <a href="https://www.gestou.com.br" class="navbar-brand">
+                <a href="/" class="navbar-brand">
                     <img src="../img/icone_gestou.png" alt="logo" width="150">
                 </a>
             </div>
@@ -255,7 +255,7 @@ require_once "iuds_pdo.php";
 
                         <!-- Already Registered -->
                         <div class="text-center w-100">
-                            <p class="text-muted font-weight-bold">Já registrado? <a href="https://www.gestou.com.br/admin/login" class="text-primary ml-2">Login</a></p>
+                            <p class="text-muted font-weight-bold">Já registrado? <a href="/admin/login" class="text-primary ml-2">Login</a></p>
                         </div>
 
                     </div>
@@ -828,7 +828,7 @@ Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.
                                 html: 'Obrigado por se cadastrar! Seu cadastro foi enviado para análise e está aguardando aprovação do sistema. Pedimos que aguarde enquanto verificamos as informações fornecidas. Assim que seu cadastro for aprovado, entraremos em contato. Agradecemos sua paciência e compreensão!'
                             }).then((result) => {
                                 if (result.isConfirmed) {
-                                    location.href = "https://www.gestou.com.br/admin/login";
+                                    location.href = "/admin/login";
                                 }
                             });
 

@@ -8,6 +8,7 @@ require_once "iuds_pdo.php";
 
 //ARQUIVO DE UTILITÁRIOS
 require_once "util2.php";
+require_once __DIR__.'/../config/app.php';
 
 // Realiza o UNSET da váriavel de filtro dos colaboradores
 if (!empty($_SESSION["colaborador_filtro_tipo"])) {
@@ -542,7 +543,7 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
 
                                                     <?php if ($validade == 1) { ?>
 
-                                                        <input type="text" class="form-control bg-white border-right-0 border-md" id="token" name="token" value="https://www.gestou.com.br/createemployee/index?emp=<?php echo $token; ?>" style="opacity: 1; background-color: white;" disabled>
+                                                        <input type="text" class="form-control bg-white border-right-0 border-md" id="token" name="token" value="<?= $app_url ?>/createemployee/index?emp=<?php echo $token; ?>" style="opacity: 1; background-color: white;" disabled>
 
                                                         <div class="input-group-append cursor-pointer btn-copy">
                                                             <span class="input-group-text bg-white px-2 border-md border-left-0" id="span-copy">
@@ -551,7 +552,7 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                                                         </div>
                                                     <?php } else { ?>
 
-                                                        <input type="text" class="form-control bg-white border-right-0 border-md" id="token" name="token" value="https://www.gestou.com.br/createemployee/index?emp=<?php echo $token; ?>" style="opacity: 1; background-color: white; text-decoration: line-through;" disabled>
+                                                        <input type="text" class="form-control bg-white border-right-0 border-md" id="token" name="token" value="<?= $app_url ?>/createemployee/index?emp=<?php echo $token; ?>" style="opacity: 1; background-color: white; text-decoration: line-through;" disabled>
 
                                                         <div class="input-group-append cursor-pointer btn-regerar" id="div-gerar">
                                                             <span class="input-group-text bg-white px-2 border-md border-left-0" id="span-gerar">
@@ -1188,7 +1189,7 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                 $.post('controller/index_post.php', dados, function(retorno) {
 
                     // Define a página de destino para o token retornado
-                    var page = 'https://www.gestou.com.br/createemployee/index?emp=';
+                    var page = '<?= $app_url ?>/createemployee/index?emp=';
 
                     // Faz o parsing do JSON recebido
                     var retorno_obj = JSON.parse(retorno);

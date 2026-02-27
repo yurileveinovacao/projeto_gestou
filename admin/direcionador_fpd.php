@@ -8,6 +8,7 @@ require_once "iuds_pdo.php";
 
 //ARQUIVO DE UTILITÁRIOS
 require_once "util.php";
+require_once __DIR__.'/../config/app.php';
 
 // Load Fpdi library 
 use setasign\Fpdi\Fpdi;
@@ -289,7 +290,7 @@ if ($tipo_layout == $ext) {
 
     // Source file and watermark config 
     $file = $temp;
-    $text = 'gestou.com.br';
+    $text = parse_url($app_url, PHP_URL_HOST);
 
     // Text font settings 
     $name = uniqid();
@@ -389,7 +390,7 @@ function direcionar(){
 
     // Source file and watermark config 
     $file = $temp;
-    $text = 'gestou.com.br';
+    $text = parse_url($app_url, PHP_URL_HOST);
 
     // Text font settings 
     $name = uniqid();

@@ -50,7 +50,7 @@ unset($_SESSION["download_raiz_validador"]);
     <div class="container d-flex align-items-center justify-content-between">
 
       <div class="logo">
-        <h1><a href="index"><img src="https://www.gestou.com.br/img/gestou-logo.png" height="40" alt="Logo Gestou Amarelo"></img></a></h1>
+        <h1><a href="index"><img src="/img/gestou-logo.png" height="40" alt="Logo Gestou Amarelo"></img></a></h1>
       </div>
 
     </div>

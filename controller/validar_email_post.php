@@ -36,12 +36,12 @@ if (isset($_POST["parametro"])) {
 
         $retorno .= '<h1>O e-mail foi validado e sua empresa está apta a utilizar o <span class="fonte-texto-gestou">GESTOU</span></h1>';
         $retorno .= '<h2>Obrigado por validar o e-mail.</h2>';
-        $retorno .= '<a href="https://www.gestou.com.br/admin/login"><button type="button" id="login" name="login" style="border: none;" class="text-center text-lg-start btn-get-started"><span class="fonte-texto-gestou" style="font-size: x-large;">LOGIN</span></button></a>';
+        $retorno .= '<a href="/admin/login"><button type="button" id="login" name="login" style="border: none;" class="text-center text-lg-start btn-get-started"><span class="fonte-texto-gestou" style="font-size: x-large;">LOGIN</span></button></a>';
     } else {
 
         $retorno .= '<h1>Não é possível validar o e-mail, o token expirou ou não existe!</h1>';
         $retorno .= '<h2>Entre em contato com o <span class="fonte-texto-gestou">SUPORTE</span> para gerar um novo link.</h2>';
-        $retorno .= '<a href="https://www.gestou.com.br/admin/login"><button type="button" id="login" name="login" style="border: none;" class="text-center text-lg-start btn-get-started"><span class="fonte-texto-gestou" style="font-size: x-large;">LOGIN</span></button></a>';
+        $retorno .= '<a href="/admin/login"><button type="button" id="login" name="login" style="border: none;" class="text-center text-lg-start btn-get-started"><span class="fonte-texto-gestou" style="font-size: x-large;">LOGIN</span></button></a>';
     }
 
     echo $retorno;

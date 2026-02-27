@@ -6,6 +6,7 @@ use PHPMailer\PHPMailer\SMTP;
 // Carregar o autoloader do composer
 require 'vendor_envio_email/autoload.php';
 require_once __DIR__.'/../config/mail.php';
+require_once __DIR__.'/../config/app.php';
 require_once "iuds_pdo.php";
 
 /* 
@@ -116,7 +117,7 @@ try {
         . '<tr> 
                                         <td align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, "helvetica neue", helvetica, sans-serif;line-height:28px;color:#333333;font-size:72px;font-weight:bold;">
                                             Att,<br>
-                                            <a target="_blanck" href="https://www.gestou.com.br"><img title="Assinatura" src="cid:assinatura" alt="As"></a>
+                                            <a target="_blanck" href="' . $app_url . '"><img title="Assinatura" src="cid:assinatura" alt="As"></a>
                                         <br></p></td>
                                         </tr>
                                     </table></td> 

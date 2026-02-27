@@ -5,6 +5,7 @@ if (isset($_POST["id_recebido"])) {
     require_once 'restrito.php';
     require_once 'util.php';
     require_once 'iuds_pdo.php';
+require_once __DIR__.'/../config/app.php';
 
     $id_usu = $_POST["id_recebido"];
     $id_emp_default = $_SESSION['id_emp_default'];
@@ -154,7 +155,7 @@ if (isset($_POST["id_recebido"])) {
                                         <tr style="border-collapse:collapse">
                                             <td align="center" style="padding:0;Margin:0">
                                                 <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;font-family:helvetica, helvetica neue, arial, verdana, sans-serif;line-height:21px;color:#FFFFFF;font-size:14px">
-                                                    <a target="_blank" href="https://www.gestou.com.br/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;text-decoration:none;color:#FFFFFF;font-size:14px">https://www.gestou.com.br/</a>
+                                                    <a target="_blank" href="' . $app_url . '/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;text-decoration:none;color:#FFFFFF;font-size:14px">' . $app_url . '/</a>
                                                 </p>
                                             </td>
                                         </tr>

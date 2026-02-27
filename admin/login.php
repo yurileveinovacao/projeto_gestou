@@ -148,7 +148,7 @@
                         case "1":
 
                             // Retorno de sucesso
-                            location.href = "https://www.gestou.com.br/admin/index";
+                            location.href = "/admin/index";
 
                             break;
 
@@ -188,7 +188,7 @@
                                 allowEscapeKey: false
                             }).then((result) => {
                                 if (result.isConfirmed) {
-                                    location.href = "https://www.gestou.com.br/admin/esqueci_senha";
+                                    location.href = "/admin/esqueci_senha";
                                 }
                             });
 

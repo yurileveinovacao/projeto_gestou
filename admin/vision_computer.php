@@ -2,6 +2,7 @@
 
 require_once 'restrito.php';
 require_once 'iuds_pdo.php';
+require_once __DIR__.'/../config/app.php';
 require_once 'util.php';
 
 if ((isset($_POST["descricao"])) or (isset($_FILES)) or (isset($_POST["periodo"]))) {
@@ -26,7 +27,7 @@ if ((isset($_POST["descricao"])) or (isset($_FILES)) or (isset($_POST["periodo"]
     if (move_uploaded_file($_FILES['file']['tmp_name'], $location)) {
       // echo $location;
 
-      $nome_url = '{"url":"https://www.gestou.com.br/admin/uploads/' . $filename . '"}';
+      $nome_url = '{"url":"' . $app_url . '/admin/uploads/' . $filename . '"}';
 
       // echo "NOME_URL: " . $nome_url;
 
@@ -44,8 +45,8 @@ if ((isset($_POST["descricao"])) or (isset($_FILES)) or (isset($_POST["periodo"]
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_HEADER => true, //incluir cabeçalhos na saida
-        // CURLOPT_POSTFIELDS => '{"url":"https://www.gestou.com.br/admin/uploads/HOLERITE_EMPRESA_TESTE.pdf"}',
-        // CURLOPT_POSTFIELDS => '{"url":"https://www.gestou.com.br/admin/uploads/' . $filename . '"}',
+        // CURLOPT_POSTFIELDS => '{"url":"<?= $app_url ?>/admin/uploads/HOLERITE_EMPRESA_TESTE.pdf"}',
+        // CURLOPT_POSTFIELDS => '{"url":"<?= $app_url ?>/admin/uploads/' . $filename . '"}',
         CURLOPT_POSTFIELDS => $nome_url,
         CURLOPT_HTTPHEADER => array(
           'Ocp-Apim-Subscription-Key: 1e62c619e8d24934aca329709a979b60',

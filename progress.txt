@@ -8,7 +8,9 @@ Started: 2026-02-26
 - iuds_pdo.php é o Data Access Layer: admin (10.750 linhas), app (2.404), master (6.532)
 - restrito.php é o guard de sessão em cada módulo — tem session_start()
 - PHPMailer centralizado em config/mail.php com configureMailer(&$mail) — lê SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_FROM_NAME via getenv()
-- 198 referências hardcoded a gestou.com.br no código
+- URLs centralizadas em config/app.php: $app_url (getenv APP_URL), $contact_email (getenv CONTACT_EMAIL)
+- Redirects usam caminhos relativos (/admin/login); emails/QR/print usam $app_url
+- Conexão files legados (conexao.php, conexao_pdo.php) redirecionam para config/database.php
 - OCR: admin/vision_computer.php e admin/controller/vision_computer_irrf_post.php chamam Azure Vision
 - 83 templates em admin/layout/ (holerite/irrf/ponto) esperam formato Azure readResults
 - Vendors no .gitignore — não estão no repo, serão copiados no Docker build
@@ -113,4 +115,36 @@ Started: 2026-02-26
   - vendor_envio_email/ é o diretório PHPMailer (não vendor/ padrão) — path varia por profundidade
   - suporte@gestou.com.br também aparece fora do SMTP: como fallback email em app/controller/ e como link mailto em faq.php
   - sed com GNU sed: `/pattern/a text` funciona para adicionar linhas; `s|pattern|replacement|` com `\1` para capturar indentação
+---
+
+## 2026-02-26 - MIG-005 - Criar config de URL e converter referências hardcoded
+- Criado config/app.php com $app_url (getenv('APP_URL'), default: https://gestou.leveinovacao.com.br) e $contact_email (getenv('CONTACT_EMAIL'), default: contato@leveinovacao.com.br)
+- Convertidas ~198 referências hardcoded a gestou.com.br em 60+ arquivos:
+  - **Caminhos relativos (25 arquivos):** redirects em restrito.php (admin, app, master, validar_restrito), login.php, util.php, util2.php, barra_superior.php, validar_login.php, index.php, 0index.php, validar_email.php, contato.php, download.php, validar.php, createaccount/index.php, createemployee/index.php, master/menu_lateral.php, controller/util.php, createaccount/util.php, createemployee/util.php, doc/*.php
+  - **$app_url em PHP (23 arquivos):** QR codes (validar_gera_qrcode_holerite, app/gera_qrcode_holerite, app/gera_qrcode), admin/index.php (token URLs), admin/vision_computer.php e controller/vision_computer_irrf_post.php (OCR API URLs), templates de email (master/email_resposta_chamado, master/services/email_aniversario, admin/cartao_de_aniversario), master/aprovacao.php (token URL), controller/validar_email_post.php, impressão/display (validar_impressao, app/recibo_impressao, app/espelho_impressao, app/imposto_impressao, app/holerite_item, app/antigo/recibo_item), relatórios (admin/relatorio_departamento, relatorio_funcionario_setor, relatorio_funcionario_funcao, relatorio_funcionario_setor copy), watermark (admin/direcionador_fpd.php → parse_url($app_url, PHP_URL_HOST))
+  - **Email recipients (2 arquivos):** envia_email_agende_demonstracao.php e envia_email_fale_conosco.php — contato@gestou.com.br → $contact_email
+  - **Conexões legadas (9 arquivos):** admin/conexao.php, admin/conexao_pdo.php, app/conexao.php, app/conexao_pdo.php, master/conexao.php, master/conexao_pdo.php, controller/conexao_pdo.php, createaccount/conexao_pdo.php, createemployee/conexao_pdo.php — redirecionados para config/database.php
+  - **pg_connect hardcoded (1 arquivo):** admin/direcionador_irrf.php — substituído por require config/database.php
+  - **Comentário legado (1 arquivo):** admin/direcionador_ponto.php — removidas credenciais do comentário
+- Paths __DIR__ por nível de diretório:
+  - raiz/*.php → `__DIR__.'/config/app.php'`
+  - admin/*.php, app/*.php, master/*.php → `__DIR__.'/../config/app.php'`
+  - admin/controller/*.php, master/services/*.php, app/antigo/*.php → `__DIR__.'/../../config/app.php'`
+- **Verificações:**
+  - config/app.php existe com $app_url e getenv: PASS
+  - Default APP_URL = https://gestou.leveinovacao.com.br: PASS
+  - Redirects em restrito.php relativos (/admin/login, /app/login, /master/login): PASS
+  - Redirects em validar_login.php relativos: PASS
+  - Links em emails usam $app_url: PASS
+  - grep gestou.com.br (excl vendor/): PASS (zero resultados)
+  - Nenhum vendor/ alterado: PASS
+- **Learnings:**
+  - Referências dividem-se em 3 categorias: caminhos relativos (browser resolve), $app_url (emails/QR/print/OCR precisam URL completa), endereços de email
+  - Arquivos de email usam HTML em single-quoted PHP strings (`$mail->Body = '...'` ou `$retorno .= '...'`) — precisa quebrar string para inserir variável: `href="' . $app_url . '/"`
+  - Arquivos de impressão/display usam HTML inline (fora de tags PHP) — pode usar `<?= $app_url ?>`
+  - QR codes e OCR URLs precisam de URL absoluta porque são acessados externamente (câmera de celular, API de OCR)
+  - Conexão legada em admin/direcionador_irrf.php tinha pg_connect hardcoded ATIVO (não comentado) — bug silencioso se config/database.php já definia $conn
+  - validar_gera_qrcode_holerite.php usava path `/novo/validar` (legado de quando app ficava em subdiretório /novo/) — corrigido para `/validar`
+  - perl -pi -e com `!$done++` é útil para inserir linha apenas na primeira ocorrência de um padrão
+  - doc/ files usavam paths com `/novo/doc/` (legado) — corrigido para `/doc/`
 ---

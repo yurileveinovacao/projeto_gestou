@@ -287,7 +287,7 @@ require_once __DIR__.'/../config/database.php';
 
                     echo "<script language=javascript>
                         alert('Empresa alterada com sucesso!');
-                        window.location.href = 'https://www.gestou.com.br/admin/index';
+                        window.location.href = '/admin/index';
                         </script>";
                 } catch (PDOException $erro) {
                     echo $erro->getMessage();

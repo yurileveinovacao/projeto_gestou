@@ -9,7 +9,7 @@
     echo '<br><br>';
     echo '<ul>';
         foreach (selectGESDOC() as $resultados) {
-            echo '<a href="https://gestou.com.br/novo/doc/pagina.php?id_doc='. $resultados['id_doc'].'">'. '<li>' . $resultados['grupo'] . ' - '. $resultados['titulo'] . '</li>' . '<br>' .'</a>';
+            echo '<a href="/doc/pagina.php?id_doc='. $resultados['id_doc'].'">'. '<li>' . $resultados['grupo'] . ' - '. $resultados['titulo'] . '</li>' . '<br>' .'</a>';
         }
     echo '</ul>';
 ?>

@@ -68,7 +68,7 @@ require_once "util.php";
         <nav class="navbar navbar-expand-lg navbar-light py-3">
             <div class="container">
                 <!-- Navbar Brand -->
-                <a href="https://www.gestou.com.br" class="navbar-brand">
+                <a href="/" class="navbar-brand">
                     <img src="../img/icone_gestou.png" alt="logo" width="150">
                 </a>
             </div>

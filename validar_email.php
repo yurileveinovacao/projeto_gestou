@@ -64,7 +64,7 @@ try {
     <div class="container d-flex align-items-center justify-content-between">
 
       <div class="logo">
-        <h1><a href="index"><img src="https://www.gestou.com.br/img/logo_gestou_escrita_branco_logo_amarelo.png" height="40" alt="Logo Gestou Amarelo"></img></a></h1>
+        <h1><a href="index"><img src="/img/logo_gestou_escrita_branco_logo_amarelo.png" height="40" alt="Logo Gestou Amarelo"></img></a></h1>
       </div>
 
       <nav id="navbar" class="navbar">
@@ -73,10 +73,10 @@ try {
           <li class="dropdown" style="cursor: pointer"><a href="./#" class="nav-link">Serviços<i class="bi bi-chevron-down"></i></a>
             <ul>
           </li>
-          <li><a href="https://www.gestou.com.br/admin/login">Administrador</a></li>
-          <li><a href="https://www.gestou.com.br/app/login">Holerite Digital</a></li>
-          <li><a href="https://www.gestou.com.br/validar">Validar Holerite</a></li>
-          <li><a href="https://www.gestou.com.br/download">Download</a></li>
+          <li><a href="/admin/login">Administrador</a></li>
+          <li><a href="/app/login">Holerite Digital</a></li>
+          <li><a href="/validar">Validar Holerite</a></li>
+          <li><a href="/download">Download</a></li>
         </ul>
         </li>
         <li><a href="./#features" class="nav-link scrollto">Recursos</a></li>
@@ -143,17 +143,17 @@ try {
               <li><i class="bx bx-chevron-right"></i> <a href="./#about">Serviços</a></li>
               <li><i class="bx bx-chevron-right"></i> <a href="./#features">Recursos</a></li>
               <li><i class="bx bx-chevron-right"></i> <a href="./#gallery">Galeria</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="https://www.gestou.com.br/contato">Contato</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="/contato">Contato</a></li>
             </ul>
           </div>
 
           <div class="col-lg-4 col-md-6 footer-links">
             <h4>Nossos Serviços</h4>
             <ul>
-              <li><i class="bx bx-chevron-right"></i> <a href="https://www.gestou.com.br/admin/login">Administrador</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="https://www.gestou.com.br/app/login">Holerite Digital</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="https://www.gestou.com.br/validar">Validar Holerite</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="https://www.gestou.com.br/download">Download</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="/admin/login">Administrador</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="/app/login">Holerite Digital</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="/validar">Validar Holerite</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="/download">Download</a></li>
             </ul>
           </div>
 

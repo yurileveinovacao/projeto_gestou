@@ -11,7 +11,7 @@ if ((!isset($_SESSION['id_mas'])) and (!isset($_SESSION['email']))) {
 
     echo "<script language=javascript>
     alert('Você não tem permissão para acessar essa página! Efetue o login!');
-    location.href = 'https://www.gestou.com.br/master/login';
+    location.href = '/master/login';
     </script>";        
 }
 

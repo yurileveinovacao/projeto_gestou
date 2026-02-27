@@ -12,8 +12,8 @@ $datinc = date('Y-m-d H:i:s');
 $datatu = date('Y-m-d H:i:s');
 
 // Variaveis para apontar o erro caso não seja possivel interpretar o arquivo
-$erro_1 = 'https://www.gestou.com.br/admin/erro/erro_1'; //erro generico
-$erro_3 = 'https://www.gestou.com.br/admin/erro/erro_3'; //erro arquivo anexado
+$erro_1 = '/admin/erro/erro_1'; //erro generico
+$erro_3 = '/admin/erro/erro_3'; //erro arquivo anexado
 
 /**
  * 

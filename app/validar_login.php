@@ -114,12 +114,12 @@ try {
         //         if($status == "Pendente"){
 
         //             //DIRECIONA PARA ACEITE POLITICAS
-        //             echo ("<script>window.open('https://www.gestou.com.br/app/aceite_politicas.php','_self')</script>");
+        //             echo ("<script>window.open('/app/aceite_politicas.php','_self')</script>");
 
         //         }else{
 
         //             //DIRECIONA PARA INDEX
-        //             echo ("<script>window.open('https://www.gestou.com.br/app/index.php','_self')</script>");
+        //             echo ("<script>window.open('/app/index.php','_self')</script>");
 
         //         }
 
@@ -127,7 +127,7 @@ try {
         //         //  location.href = 'index.php';
         //         // </script>";
 
-        //         // header('Location: https://www.gestou.com.br/novo/app/index.php');
+        //         // header('Location: /novo/app/index.php');
         //         // echo "if";
         //         exit;
         //     } else {
@@ -222,11 +222,11 @@ function cpf()
                 if ($status == "Pendente") {
 
                     //DIRECIONA PARA ACEITE POLITICAS
-                    echo ("<script>window.open('https://www.gestou.com.br/app/aceite_politicas','_self')</script>");
+                    echo ("<script>window.open('/app/aceite_politicas','_self')</script>");
                 } else {
 
                     //DIRECIONA PARA INDEX
-                    echo ("<script>window.open('https://www.gestou.com.br/app/index','_self')</script>");
+                    echo ("<script>window.open('/app/index','_self')</script>");
                 }
 
                 exit;
@@ -328,11 +328,11 @@ function email()
                 if ($status == "Pendente") {
 
                     //DIRECIONA PARA ACEITE POLITICAS
-                    echo ("<script>window.open('https://www.gestou.com.br/app/aceite_politicas','_self')</script>");
+                    echo ("<script>window.open('/app/aceite_politicas','_self')</script>");
                 } else {
 
                     //DIRECIONA PARA INDEX
-                    echo ("<script>window.open('https://www.gestou.com.br/app/index','_self')</script>");
+                    echo ("<script>window.open('/app/index','_self')</script>");
                 }
 
                 exit;
@@ -434,11 +434,11 @@ function telefone()
                 if ($status == "Pendente") {
 
                     //DIRECIONA PARA ACEITE POLITICAS
-                    echo ("<script>window.open('https://www.gestou.com.br/app/aceite_politicas','_self')</script>");
+                    echo ("<script>window.open('/app/aceite_politicas','_self')</script>");
                 } else {
 
                     //DIRECIONA PARA INDEX
-                    echo ("<script>window.open('https://www.gestou.com.br/app/index','_self')</script>");
+                    echo ("<script>window.open('/app/index','_self')</script>");
                 }
 
                 exit;

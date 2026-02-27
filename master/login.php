@@ -164,7 +164,7 @@ session_start();
                 //  echo $_SESSION["email"]."<br>";
 
                 //header("location:index.html");
-                echo "<script>window.open('https://www.gestou.com.br/master/index','_self')</script>";
+                echo "<script>window.open('/master/index','_self')</script>";
             } else {
                 echo "<script language=javascript>
 			alert('Usuário ou Senha incorretos!');

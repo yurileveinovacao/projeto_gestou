@@ -12,6 +12,6 @@ if ((!isset($_SESSION['id_usu_app'])) and (!isset($_SESSION['email_app']))) {
     //header("location:acesso.php");
     echo "<script language=javascript>
     alert('Você não tem permissão para acessar essa página! Efetue o login!');
-    location.href = 'https://www.gestou.com.br/app/login';
+    location.href = '/app/login';
     </script>";
 }

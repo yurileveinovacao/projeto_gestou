@@ -232,7 +232,7 @@ require_once 'iuds_pdo.php';
 // ////////////////////////
 // $id_emp_default = $_SESSION['id_emp_default'];
 
-// $conn = pg_connect('host=pgsql.gestou.com.br port=5432 dbname=gestou user=gestou password=Astolpho@286');
+// $conn = pg_connect('host=DB_HOST port=5432 dbname=DB_NAME user=DB_USER password=DB_PASS');
 // if (!$conn) {
 //     die('Erro ao conectar com o banco PGSQL');
 // }

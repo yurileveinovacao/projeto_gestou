@@ -6,6 +6,7 @@ use PHPMailer\PHPMailer\SMTP;
 // Carregar o autoloader do composer
 require 'vendor_envio_email/autoload.php';
 require_once __DIR__.'/config/mail.php';
+require_once __DIR__.'/config/app.php';
 // Instância da classe
 $mail = new PHPMailer(true);
 try {
@@ -19,7 +20,7 @@ try {
   $mail->AddEmbeddedImage('img/images_email/youtube.png', 'youtube');
 
   // Define o destinatário
-  $mail->addAddress("contato@gestou.com.br", "CONTATO GESTOU");
+  $mail->addAddress($contact_email, "CONTATO GESTOU");
   // Conteúdo da mensagem
   $mail->isHTML(true);  // Seta o formato do e-mail para aceitar conteúdo HTML
   $mail->Subject = 'Solicitação de Demonstração';

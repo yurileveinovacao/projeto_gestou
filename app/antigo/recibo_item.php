@@ -4,6 +4,7 @@
 
 require 'restrito.php';
 require 'util.php';
+require_once __DIR__.'/../../config/app.php';
 
 ?>
 
@@ -312,7 +313,7 @@ require_once __DIR__.'/../../config/database.php';
 
                                     <div class="row text-center">
 
-                                        <h6 class="text-center" style="margin: auto;">A autenticidade deste comprovante pode ser confirmada pelo site <a href="https://www.gestou.com.br/validar">https://gestou.com.br/validar</a> ou pelo QR Code abaixo</h6>
+                                        <h6 class="text-center" style="margin: auto;">A autenticidade deste comprovante pode ser confirmada pelo site <a href="<?= $app_url ?>/validar"><?= $app_url ?>/validar</a> ou pelo QR Code abaixo</h6>
 
                                     </div>
                                     <!-- FIM DIV ROW -->
@@ -707,7 +708,7 @@ require_once __DIR__.'/../../config/database.php';
 
                                             <div class="row text-center">
 
-                                                <h6 class="text-center" style="margin: auto;">A autenticidade deste comprovante pode ser confirmada pelo site <a href="https://www.gestou.com.br/validar">https://gestou.com.br/validar</a> ou pelo QR Code abaixo</h6>
+                                                <h6 class="text-center" style="margin: auto;">A autenticidade deste comprovante pode ser confirmada pelo site <a href="<?= $app_url ?>/validar"><?= $app_url ?>/validar</a> ou pelo QR Code abaixo</h6>
 
                                             </div>
                                             <!-- FIM DIV ROW -->

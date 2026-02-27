@@ -194,10 +194,7 @@ require_once 'restrito.php';
 ////////////////////////
 $id_emp_default = $_SESSION['id_emp_default'];
 
-$conn = pg_connect('host=pgsql.gestou.com.br port=5432 dbname=gestou user=gestou password=Astolpho@286');
-if (!$conn) {
-    die('Erro ao conectar com o banco PGSQL');
-}
+require_once __DIR__.'/../config/database.php';
 
 $sql = 'SELECT cnpj,layout_irrf from public."GESEMP" where id_emp='.$id_emp_default.'';
 $res = pg_exec($conn, $sql);

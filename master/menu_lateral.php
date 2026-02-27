@@ -12,9 +12,9 @@ $id_emp_default = $_SESSION['id_emp_default'];
     <!-- Sidebar - Brand -->
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index">
         <div class="sidebar-brand-icon">
-            <img src="https://www.gestou.com.br/img/logo_gestou.png" height="40"></img>
+            <img src="/img/logo_gestou.png" height="40"></img>
         </div>
-        <div class="sidebar-brand-text mx-3"><img src="https://www.gestou.com.br/img/texto_gestou.png" height="15"></img><sup>Portal Master</sup></div>
+        <div class="sidebar-brand-text mx-3"><img src="/img/texto_gestou.png" height="15"></img><sup>Portal Master</sup></div>
 
     </a>
 
@@ -23,7 +23,7 @@ $id_emp_default = $_SESSION['id_emp_default'];
 
     <!-- Nav Item - Dashboard -->
     <li class="nav-item active">
-        <a class="nav-link" href="https://www.gestou.com.br/master">
+        <a class="nav-link" href="/master">
             <i class="fas fa-home fa-1x"></i>
             <span>Menu</span></a>
     </li>

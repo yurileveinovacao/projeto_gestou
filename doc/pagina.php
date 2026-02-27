@@ -17,6 +17,6 @@ foreach (selectGESDOCid_doc($tmpId_doc) as $resultados) {
 }
 
 echo '<br><br>';
-echo '<a href="https://gestou.com.br/novo/doc">Voltar</a>'; 
+echo '<a href="/doc">Voltar</a>'; 
 
 ?>

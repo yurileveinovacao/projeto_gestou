@@ -82,7 +82,7 @@
         "Nenhum arquivo em vendor/ ou vendor_* foi alterado"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "198 referências hardcoded. Priorizar caminhos RELATIVOS para redirects (location.href = '/admin/login'). Usar $app_url APENAS para links em emails e QR codes (precisam ser URL completa). NUNCA alterar vendor/ ou vendor_*."
     },
     {

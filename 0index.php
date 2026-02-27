@@ -10,25 +10,25 @@
   <meta content="" name="keywords"> -->
 
   <!-- Favicons -->
-  <link href="https://www.gestou.com.br/img/logo.png" rel="icon">
-  <link href="https://www.gestou.com.br/img/logo.png" rel="apple-touch-icon">
+  <link href="/img/logo.png" rel="icon">
+  <link href="/img/logo.png" rel="apple-touch-icon">
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Montserrat:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
-  <link href="https://www.gestou.com.br/vendor/aos/aos.css" rel="stylesheet">
-  <link href="https://www.gestou.com.br/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://www.gestou.com.br/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="https://www.gestou.com.br/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-  <link href="https://www.gestou.com.br/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="https://www.gestou.com.br/vendor/remixicon/remixicon.css" rel="stylesheet">
-  <link href="https://www.gestou.com.br/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <link href="/vendor/aos/aos.css" rel="stylesheet">
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="/vendor/remixicon/remixicon.css" rel="stylesheet">
+  <link href="/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
 
   <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous" />
 
   <!-- Template Main CSS File -->
-  <link href="https://www.gestou.com.br/css/style.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
   <style>
     .btn-get-started {
       font-family: "Montserrat", sans-serif;
@@ -64,7 +64,7 @@
     <div class="container d-flex align-items-center justify-content-between">
 
       <div class="logo">
-        <h1><a href="index"><img src="https://www.gestou.com.br/img/gestou-logo.png" height="40" alt="Logo Gestou Amarelo"></img></a></h1>
+        <h1><a href="index"><img src="/img/gestou-logo.png" height="40" alt="Logo Gestou Amarelo"></img></a></h1>
       </div>
 
       <nav id="navbar" class="navbar">
@@ -73,10 +73,10 @@
           <li class="dropdown" style="cursor: pointer"><a href="#" class="nav-link">Serviços<i class="bi bi-chevron-down"></i></a>
             <ul>
           </li>
-          <li><a href="https://www.gestou.com.br/admin/login">Administrador</a></li>
-          <li><a href="https://www.gestou.com.br/app/login">Holerite Digital</a></li>
-          <li><a href="https://www.gestou.com.br/validar">Validar Holerite</a></li>
-          <li><a href="https://www.gestou.com.br/download">Download</a></li>
+          <li><a href="/admin/login">Administrador</a></li>
+          <li><a href="/app/login">Holerite Digital</a></li>
+          <li><a href="/validar">Validar Holerite</a></li>
+          <li><a href="/download">Download</a></li>
         </ul>
         </li>
         <li><a href="#features" class="nav-link scrollto">Recursos</a></li>
@@ -128,7 +128,7 @@
           </div>
         </div>
         <div class="col-lg-4 order-1 order-lg-2 hero-img" data-aos="zoom-out" data-aos-delay="300">
-          <img src="https://www.gestou.com.br/img/hero-img.png" class="img-fluid animated" alt="Image Hero Page">
+          <img src="/img/hero-img.png" class="img-fluid animated" alt="Image Hero Page">
         </div>
       </div>
     </div>
@@ -159,7 +159,7 @@
         <div class="row">
           <div class="col-xl-5 col-lg-6 d-flex justify-content-center align-items-stretch m-auto" data-aos="fade-right">
             <video controls="" controlslist="nodownload" style="width: 100%; height: 54%;">
-              <source src="https://www.gestou.com.br/img/gestou.mp4" type="video/mp4">
+              <source src="/img/gestou.mp4" type="video/mp4">
             </video>
           </div>
 
@@ -266,7 +266,7 @@
 
         <div class="row content align-items-center">
           <div class="col-md-4" data-aos="fade-right">
-            <img src="https://www.gestou.com.br/img/details-1.png" class="img-fluid" alt="Portal Administrativo">
+            <img src="/img/details-1.png" class="img-fluid" alt="Portal Administrativo">
           </div>
           <div class="col-md-8 pt-4" data-aos="fade-up">
             <h3>Portal Administrativo</h3>
@@ -279,7 +279,7 @@
 
         <div class="row content align-items-center">
           <div class="col-md-4 order-1 order-md-2" data-aos="fade-left">
-            <img src="https://www.gestou.com.br/img/details-3.png" class="img-fluid" alt="Aplicativo">
+            <img src="/img/details-3.png" class="img-fluid" alt="Aplicativo">
           </div>
           <div class="col-md-8 pt-5 order-2 order-md-1" data-aos="fade-up">
             <h3 class="pb-3">Aplicativo</h3>
@@ -526,17 +526,17 @@
               <li><i class="bx bx-chevron-right"></i> <a href="#about">Serviços</a></li>
               <li><i class="bx bx-chevron-right"></i> <a href="#features">Recursos</a></li>
               <li><i class="bx bx-chevron-right"></i> <a href="#parceiros">Parceiros</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="https://www.gestou.com.br/contato">Contato</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="/contato">Contato</a></li>
             </ul>
           </div>
 
           <div class="col-lg-4 col-md-6 footer-links">
             <h4>Nossos Serviços</h4>
             <ul>
-              <li><i class="bx bx-chevron-right"></i> <a href="https://www.gestou.com.br/admin/login">Administrador</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="https://www.gestou.com.br/app/login">Holerite Digital</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="https://www.gestou.com.br/validar">Validar Holerite</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="https://www.gestou.com.br/download">Download</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="/admin/login">Administrador</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="/app/login">Holerite Digital</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="/validar">Validar Holerite</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="/download">Download</a></li>
             </ul>
           </div>
 
@@ -563,16 +563,16 @@
 </html>
 
 <!-- Vendor JS Files -->
-<script src="https://www.gestou.com.br/vendor/purecounter/purecounter.js"></script>
-<script src="https://www.gestou.com.br/vendor/aos/aos.js"></script>
-<script src="https://www.gestou.com.br/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="https://www.gestou.com.br/vendor/glightbox/js/glightbox.min.js"></script>
-<script src="https://www.gestou.com.br/vendor/swiper/swiper-bundle.min.js"></script>
+<script src="/vendor/purecounter/purecounter.js"></script>
+<script src="/vendor/aos/aos.js"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/glightbox/js/glightbox.min.js"></script>
+<script src="/vendor/swiper/swiper-bundle.min.js"></script>
 
 <!-- Template Main JS File -->
-<script src="https://www.gestou.com.br/js/main.js"></script>
+<script src="/js/main.js"></script>
 
-<script src="https://www.gestou.com.br/vendor/jquery/jquery.min.js"></script>
+<script src="/vendor/jquery/jquery.min.js"></script>
 
 <!-- RECAPTCHA -->
 <script src='https://www.google.com/recaptcha/api.js'></script>

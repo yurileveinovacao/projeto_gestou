@@ -10,7 +10,7 @@ if (isset($_POST['fpesquisa'])) {
     foreach (selectGESDOC_conteudo(strtoupper($tmpPesquisa)) as $resultados) {
         if (!empty($resultados)) {
             //echo 'Array preenchido !!!! <br>';
-            echo '<a href="https://gestou.com.br/novo/doc/pagina.php?id_doc='. $resultados['id_doc'].'">'. '<li>' . $resultados['grupo'] . ' - '. $resultados['titulo'] . '</li>' . '<br>' .'</a>';
+            echo '<a href="/doc/pagina.php?id_doc='. $resultados['id_doc'].'">'. '<li>' . $resultados['grupo'] . ' - '. $resultados['titulo'] . '</li>' . '<br>' .'</a>';
         }else{
             echo 'Array vazio !!!! <br>';
         }

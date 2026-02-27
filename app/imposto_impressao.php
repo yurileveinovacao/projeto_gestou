@@ -4,6 +4,7 @@
 
 require 'restrito.php';
 require 'util.php';
+require_once __DIR__.'/../config/app.php';
 
 ?>
 
@@ -283,7 +284,7 @@ require_once __DIR__.'/../config/database.php';
                             <h3 class="mb-0">CARTÃO DE PONTOS <br> ?php echo $periodo; ?></h3>
                         </td> -->
                         <td class="text-right" style="width: 50%; vertical-align: bottom;">
-                            <h3 class="mb-0">https://www.gestou.com.br<br>
+                            <h3 class="mb-0"><?= $app_url ?><br>
                             </h3>
                         </td>
                     </tr>

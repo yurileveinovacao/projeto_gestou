@@ -63,7 +63,7 @@ foreach(selectVW_ADMIN_GACESSO_situac($id_mas_situac) as $situac_usa){
 
         echo "<script language=javascript>
         alert('Seu usuário está inativo!');
-        location.href = 'https://www.gestou.com.br/master/login';
+        location.href = '/master/login';
         </script>";   
 
     }

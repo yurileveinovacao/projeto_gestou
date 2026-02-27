@@ -8,6 +8,7 @@ require_once "iuds_pdo.php";
 
 //ARQUIVO DE UTILITÁRIOS
 require_once "util.php";
+require_once __DIR__.'/../config/app.php';
 
 // reset variavel de sessao para limpar o valor caso tenha editado uma empresa antes
 unset($_SESSION["id_emp_master"]);
@@ -361,7 +362,7 @@ $filtro_analise = $_SESSION["filtro_analise"];
 
                                                                 if ($linha["analise"] == 2) {
 
-                                                                    $link = "https://www.gestou.com.br/validar_email?token=" . $linha["token_usa"];
+                                                                    $link = $app_url . "/validar_email?token=" . $linha["token_usa"];
 
                                                                 ?>
 

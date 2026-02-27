@@ -31,8 +31,8 @@ $datinc = date('Y-m-d H:i:s');
 $datatu = date('Y-m-d H:i:s');
 
 // Variaveis para apontar o erro caso não seja possivel interpretar o arquivo
-$erro_1 = 'https://www.gestou.com.br/admin/erro/erro_1'; //erro generico
-$erro_3 = 'https://www.gestou.com.br/admin/erro/erro_3'; //erro arquivo anexado
+$erro_1 = '/admin/erro/erro_1'; //erro generico
+$erro_3 = '/admin/erro/erro_3'; //erro arquivo anexado
 
 foreach (buscaRaizCNPJ($id_emp_default) as $resultado_raiz) {
     $raiz_cnpj = $resultado_raiz['raiz_cnpj'];
@@ -44,7 +44,7 @@ foreach (selectVW_ADMIN_GACESSO_situac($id_usa_situac) as $situac_usa) {
     if ($situac_usa['situac'] == 0) {
         echo "<script language=javascript>
         alert('Seu usuário está inativo!');
-        location.href = 'https://www.gestou.com.br/admin/login';
+        location.href = '/admin/login';
         </script>";
     }
 }

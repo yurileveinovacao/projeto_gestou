@@ -4,6 +4,7 @@
 
 require 'restrito.php';
 require 'util.php';
+require_once __DIR__.'/../config/app.php';
 
 ?>
 
@@ -131,7 +132,7 @@ require_once __DIR__.'/../config/database.php';
 
             <tr>
 
-                <td><img src="https://www.gestou.com.br/upload/empresa/<?= $imagem_empresa; ?>" alt="logo_empresa"></img></td>
+                <td><img src="<?= $app_url ?>/upload/empresa/<?= $imagem_empresa; ?>" alt="logo_empresa"></img></td>
                 <td><?= $nome_relatorio; ?><br><?= $nome_empresa; ?></td>
                 <td>DATA: <?= date("d/m/Y"); ?><br>HORA: <?= date("H:m:s"); ?></td>
 
