@@ -341,3 +341,31 @@ Started: 2026-02-26
   - healthcheck.php deve testar conexão real (SELECT 1) em vez de apenas verificar se variáveis existem
   - Cloud Run usa healthcheck endpoint para liveness/readiness probes — retorno rápido é essencial
 ---
+
+## 2026-02-26 - MIG-012 - Criar checklist de testes
+- Criado docs/test-checklist.md com checklist completo de testes por módulo
+- 9 seções principais:
+  1. Site Público (raiz/) — páginas estáticas, formulários de contato, validação/downloads
+  2. Admin (Painel RH) — auth, CRUD colaboradores, uploads, OCR (holerite/IRRF/ponto), emails (12), relatórios, config
+  3. App (Portal Colaborador) — login por CPF/email/telefone, reset de senha, dados pessoais, holerites, espelho ponto, IR, benefícios, comunicação RH, empresa, documentos, QR code
+  4. Master (Super-Admin) — auth, gestão empresas, gestão usuários admin, gestão super-admins, permissões, menus/docs, aprovação/chamados, serviços background
+  5. CreateEmployee — cadastro via token (formulário, validação, criação)
+  6. CreateAccount — auto-registro (formulário, validação CNPJ, criação)
+  7. Testes Transversais — sessões PostgreSQL, uploads/storage (local+GCS), emails SMTP, conexão banco, URLs/redirects, OCR Google Vision, configs centralizados
+  8. Docker e Deploy — build, compose, healthcheck, scripts de migração
+  9. Segurança — credenciais, .gitignore, sessões, prepared statements
+- Total: ~200 itens de teste cobrindo todos os fluxos críticos
+- Notas de execução: ordem de testes, dados sanitizados, regressão, Mailtrap para emails
+- Arquivos criados: docs/test-checklist.md
+- Arquivos alterados: prd.json (MIG-012 passes: true)
+- **Verificações:**
+  - docs/test-checklist.md existe: PASS
+  - Seções Site, Admin, App, Master, CreateEmployee, CreateAccount: PASS (6/6)
+  - Admin inclui testes OCR (holerite: 10 refs, IRRF: 4 refs, ponto: 4 refs): PASS
+  - App inclui testes login CPF, email, telefone: PASS (seções separadas 3.1, 3.2, 3.3)
+  - Testes transversais (sessões, uploads, emails): PASS (seções 7.1, 7.2, 7.3)
+- **Learnings:**
+  - Admin é o módulo mais complexo: 11 subseções de teste (auth, CRUD, upload, 3x OCR, validações OCR, emails, relatórios, config)
+  - App tem 3 métodos de login distintos (CPF, email, telefone) — cada um precisa de testes separados
+  - Testes transversais são essenciais porque a migração tocou em infraestrutura compartilhada (sessões, SMTP, storage, URLs, OCR)
+---

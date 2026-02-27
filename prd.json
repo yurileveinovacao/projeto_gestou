@@ -197,7 +197,7 @@
         "Inclui seção de testes transversais (sessões, uploads, emails)"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": "Cobrir todos os fluxos críticos. Admin tem o maior número de testes por ser o módulo mais complexo."
     }
   ]
