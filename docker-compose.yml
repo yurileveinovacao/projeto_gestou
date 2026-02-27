@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: gestou
+      DB_USER: gestou
+      DB_PASS: gestou_dev
+      APP_URL: "http://localhost:8080"
+      SMTP_HOST: smtp-relay.gmail.com
+      SMTP_PORT: "587"
+      SMTP_USER: ""
+      SMTP_PASS: ""
+      SMTP_FROM: contato@leveinovacao.com.br
+      SMTP_FROM_NAME: GESTOU
+      STORAGE_DRIVER: local
+      CONTACT_EMAIL: contato@leveinovacao.com.br
+    volumes:
+      - .:/var/www/html
+      - upload_data:/var/www/html/upload
+    depends_on:
+      - db
+
+  db:
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: gestou
+      POSTGRES_USER: gestou
+      POSTGRES_PASSWORD: gestou_dev
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./config/schema:/docker-entrypoint-initdb.d
+
+volumes:
+  pgdata:
+  upload_data:

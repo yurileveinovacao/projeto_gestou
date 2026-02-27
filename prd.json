@@ -117,7 +117,7 @@
         "Arquivo .dockerignore existe"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "Cloud Run exige porta 8080. Vendors não estão no git — serão copiados de /vendors/ para dentro da imagem. Estrutura: /vendors/site/, /vendors/admin/, /vendors/app/, /vendors/master/ cada um com suas pastas vendor_*. Criar diretórios de upload vazios dentro da imagem."
     },
     {

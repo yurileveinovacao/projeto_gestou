@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+
+# Dev container
+.devcontainer
+
+# Uploads (mounted as volume or stored in Cloud Storage)
+upload/
+admin/uploads/
+master/upload/
+downloads/
+
+# Backups and dumps
+*.dump
+*.backup
+*.tar.xz
+*.tar
+*.zip
+*.rar
+*.gz
+
+# Media
+*.mp4
+*.mov
+*.avi
+img/gallery/
+img/images_email/
+*.apk
+
+# Temp and cache
+*.log
+logs/
+cache/
+tmp/
+temp/
+sessions/
+*.tmp
+*.bak
+
+# IDE and OS
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~

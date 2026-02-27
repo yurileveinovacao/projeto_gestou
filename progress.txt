@@ -14,7 +14,10 @@ Started: 2026-02-26
 - OCR: admin/vision_computer.php e admin/controller/vision_computer_irrf_post.php chamam Azure Vision
 - 83 templates em admin/layout/ (holerite/irrf/ponto) esperam formato Azure readResults
 - Vendors no .gitignore — não estão no repo, serão copiados no Docker build
+- Vendors por módulo: admin/ (~341MB, 10 dirs), app/ (~87MB, 6 dirs), master/ (~50MB, 3 dirs), raiz (~30MB, vendor/ + vendor_envio_email/)
 - Arquivos .example na raiz: conexao.php.example e conexao_pdo.php.example mostram formato das conexões
+- Docker: php:7.4-apache, porta 8080 (Cloud Run), mod_rewrite + AllowOverride All para .htaccess
+- Uploads: upload/ (8.7GB), admin/uploads/ (36MB), master/upload/ — montados como volume ou Cloud Storage
 
 ---
 
@@ -172,4 +175,41 @@ Started: 2026-02-26
   - GC com intervalo: `NOW() - CAST('1440 seconds' AS INTERVAL)` — mais legível que timestamp math
   - session_set_save_handler($handler, true) — segundo param true registra session_write_close como shutdown function
   - require_once garante que múltiplos requires de restrito.php (que inclui session.php → database.php) não criam conexões duplicadas
+---
+
+## 2026-02-26 - MIG-007 - Criar Dockerfile e docker-compose.yml
+- Criado Dockerfile na raiz:
+  - Base: php:7.4-apache
+  - Extensões: pgsql, pdo_pgsql, gd, curl, zip, intl, mbstring (com deps de sistema)
+  - Apache: mod_rewrite habilitado, AllowOverride All, porta 8080 (Cloud Run)
+  - COPY do código e vendors para /var/www/html/
+  - Fallback: copia database.php.example → database.php se o original não existir (gitignored)
+  - Cria diretórios de upload vazios com permissões www-data
+- Criado docker-compose.yml:
+  - Service web: build local, porta 8080, env vars (DB_HOST=db, APP_URL, SMTP_*, STORAGE_DRIVER, CONTACT_EMAIL)
+  - Service db: postgres:17, porta 5432, POSTGRES_DB/USER/PASSWORD
+  - Volume pgdata para persistir dados do PostgreSQL
+  - Volume upload_data para uploads
+  - Mount config/schema → docker-entrypoint-initdb.d (auto-executa sessions.sql)
+  - Dev: monta código local como volume (.:/var/www/html)
+- Criado .dockerignore:
+  - Exclui: .git, .devcontainer, uploads (8.7GB), backups, media, temp, IDE
+  - NÃO exclui vendors (precisam ser copiados para imagem)
+- Arquivos criados: Dockerfile, docker-compose.yml, .dockerignore
+- **Verificações:**
+  - Dockerfile existe na raiz: PASS
+  - Base php:7.4-apache: PASS
+  - 7 extensões (pgsql, pdo_pgsql, gd, curl, zip, intl, mbstring): PASS
+  - Apache porta 8080: PASS
+  - COPY do código e vendors: PASS
+  - docker-compose.yml com web + db (postgres:17): PASS
+  - docker-compose.yml com DB_HOST=db: PASS
+  - .dockerignore existe: PASS
+- **Learnings:**
+  - Vendors estão embarcados em cada módulo (admin/vendor_*, app/vendor_*, etc.) — ~500MB total
+  - .htaccess files ainda têm URLs hardcoded (www.gestou.com.br) — não são .php então não foram migrados no MIG-005
+  - php:7.4-apache precisa de libonig-dev para mbstring, libjpeg62-turbo-dev para gd com JPEG
+  - Cloud Run: porta 8080 obrigatória, configurar via sed nos ports.conf e sites-available
+  - config/database.php.example também usa getenv() — funciona como fallback para Docker builds sem o arquivo real
+  - docker-entrypoint-initdb.d do postgres:17 executa .sql automaticamente — ideal para criar php_sessions
 ---
