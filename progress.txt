@@ -11,8 +11,9 @@ Started: 2026-02-26
 - URLs centralizadas em config/app.php: $app_url (getenv APP_URL), $contact_email (getenv CONTACT_EMAIL)
 - Redirects usam caminhos relativos (/admin/login); emails/QR/print usam $app_url
 - Conexão files legados (conexao.php, conexao_pdo.php) redirecionam para config/database.php
-- OCR: admin/vision_computer.php e admin/controller/vision_computer_irrf_post.php chamam Azure Vision
-- 83 templates em admin/layout/ (holerite/irrf/ponto) esperam formato Azure readResults
+- OCR: config/ocr.php com googleVisionOCR() — envia PDF base64 para Google Vision files:annotate, converte para formato Azure
+- 83 templates em admin/layout/ (holerite/irrf/ponto) esperam formato Azure: analyzeResult.readResults[n].page, .lines[m].text
+- Google Vision files:annotate suporta até 5 páginas por request — config/ocr.php faz batching automático
 - Vendors no .gitignore — não estão no repo, serão copiados no Docker build
 - Vendors por módulo: admin/ (~341MB, 10 dirs), app/ (~87MB, 6 dirs), master/ (~50MB, 3 dirs), raiz (~30MB, vendor/ + vendor_envio_email/)
 - Arquivos .example na raiz: conexao.php.example e conexao_pdo.php.example mostram formato das conexões
@@ -240,4 +241,42 @@ Started: 2026-02-26
   - GCS REST API não precisa de library PHP — cURL + metadata server token é suficiente no Cloud Run
   - Diretórios de upload por tenant: upload/{CNPJ}/..., upload/beneficios/.../{RAIZ_CNPJ}/, admin/uploads/
   - Permissões de mkdir variam: 0755 (cursos) vs 0777 (benefícios) — storageUpload() usa 0755 por padrão
+---
+
+## 2026-02-26 - MIG-009 - Migrar OCR de Azure Vision para Google Cloud Vision
+- Criado config/ocr.php com duas funções:
+  - googleVisionOCR($pdfFilePath): lê PDF, base64 encode, envia para Google Vision files:annotate API (síncrono)
+  - convertGoogleToAzureFormat($googlePageResponses): converte resposta Google para formato Azure (analyzeResult.readResults)
+- Lê GOOGLE_VISION_API_KEY via getenv()
+- Batching automático: processa até 5 páginas por request, faz múltiplos requests para PDFs maiores (safety limit 100 páginas)
+- Formato de saída compatível com 83 templates em admin/layout/:
+  - analyzeResult.readResults[n].page (número da página)
+  - analyzeResult.readResults[n].lines[m].text (texto da linha)
+  - analyzeResult.readResults[n].lines[m].words[w].text (palavras individuais, para compatibilidade total)
+- Refatorado admin/vision_computer.php:
+  - Removido: 2 chamadas cURL Azure (POST analyze + GET results), sleep(10), parsing de headers
+  - Adicionado: require config/ocr.php, chamada googleVisionOCR($location)
+- Refatorado admin/controller/vision_computer_irrf_post.php:
+  - Mesmas mudanças que vision_computer.php
+- Removidas credenciais Azure: Ocp-Apim-Subscription-Key, cognitiveservices.azure.com
+- Nenhum arquivo em admin/layout/ foi alterado
+- Arquivos criados: config/ocr.php
+- Arquivos alterados: admin/vision_computer.php, admin/controller/vision_computer_irrf_post.php
+- **Verificações:**
+  - config/ocr.php existe com googleVisionOCR($pdfFilePath): PASS
+  - Função lê GOOGLE_VISION_API_KEY de getenv(): PASS
+  - Envia PDF base64 para Google Vision (síncrono files:annotate): PASS
+  - convertGoogleToAzureFormat() converte para formato Azure: PASS
+  - admin/vision_computer.php usa config/ocr.php: PASS
+  - admin/controller/vision_computer_irrf_post.php usa config/ocr.php: PASS
+  - grep 'Ocp-Apim-Subscription-Key' admin/ = zero: PASS
+  - grep 'cognitiveservices.azure.com' admin/ = zero: PASS
+  - grep 'sleep(10)' nos 2 arquivos = zero: PASS
+  - NENHUM arquivo em admin/layout/ alterado: PASS
+- **Learnings:**
+  - Azure Vision era assíncrono (POST analyze → sleep(10) → GET results), Google Vision files:annotate é síncrono — elimina latência de 10s
+  - Templates em admin/layout/ só acessam .page e .lines[].text — não usam boundingBox, confidence, ou words
+  - Google Vision fullTextAnnotation.text contém texto completo separado por \n — split simples cria as "lines"
+  - Google Vision files:annotate aceita parâmetro pages[] (1-indexed) para especificar quais páginas processar
+  - Azure API key estava hardcoded no código (1e62c619e8d24934aca329709a979b60) — agora removida e substituída por env var
 ---
