@@ -99,7 +99,7 @@
         "Verificar: grep -rn 'PgSessionHandler' config/session.php retorna resultado"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "Sessões em filesystem não funcionam no Cloud Run (stateless). A tabela php_sessions precisa ter: id VARCHAR(128) PK, data TEXT, last_access TIMESTAMP. Adicionar session.php ANTES do session_start() existente — NÃO mover o session_start()."
     },
     {

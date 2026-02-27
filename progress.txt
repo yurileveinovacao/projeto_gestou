@@ -148,3 +148,28 @@ Started: 2026-02-26
   - perl -pi -e com `!$done++` é útil para inserir linha apenas na primeira ocorrência de um padrão
   - doc/ files usavam paths com `/novo/doc/` (legado) — corrigido para `/doc/`
 ---
+
+## 2026-02-26 - MIG-006 - Implementar sessões via PostgreSQL
+- Criado config/schema/sessions.sql com CREATE TABLE php_sessions (id VARCHAR(128) PK, data TEXT, last_access TIMESTAMP) e índice para GC
+- Criado config/session.php com classe PgSessionHandler implementando SessionHandlerInterface
+  - Usa $pdo de config/database.php (require_once)
+  - Métodos: open, close, read, write (UPSERT via ON CONFLICT), destroy, gc
+  - GC usa intervalo PostgreSQL (CAST(:lifetime AS INTERVAL))
+  - Registra handler via session_set_save_handler() automaticamente ao ser incluído
+- Integrado nos 3 restrito.php (admin, app, master): require_once ANTES do session_start() existente
+- Arquivos criados: config/session.php, config/schema/sessions.sql
+- Arquivos alterados: admin/restrito.php, app/restrito.php, master/restrito.php
+- **Verificações:**
+  - config/session.php existe com PgSessionHandler implements SessionHandlerInterface: PASS
+  - PgSessionHandler usa $pdo de config/database.php: PASS
+  - config/schema/sessions.sql existe com CREATE TABLE php_sessions: PASS
+  - admin/restrito.php require session.php ANTES de session_start(): PASS
+  - app/restrito.php require session.php ANTES de session_start(): PASS
+  - master/restrito.php require session.php ANTES de session_start(): PASS
+  - grep PgSessionHandler config/session.php retorna resultado: PASS
+- **Learnings:**
+  - PostgreSQL UPSERT: `INSERT ... ON CONFLICT (id) DO UPDATE SET ...` — ideal para write de sessão
+  - GC com intervalo: `NOW() - CAST('1440 seconds' AS INTERVAL)` — mais legível que timestamp math
+  - session_set_save_handler($handler, true) — segundo param true registra session_write_close como shutdown function
+  - require_once garante que múltiplos requires de restrito.php (que inclui session.php → database.php) não criam conexões duplicadas
+---
