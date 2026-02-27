@@ -24,7 +24,7 @@ if (isset($_POST["codigo"])) {
 
         if(!empty($arquivo)){
 
-          session_start();
+          require_once __DIR__."/config/session.php"; session_start();
 
         $_SESSION['download_id_validador'] = $id_validador;
         $_SESSION['download_raiz_validador'] = $raiz_validador;
@@ -36,7 +36,7 @@ if (isset($_POST["codigo"])) {
 
         }else{
 
-        session_start();
+        require_once __DIR__."/config/session.php"; session_start();
 
         $_SESSION['download_id_validador'] = $id_validador;
         $_SESSION['download_raiz_validador'] = $raiz_validador;

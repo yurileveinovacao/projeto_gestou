@@ -2,7 +2,7 @@
 
 require_once 'restrito.php';
 
-session_start();
+require_once __DIR__."/../config/session.php"; session_start();
 
 if ($_SESSION['id_usa'] == 1 || $_SESSION['id_usa'] == 34 || $_SESSION['id_usa'] == 50) {
 

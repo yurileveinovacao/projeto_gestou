@@ -47,7 +47,7 @@ if (isset($_POST["btn_submit"])) {
                     // Se a situac_senha for == 1, direciona para a troca de senha
                     if ($situac_senha_banco == 1) {
 
-                        session_start();
+                        require_once __DIR__."/../../config/session.php"; session_start();
 
                         // Todas as opções validadas
                         $_SESSION['id_usa'] = $id_usa_banco;

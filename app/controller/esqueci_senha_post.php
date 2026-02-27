@@ -124,7 +124,7 @@ function iniciar_sessao_recuperacao_senha($cpf)
 {
     // Inicia a sessão para recuperação de senha
     session_name("troca_senha");
-    session_start();
+    require_once __DIR__."/../../config/session.php"; session_start();
 
     $_SESSION["troca_senha_cpf"] = $cpf;
 }

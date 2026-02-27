@@ -1,7 +1,7 @@
 <?php
 
 //Faz o START da Sessão
-session_start();
+require_once __DIR__."/../config/session.php"; session_start();
 
 require_once __DIR__.'/../config/database.php';
 require_once 'iuds_app.php';

@@ -93,7 +93,7 @@ try {
 	if (isset($_REQUEST['consulta-codigo'])) {
 
 		session_name("senha_admin");
-		session_start();
+		require_once __DIR__."/../config/session.php"; session_start();
 
 		$codigo = $_POST['codigo'];
 		$email = $_SESSION["senha_admin_email"];

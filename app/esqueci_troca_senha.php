@@ -46,7 +46,7 @@
 
 				<?php
 				session_name("troca_senha");
-				session_start();
+				require_once __DIR__."/../config/session.php"; session_start();
 
 				if (!isset($_SESSION['troca_senha_cpf'])) {
 

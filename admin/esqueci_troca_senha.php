@@ -118,7 +118,7 @@ try {
 	if (isset($_REQUEST['troca-senha'])) {
 
 		session_name("senha_admin");
-		session_start();
+		require_once __DIR__."/../config/session.php"; session_start();
 
 		$senha = $_POST['senha'];
 		$confirm_senha = $_POST['confirm_senha'];

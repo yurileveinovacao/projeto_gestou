@@ -11,7 +11,7 @@
 
     <?php
 
-session_start();
+require_once __DIR__."/../config/session.php"; session_start();
 session_destroy();
 
 header('location:login');

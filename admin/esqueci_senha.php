@@ -110,7 +110,7 @@ try {
 				$email = $consulta_email['email'];
 
 				session_name("senha_admin");
-				session_start();
+				require_once __DIR__."/../config/session.php"; session_start();
 
 				$_SESSION["senha_admin_email"] = $email;
 
