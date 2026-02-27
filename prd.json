@@ -182,7 +182,7 @@
         "Scripts têm comentários explicando o que cada seção faz"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "migrate-database.sh: pg_dump + pg_restore + criar tabela php_sessions. migrate-uploads.sh: gsutil rsync para Cloud Storage. validate-migration.sh: testa conexão, verifica tabelas, verifica views. healthcheck.php: endpoint HTTP 200/500."
     },
     {

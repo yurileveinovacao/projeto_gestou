@@ -308,3 +308,36 @@ Started: 2026-02-26
   - VPC Connector é necessário para Cloud Run acessar Cloud SQL via IP privado (~US$ 15-20/mês fixo); alternativa é Cloud SQL Auth Proxy como sidecar
   - Domain mapping direto no Cloud Run é mais simples mas Load Balancer oferece mais controle (CDN, WAF, múltiplos backends)
 ---
+
+## 2026-02-26 - MIG-011 - Criar scripts de migração de dados
+- Criado diretório scripts/ com 4 arquivos:
+  - scripts/migrate-database.sh: pg_dump do banco de origem → pg_restore no Cloud SQL, cria tabela php_sessions
+    - Variáveis: SOURCE_DB_* e TARGET_DB_* (host, port, name, user, pass)
+    - 5 passos: verificar ferramentas → dump → criar banco destino → restore → criar php_sessions
+    - Usa --no-owner --no-privileges --clean --if-exists para portabilidade
+  - scripts/migrate-uploads.sh: gsutil rsync para sincronizar uploads para GCS
+    - Sincroniza 3 diretórios: upload/, admin/uploads/, master/upload/
+    - Suporta DRY_RUN=true para testar sem copiar
+    - gsutil rsync -r é idempotente (pode re-executar com segurança)
+  - scripts/validate-migration.sh: validação pós-migração do banco
+    - 5 testes: conexão → tabelas principais (empresa, colaborador, php_sessions) → views → contagem de registros → configurações PG
+    - Contadores de PASS/FAIL com resumo final e exit code
+  - scripts/healthcheck.php: endpoint HTTP para Cloud Run health checks
+    - Testa conexão PDO e pg_connect via config/database.php
+    - Retorna JSON com status, timestamp, php_version
+    - HTTP 200 (healthy) ou HTTP 500 (unhealthy)
+- Todos os scripts .sh são executáveis (chmod +x)
+- Todos os scripts têm comentários explicando cada seção
+- Arquivos criados: scripts/migrate-database.sh, scripts/migrate-uploads.sh, scripts/validate-migration.sh, scripts/healthcheck.php
+- **Verificações:**
+  - scripts/migrate-database.sh existe e é executável: PASS
+  - scripts/migrate-uploads.sh existe e é executável: PASS
+  - scripts/validate-migration.sh existe e é executável: PASS
+  - scripts/healthcheck.php existe e testa conexão ao banco: PASS
+  - Scripts têm comentários explicando seções: PASS (44, 36, 47, 10 linhas de comentário)
+- **Learnings:**
+  - pg_dump -F p (plain text) é mais portável que -F c (custom) para Cloud SQL — permite pg_restore via psql
+  - gsutil rsync -r -n faz dry-run — útil para validar antes de copiar ~8.7GB de uploads
+  - healthcheck.php deve testar conexão real (SELECT 1) em vez de apenas verificar se variáveis existem
+  - Cloud Run usa healthcheck endpoint para liveness/readiness probes — retorno rápido é essencial
+---
