@@ -1,3 +1,4 @@
+<?php require_once __DIR__."/../config/session.php"; session_start(); session_destroy(); header("Location: /app/login"); exit; ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -11,7 +12,6 @@
 
     <?php
 
-require_once __DIR__."/../config/session.php"; session_start();
 session_destroy();
 
 header("location:login");
