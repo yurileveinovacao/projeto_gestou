@@ -2,15 +2,23 @@
 # =============================================================================
 # migrate-database.sh — Migração do banco PostgreSQL para Cloud SQL (GCP)
 #
-# Faz pg_dump do banco de origem e pg_restore no Cloud SQL de destino.
+# Restaura um dump PostgreSQL (formato custom) no Cloud SQL via Cloud SQL Proxy.
 # Também garante que a tabela php_sessions existe no destino.
 #
 # Uso:
-#   ./scripts/migrate-database.sh
+#   ./scripts/migrate-database.sh /caminho/para/dump_gestou.backup
 #
-# Variáveis de ambiente necessárias:
-#   SOURCE_DB_HOST, SOURCE_DB_PORT, SOURCE_DB_NAME, SOURCE_DB_USER, SOURCE_DB_PASS
-#   TARGET_DB_HOST, TARGET_DB_PORT, TARGET_DB_NAME, TARGET_DB_USER, TARGET_DB_PASS
+# Pré-requisitos:
+#   - cloud-sql-proxy binário disponível no PATH ou diretório atual
+#   - gcloud autenticado (gcloud auth login + gcloud auth application-default login)
+#   - Docker instalado (usa container postgres:17 para pg_restore compatível)
+#
+# Variáveis de ambiente (opcionais, têm defaults):
+#   DB_USER       — Usuário do Cloud SQL (default: gestou)
+#   DB_NAME       — Nome do banco (default: gestou)
+#   DB_PASS       — Senha do banco (obrigatória)
+#   PROXY_PORT    — Porta local do proxy (default: 5434)
+#   CLOUD_SQL_INSTANCE — Connection name (default: gestou-489010:us-central1:gestou-db)
 # =============================================================================
 
 set -euo pipefail
@@ -21,35 +29,18 @@ set -euo pipefail
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 # ---------------------------------------------------------------------------
-# Configuração do banco de ORIGEM (hosting atual)
+# Configuração
 # ---------------------------------------------------------------------------
-SOURCE_DB_HOST="${SOURCE_DB_HOST:?Defina SOURCE_DB_HOST}"
-SOURCE_DB_PORT="${SOURCE_DB_PORT:-5432}"
-SOURCE_DB_NAME="${SOURCE_DB_NAME:?Defina SOURCE_DB_NAME}"
-SOURCE_DB_USER="${SOURCE_DB_USER:?Defina SOURCE_DB_USER}"
-SOURCE_DB_PASS="${SOURCE_DB_PASS:?Defina SOURCE_DB_PASS}"
+DUMP_FILE="${1:?Uso: $0 /caminho/para/dump.backup}"
+DB_USER="${DB_USER:-gestou}"
+DB_NAME="${DB_NAME:-gestou}"
+DB_PASS="${DB_PASS:?Defina DB_PASS com a senha do Cloud SQL}"
+PROXY_PORT="${PROXY_PORT:-5434}"
+CLOUD_SQL_INSTANCE="${CLOUD_SQL_INSTANCE:-gestou-489010:us-central1:gestou-db}"
 
-# ---------------------------------------------------------------------------
-# Configuração do banco de DESTINO (Cloud SQL)
-# ---------------------------------------------------------------------------
-TARGET_DB_HOST="${TARGET_DB_HOST:?Defina TARGET_DB_HOST}"
-TARGET_DB_PORT="${TARGET_DB_PORT:-5432}"
-TARGET_DB_NAME="${TARGET_DB_NAME:?Defina TARGET_DB_NAME}"
-TARGET_DB_USER="${TARGET_DB_USER:?Defina TARGET_DB_USER}"
-TARGET_DB_PASS="${TARGET_DB_PASS:?Defina TARGET_DB_PASS}"
-
-# ---------------------------------------------------------------------------
-# Diretório para armazenar o dump temporário
-# ---------------------------------------------------------------------------
-DUMP_DIR="${DUMP_DIR:-/tmp}"
-DUMP_FILE="${DUMP_DIR}/gestou_dump_$(date +%Y%m%d_%H%M%S).sql"
-
-# ---------------------------------------------------------------------------
-# Caminho para o schema de sessões
-# ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SESSIONS_SQL="${SCRIPT_DIR}/../config/schema/sessions.sql"
 
@@ -57,104 +48,138 @@ echo -e "${YELLOW}=== Migração de Banco de Dados — Gestou ===${NC}"
 echo ""
 
 # ---------------------------------------------------------------------------
-# Passo 1: Verificar ferramentas necessárias
+# Passo 1: Verificar pré-requisitos
 # ---------------------------------------------------------------------------
-echo -e "${YELLOW}[1/5] Verificando ferramentas...${NC}"
+echo -e "${YELLOW}[1/5] Verificando pré-requisitos...${NC}"
 
-for cmd in pg_dump pg_restore psql; do
-    if ! command -v "$cmd" &> /dev/null; then
-        echo -e "${RED}ERRO: $cmd não encontrado. Instale o PostgreSQL client.${NC}"
-        exit 1
-    fi
-done
-
-echo -e "${GREEN}  pg_dump, pg_restore e psql disponíveis.${NC}"
-
-# ---------------------------------------------------------------------------
-# Passo 2: Exportar dump do banco de origem
-# ---------------------------------------------------------------------------
-echo ""
-echo -e "${YELLOW}[2/5] Exportando dump do banco de origem...${NC}"
-echo "  Host: ${SOURCE_DB_HOST}:${SOURCE_DB_PORT}"
-echo "  Banco: ${SOURCE_DB_NAME}"
-echo "  Dump: ${DUMP_FILE}"
-
-PGPASSWORD="${SOURCE_DB_PASS}" pg_dump \
-    -h "${SOURCE_DB_HOST}" \
-    -p "${SOURCE_DB_PORT}" \
-    -U "${SOURCE_DB_USER}" \
-    -d "${SOURCE_DB_NAME}" \
-    --no-owner \
-    --no-privileges \
-    --clean \
-    --if-exists \
-    -F p \
-    -f "${DUMP_FILE}"
+if [ ! -f "${DUMP_FILE}" ]; then
+    echo -e "${RED}ERRO: Arquivo ${DUMP_FILE} não encontrado.${NC}"
+    exit 1
+fi
 
 DUMP_SIZE=$(du -h "${DUMP_FILE}" | cut -f1)
-echo -e "${GREEN}  Dump concluído (${DUMP_SIZE}).${NC}"
+echo -e "  Dump: ${DUMP_FILE} (${DUMP_SIZE})"
+
+# Localizar cloud-sql-proxy
+PROXY_BIN=""
+if command -v cloud-sql-proxy &> /dev/null; then
+    PROXY_BIN="cloud-sql-proxy"
+elif [ -f "./cloud-sql-proxy" ]; then
+    PROXY_BIN="./cloud-sql-proxy"
+else
+    echo -e "${RED}ERRO: cloud-sql-proxy não encontrado.${NC}"
+    echo "  Baixe de: https://cloud.google.com/sql/docs/postgres/sql-proxy"
+    exit 1
+fi
+
+if ! command -v docker &> /dev/null; then
+    echo -e "${RED}ERRO: docker não encontrado.${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}  Tudo OK.${NC}"
 
 # ---------------------------------------------------------------------------
-# Passo 3: Criar banco de destino (se não existir)
+# Passo 2: Iniciar Cloud SQL Proxy
 # ---------------------------------------------------------------------------
 echo ""
-echo -e "${YELLOW}[3/5] Preparando banco de destino...${NC}"
-echo "  Host: ${TARGET_DB_HOST}:${TARGET_DB_PORT}"
-echo "  Banco: ${TARGET_DB_NAME}"
+echo -e "${YELLOW}[2/5] Iniciando Cloud SQL Proxy...${NC}"
+echo "  Instância: ${CLOUD_SQL_INSTANCE}"
+echo "  Porta local: ${PROXY_PORT}"
 
-# Tenta criar o banco; ignora erro se já existir
-PGPASSWORD="${TARGET_DB_PASS}" psql \
-    -h "${TARGET_DB_HOST}" \
-    -p "${TARGET_DB_PORT}" \
-    -U "${TARGET_DB_USER}" \
-    -d "postgres" \
-    -c "CREATE DATABASE ${TARGET_DB_NAME};" 2>/dev/null || true
+${PROXY_BIN} --port ${PROXY_PORT} ${CLOUD_SQL_INSTANCE} &
+PROXY_PID=$!
 
-echo -e "${GREEN}  Banco de destino pronto.${NC}"
+# Aguardar proxy iniciar
+sleep 5
+
+# Verificar se proxy está rodando
+if ! kill -0 ${PROXY_PID} 2>/dev/null; then
+    echo -e "${RED}ERRO: Cloud SQL Proxy falhou ao iniciar.${NC}"
+    echo "  Verifique se gcloud está autenticado:"
+    echo "    gcloud auth login"
+    echo "    gcloud auth application-default login"
+    exit 1
+fi
+
+echo -e "${GREEN}  Proxy iniciado (PID: ${PROXY_PID}).${NC}"
+
+# Cleanup: matar proxy ao sair
+trap "kill ${PROXY_PID} 2>/dev/null; echo '  Proxy encerrado.'" EXIT
 
 # ---------------------------------------------------------------------------
-# Passo 4: Restaurar dump no destino
+# Passo 3: Restaurar dump via pg_restore (container Docker)
 # ---------------------------------------------------------------------------
 echo ""
-echo -e "${YELLOW}[4/5] Restaurando dump no banco de destino...${NC}"
+echo -e "${YELLOW}[3/5] Restaurando dump no Cloud SQL...${NC}"
+echo "  Usando container postgres:17 para compatibilidade de versão."
 
-PGPASSWORD="${TARGET_DB_PASS}" psql \
-    -h "${TARGET_DB_HOST}" \
-    -p "${TARGET_DB_PORT}" \
-    -U "${TARGET_DB_USER}" \
-    -d "${TARGET_DB_NAME}" \
-    -f "${DUMP_FILE}" \
-    --single-transaction \
-    2>&1 | tail -5
+DUMP_DIR=$(dirname "${DUMP_FILE}")
+DUMP_BASENAME=$(basename "${DUMP_FILE}")
+
+docker run --rm --network host \
+    -v "${DUMP_DIR}:/data" \
+    -e PGPASSWORD="${DB_PASS}" \
+    postgres:17 \
+    pg_restore \
+        -h 127.0.0.1 \
+        -p ${PROXY_PORT} \
+        -U ${DB_USER} \
+        -d ${DB_NAME} \
+        --no-owner \
+        --no-privileges \
+        "/data/${DUMP_BASENAME}"
 
 echo -e "${GREEN}  Restauração concluída.${NC}"
 
 # ---------------------------------------------------------------------------
-# Passo 5: Criar tabela php_sessions (necessária para Cloud Run)
+# Passo 4: Criar tabela php_sessions
 # ---------------------------------------------------------------------------
 echo ""
-echo -e "${YELLOW}[5/5] Criando tabela php_sessions...${NC}"
+echo -e "${YELLOW}[4/5] Criando tabela php_sessions...${NC}"
 
-if [ -f "${SESSIONS_SQL}" ]; then
-    PGPASSWORD="${TARGET_DB_PASS}" psql \
-        -h "${TARGET_DB_HOST}" \
-        -p "${TARGET_DB_PORT}" \
-        -U "${TARGET_DB_USER}" \
-        -d "${TARGET_DB_NAME}" \
-        -f "${SESSIONS_SQL}"
-    echo -e "${GREEN}  Tabela php_sessions criada/verificada.${NC}"
-else
-    echo -e "${RED}  AVISO: ${SESSIONS_SQL} não encontrado. Crie a tabela manualmente.${NC}"
-fi
+docker run --rm --network host \
+    -e PGPASSWORD="${DB_PASS}" \
+    postgres:17 \
+    psql -h 127.0.0.1 -p ${PROXY_PORT} -U ${DB_USER} -d ${DB_NAME} \
+    -c "CREATE TABLE IF NOT EXISTS php_sessions (id VARCHAR(128) PRIMARY KEY, data TEXT NOT NULL DEFAULT '', last_access TIMESTAMP NOT NULL DEFAULT NOW()); CREATE INDEX IF NOT EXISTS idx_php_sessions_last_access ON php_sessions(last_access);"
+
+echo -e "${GREEN}  Tabela php_sessions criada/verificada.${NC}"
 
 # ---------------------------------------------------------------------------
-# Resumo final
+# Passo 5: Validação rápida
+# ---------------------------------------------------------------------------
+echo ""
+echo -e "${YELLOW}[5/5] Validando migração...${NC}"
+
+TABLE_COUNT=$(docker run --rm --network host \
+    -e PGPASSWORD="${DB_PASS}" \
+    postgres:17 \
+    psql -h 127.0.0.1 -p ${PROXY_PORT} -U ${DB_USER} -d ${DB_NAME} \
+    -t -A -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public';")
+
+echo -e "  Total de tabelas: ${TABLE_COUNT}"
+
+# Verificar tabelas-chave do Gestou
+for TABLE in GESEMP GESUSU GESACE GESACP php_sessions; do
+    EXISTS=$(docker run --rm --network host \
+        -e PGPASSWORD="${DB_PASS}" \
+        postgres:17 \
+        psql -h 127.0.0.1 -p ${PROXY_PORT} -U ${DB_USER} -d ${DB_NAME} \
+        -t -A -c "SELECT CASE WHEN EXISTS (SELECT FROM information_schema.tables WHERE table_name='${TABLE}') THEN 'sim' ELSE 'nao' END;")
+    if [ "${EXISTS}" = "sim" ]; then
+        echo -e "  ${GREEN}✓${NC} ${TABLE} existe"
+    else
+        echo -e "  ${RED}✗${NC} ${TABLE} NÃO encontrada"
+    fi
+done
+
+# ---------------------------------------------------------------------------
+# Resumo
 # ---------------------------------------------------------------------------
 echo ""
 echo -e "${GREEN}=== Migração concluída com sucesso ===${NC}"
-echo "  Dump salvo em: ${DUMP_FILE}"
 echo ""
 echo -e "${YELLOW}Próximos passos:${NC}"
-echo "  1. Execute scripts/validate-migration.sh para verificar a integridade"
-echo "  2. Execute scripts/migrate-uploads.sh para migrar os arquivos"
-echo "  3. Teste o healthcheck: curl http://SEU_DOMINIO/scripts/healthcheck.php"
+echo "  1. Sincronizar uploads: gcloud storage rsync ./upload/ gs://gestou-uploads-489010/upload/ --recursive"
+echo "  2. Testar healthcheck: curl https://gestou.leveinovacao.com.br/scripts/healthcheck.php"
