@@ -53,6 +53,25 @@ foreach ($json_base->analyzeResult->readResults as $key) {
 
         //Exibição da variavel texto gobal em loop
         // echo "<br>Valores Registro:" . $var_text . "<br>";
+        // Detecção antecipada do ano (Google Vision retorna ano antes do CNPJ)
+        if ($encontra_anoexe == 0) {
+            // Formato 1: 'Exercicio de 2023' numa linha só
+            if (preg_match('/Exercicio\s+de\s+(20[0-9]{2})/i', $var_text, $match_exe)) {
+                $anoexe = $match_exe[1];
+                $anocal = $anoexe - 1;
+                $encontra_anoexe = 1;
+            }
+            // Formato 2: 'EXERCICIO:' numa linha, '2026' na próxima
+            if (preg_match('/EXERCICIO:/i', $var_text)) {
+                $encontra_exercicio_label = 1;
+            }
+            if (isset($encontra_exercicio_label) && $encontra_exercicio_label == 1 && preg_match('/^20[0-9]{2}$/', trim($var_text))) {
+                $anoexe = trim($var_text);
+                $anocal = $anoexe - 1;
+                $encontra_anoexe = 1;
+                $encontra_exercicio_label = 0;
+            }
+        }
 
         // if (preg_match('/Fonte Pagadora Pessoa Juridica|FONTE PAGADORA/i', $text)) {
         //     // Atribui a página atual como começo para o registro
@@ -393,6 +412,8 @@ if (!empty($retorno_cnpj)) {
                     // echo "Paginas a gravar:" . $pagina_loop . "<br>";
                 }
 
+                $dirPath = "../../../upload/beneficios/irrf/" . $raiz_cnpj;
+                if (!is_dir($dirPath)) { mkdir($dirPath, 0777, true); }
                 // Salvamento do arquivo em diretorio 
                 $pdf->Output('F', '../../../upload/beneficios/irrf/' . $raiz_cnpj . '/' . $validador . '.pdf');
             } else {
