@@ -25,7 +25,6 @@ downloads/
 *.mov
 *.avi
 img/gallery/
-img/images_email/
 *.apk
 
 # Temp and cache

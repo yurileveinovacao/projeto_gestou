@@ -60,6 +60,7 @@ sessions/
 # RISCO DE SEGURANCA
 # ========================================
 phpinfo*.php
+scripts/test-*.php
 
 # ========================================
 # ARQUIVOS DE BACKUP/COPIA
