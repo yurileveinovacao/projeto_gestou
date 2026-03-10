@@ -52,6 +52,26 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         $var_text = $key2->text;
         $var_text = str_replace("R.G.:", "R.G.:", str_replace("Ó", "O", str_replace("ó", "o", str_replace("Ç", "C", str_replace("Õ", "O", str_replace("(", "", str_replace("ç", "c", str_replace("õ", "o", str_replace("í", "i", str_replace("á", "a", str_replace("Á", "A", str_replace("Í", "I", str_replace("ê", "e", str_replace("Ê", "E", $var_text))))))))))))));
 
+        // Detecção antecipada do ano (Google Vision retorna ano antes do CNPJ)
+        if ($encontra_anoexe == 0) {
+            // Formato 1: 'Exercicio de 2023' numa linha só
+            if (preg_match('/Exercicio\s+de\s+(20[0-9]{2})/i', $var_text, $match_exe)) {
+                $anoexe = $match_exe[1];
+                $anocal = $anoexe - 1;
+                $encontra_anoexe = 1;
+            }
+            // Formato 2: 'EXERCICIO:' numa linha, '2026' na próxima
+            if (preg_match('/EXERCICIO:/i', $var_text)) {
+                $encontra_exercicio_label = 1;
+            }
+            if (isset($encontra_exercicio_label) && $encontra_exercicio_label == 1 && preg_match('/^20[0-9]{2}$/', trim($var_text))) {
+                $anoexe = trim($var_text);
+                $anocal = $anoexe - 1;
+                $encontra_anoexe = 1;
+                $encontra_exercicio_label = 0;
+            }
+        }
+
         if (preg_match('/Responsavel pelas Informacoes|RESPONSAVEL PELAS INFORMACOES/i', $var_text)) {
             $pagina_fim = $page_number;
         }
@@ -194,6 +214,8 @@ if (!empty($retorno_cnpj)) {
                     $pdf->useTemplate($tplIdx);
                 }
 
+                $dirPath = "../../../upload/beneficios/irrf/" . $raiz_cnpj;
+                if (!is_dir($dirPath)) { mkdir($dirPath, 0777, true); }
                 // Salvamento do arquivo em diretorio
                 $pdf->Output('F', '../../../upload/beneficios/irrf/' . $raiz_cnpj . '/' . $validador . '.pdf');
             } else {
