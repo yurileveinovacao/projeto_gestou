@@ -81,25 +81,28 @@ foreach ($json_base->analyzeResult->readResults as $key) {
             echo "<br>Valores Registro:" . $var_text . "<br>";
         }
         //////////////////////////////////////////////////////////////////////////////////////////////////////
-        if ($competenciaEmLinhas == 1) {
+        if ($competenciaEmLinhas >= 1 && $competenciaEmLinhas <= 5) {
             $competencia .= $var_text . " ";
             // Verifica se encontrou o ano no formato "2023"
             if (preg_match('/\b\d{4}\b/', $var_text)) {
-                $competenciaEmLinhas = 2;
+                $competenciaEmLinhas = 0;
+            } else {
+                $competenciaEmLinhas++;
             }
         }
 
         //LOCALIZAR COMPETENCIA
-        if (preg_match('/\b(Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro) de \d{4}\b/i', $var_text)) {
+        if (preg_match('/\b(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro) de \d{4}\b/i', $var_text)) {
             $competencia = $var_text;
-        } else    if ($competenciaEmLinhas == 0 && preg_match('/\b(Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/i', $var_text)) {
+        } else    if ($competenciaEmLinhas == 0 && preg_match('/\b(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/i', $var_text)) {
             $competencia = $var_text . " ";
             $competenciaEmLinhas = 1;
         }
 
         // Verifica e identifica o CNPJ, caso enconte numera o registro
         if (preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/i', $var_text)) {
-            $cnpj = remover_nao_numericos($var_text);
+            preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/', $var_text, $cnpj_match);
+            $cnpj = remover_nao_numericos($cnpj_match[0]);
             if ($cnpj == $cnpjCompleto) {
                 $cnpj_consulta = $cnpj;
             }
@@ -109,46 +112,48 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         if ($cnpj_consulta == $cnpjCompleto) {
             $retorno_cnpj = 1;
 
-            if ($encontra_cod_integracao == 1) {
+            if ($encontra_cod_integracao >= 1 && $encontra_cod_integracao <= 5) {
 
                 $regex = '/\d+/i';
-                preg_match($regex, $var_text, $resposta);
+                if (preg_match($regex, $var_text, $resposta)) {
+                    $cpf = $resposta[0];
+                    $cpf = remover_nao_numericos($cpf);
 
-                $cpf = $resposta[0];
-                $cpf = remover_nao_numericos($cpf);
+                    if ($cpf != $cpfConsultas) {
+                        $encLiquidoP2 = 1; //SEMPRE QUE ACHAR O CPF VAI BUSCAR O VALOR LIQUIDO DO CPF ENCONTRADO
+                        $cpfConsultas = $cpf;
+                        $contagem_Cpf++;
+                        $contagCpfPag++;
+                        $pagina_ini = $page_number;
+                        $concat_cpf .= "||" . $cpfConsultas;
+                        $concat_pagina_ini .= "||" . $pagina_ini;
+                        $pagina_fim = $page_number;
 
-                if ($cpf != $cpfConsultas) {
-                    $encLiquidoP2 = 1; //SEMPRE QUE ACHAR O CPF VAI BUSCAR O VALOR LIQUIDO DO CPF ENCONTRADO
-                    $cpfConsultas = $cpf;
-                    $contagem_Cpf++;
-                    $contagCpfPag++;
-                    $pagina_ini = $page_number;
-                    $concat_cpf .= "||" . $cpfConsultas;
-                    $concat_pagina_ini .= "||" . $pagina_ini;
-                    $pagina_fim = $page_number;
+                        $valorliq = 0;
+                        $forcavalor = 0;
 
-                    $valorliq = 0;
-                    $forcavalor = 0;
+                        if ($contagCpfPag > 1) {
+                            $encDois_Cpfs = 1;
+                            // echo "2 CPFS diferentes por pagina";
+                        }
+                        // echo "<br>CPF cont page:" . $encDois_Cpfs . "<br>";
+                    } else {
 
-                    if ($contagCpfPag > 1) {
-                        $encDois_Cpfs = 1;
-                        // echo "2 CPFS diferentes por pagina";
+                        if ($valorliq == 1) {
+
+                            $encLiquidoP2 = 1;
+                            unset($valorliq);
+                        }
+
+                        $pagina_fim = $page_number;
+                        $pagina_espelhada = 1;
+                        // echo "<br>CPF IGUAL O DO REGISTRO ANTERIOR:" . $cpfConsultas . "<br>";
                     }
-                    // echo "<br>CPF cont page:" . $encDois_Cpfs . "<br>";
+                    $regarq =   $contagem_Cpf;
+                    unset($encontra_cod_integracao);
                 } else {
-
-                    if ($valorliq == 1) {
-
-                        $encLiquidoP2 = 1;
-                        unset($valorliq);
-                    }
-
-                    $pagina_fim = $page_number;
-                    $pagina_espelhada = 1;
-                    // echo "<br>CPF IGUAL O DO REGISTRO ANTERIOR:" . $cpfConsultas . "<br>";
+                    $encontra_cod_integracao++;
                 }
-                $regarq =   $contagem_Cpf;
-                unset($encontra_cod_integracao);
             }
 
             if ($encLiquidoP2 == 1 && $encLiquidoP1 == 1) {
@@ -169,11 +174,13 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         }
 
         // Caso encontre a filial, ele atribui valor da proxima casa para formar o cod usuario
-        if ($encontra_filial == 1) {
-            $codusu = $var_text;
-            $codIntegraca = $codusu;
-            $codIntegraca = remover_nao_numericos($codIntegraca);
-            unset($encontra_filial);
+        if ($encontra_filial >= 1 && $encontra_filial <= 5) {
+            $codIntegraca = remover_nao_numericos($var_text);
+            if (!empty($codIntegraca)) {
+                unset($encontra_filial);
+            } else {
+                $encontra_filial++;
+            }
         }
 
         // Identificar Filial
@@ -266,8 +273,10 @@ if (empty($encDois_Cpfs)) {
                                 // echo "Paginas a gravar:" . $pagina_loop . "<br>";
                             }
 
-                            // Salvamento do arquivo em diretorio 
+                            // Salvamento do arquivo em diretorio
                             if ($desativaInsercao  == 0) {
+                                $output_dir = '../../../upload/beneficios/holerite/' . $raiz_cnpj;
+                                if (!is_dir($output_dir)) { mkdir($output_dir, 0777, true); }
                                 $pdf->Output('F', '../../../upload/beneficios/holerite/' . $raiz_cnpj . '/' . $validador . '.pdf');
                             }
                         }

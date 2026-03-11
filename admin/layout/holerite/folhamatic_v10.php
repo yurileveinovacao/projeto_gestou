@@ -8,9 +8,9 @@ require_once '../vendor_fpdi/autoload.php'; //chamada da biblioteca do FPDI
 use setasign\Fpdi\Fpdi;
 
 //VARIAVEIS DE CONTROLE
-$desativaInsercao = 1; //0 ativa - 1 desativa
-$exibeVarTexto = 1; //0 nao exibe - 1 exibe 
-$exibeRegistros = 1; //0 nao exibe - 1 exibe
+$desativaInsercao = 0; //0 ativa - 1 desativa
+$exibeVarTexto = 0; //0 nao exibe - 1 exibe
+$exibeRegistros = 0; //0 nao exibe - 1 exibe
 
 //Variavies estao vindo do util.php/////////////////////////////////////////////////////////////////////
 //$raiz_cnpj
@@ -22,7 +22,7 @@ $exibeRegistros = 1; //0 nao exibe - 1 exibe
 //$id_usa
 
 //Atribuição de variaveis//////////////////////////////////////////////////////////////////////////////
-$cnpjCompleto = '44.178.441/0001-53';
+$cnpjCompleto = $cnpj_completo;
 $idEmpDefault = $id_emp_default;
 $dataInclusao = $datinc;
 
@@ -34,6 +34,7 @@ $codIntegraca = null;
 $cpfConsultas = null;
 $valorLiquido = null;
 $encDois_Cpfs = null;
+$encontra_cpf_nextline = 0;
 
 // Variavel que recebe a descricao da importacao
 $descricao_recibo = $_SESSION['descricao'];
@@ -79,13 +80,14 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
         //////////////////////////////////////////////////////////////////////////////////////////////////////
 
         //LOCALIZAR COMPETENCIA
-        if (preg_match('/[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]+\/\d{4}/i', $var_text)) {
-            $competencia = $var_text;
+        if (preg_match('/[A-Za-z]+\/\d{4}/i', $var_text, $match_competencia)) {
+            $competencia = $match_competencia[0];
         }
 
         // Verifica e identifica o CNPJ, caso enconte numera o registro
         if (preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/i', $var_text)) {
-            $cnpj = remover_nao_numericos($var_text);
+            preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/', $var_text, $cnpj_match);
+            $cnpj = remover_nao_numericos($cnpj_match[0]);
             if ($cnpj == $cnpjCompleto) {
                 $cnpj_consulta = $cnpj;
             }
@@ -93,6 +95,32 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
 
         if ($cnpj_consulta == $cnpjCompleto) {
             $retorno_cnpj = 1;
+
+            // Flag CPF next-line
+            if ($encontra_cpf_nextline >= 1 && $encontra_cpf_nextline <= 5) {
+                $var_text_cpf = str_replace(" ", ".", $var_text);
+                if (preg_match('/[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}/i', $var_text_cpf, $resposta)) {
+                    $cpf = remover_nao_numericos($resposta[0]);
+                    $encontra_cpf_nextline = 0;
+                    if ($cpf != $cpfConsultas) {
+                        $encLiquidoP1 = 1;
+                        $cpfConsultas = $cpf;
+                        $contagem_Cpf++;
+                        $contagCpfPag++;
+                        $pagina_ini = $page_number;
+                        $concat_cpf .= "||" . $cpfConsultas;
+                        $concat_pagina_ini .= "||" . $pagina_ini;
+                        $pagina_fim = $page_number;
+                        if ($contagCpfPag > 1) { $encDois_Cpfs = 1; }
+                    } else {
+                        $pagina_fim = $page_number;
+                        $pagina_espelhada = 1;
+                    }
+                    $regarq = $contagem_Cpf;
+                } else {
+                    $encontra_cpf_nextline++;
+                }
+            }
 
             // Verifica e identifica o CPF
             if (preg_match('/CPF:/i', $var_text)) {
@@ -127,6 +155,8 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
                         // echo "<br>CPF IGUAL O DO REGISTRO ANTERIOR:" . $cpfConsultas . "<br>";
                     }
                     $regarq =   $contagem_Cpf;
+                } else {
+                    $encontra_cpf_nextline = 1;
                 }
             }
             //ENCONTROU VALOR LIQUIDO/////////////////////////////////////////////////////////////////////////////////////////
@@ -226,8 +256,10 @@ if (empty($encDois_Cpfs)) {
                                 // echo "Paginas a gravar:" . $pagina_loop . "<br>";
                             }
 
-                            // Salvamento do arquivo em diretorio 
+                            // Salvamento do arquivo em diretorio
                             if ($desativaInsercao  == 0) {
+                                $output_dir = '../../../upload/beneficios/holerite/' . $raiz_cnpj;
+                                if (!is_dir($output_dir)) { mkdir($output_dir, 0777, true); }
                                 $pdf->Output('F', '../../../upload/beneficios/holerite/' . $raiz_cnpj . '/' . $validador . '.pdf');
                             }
                         }

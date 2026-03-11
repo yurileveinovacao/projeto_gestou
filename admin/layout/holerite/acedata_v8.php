@@ -82,13 +82,14 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         //////////////////////////////////////////////////////////////////////////////////////////////////////
 
         //LOCALIZAR COMPETENCIA
-        if (preg_match('/[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ ]+\S\/\d{4}/i', $var_text)) {
-            $competencia = $var_text;
+        if (preg_match('/[A-Za-z]+\/\d{4}/i', $var_text, $match_competencia)) {
+            $competencia = $match_competencia[0];
         }
 
         // Verifica e identifica o CNPJ, caso enconte numera o registro
         if (preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/i', $var_text)) {
-            $cnpj = remover_nao_numericos($var_text);
+            preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/', $var_text, $cnpj_match);
+            $cnpj = remover_nao_numericos($cnpj_match[0]);
             if ($cnpj == $cnpjCompleto) {
                 $cnpj_consulta = $cnpj;
             }
@@ -97,10 +98,9 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         if ($cnpj_consulta == $cnpjCompleto) {
             $retorno_cnpj = 1;
 
-            if ($encontra_cod_integracao == 1) {
-                if (preg_match('/[0-9]+/i', $var_text)) {
+            if ($encontra_cod_integracao >= 1 && $encontra_cod_integracao <= 5) {
+                if (preg_match('/[0-9]+/i', $var_text, $codusu)) {
 
-                    preg_match('/[0-9]+/i', $var_text, $codusu);
                     $cod_integracao = $codusu[0];
                     unset($encontra_cod_integracao);
                     $cpf  =   $cod_integracao;
@@ -127,6 +127,8 @@ foreach ($json_base->analyzeResult->readResults as $key) {
                         // echo "<br>CPF IGUAL O DO REGISTRO ANTERIOR:" . $cpfConsultas . "<br>";
                     }
                     $regarq =   $contagem_Cpf;
+                } else {
+                    $encontra_cod_integracao++;
                 }
             }
 
@@ -230,8 +232,10 @@ if (empty($encDois_Cpfs)) {
                                 // echo "Paginas a gravar:" . $pagina_loop . "<br>";
                             }
 
-                            // Salvamento do arquivo em diretorio 
+                            // Salvamento do arquivo em diretorio
                             if ($desativaInsercao  == 0) {
+                                $output_dir = '../../../upload/beneficios/holerite/' . $raiz_cnpj;
+                                if (!is_dir($output_dir)) { mkdir($output_dir, 0777, true); }
                                 $pdf->Output('F', '../../../upload/beneficios/holerite/' . $raiz_cnpj . '/' . $validador . '.pdf');
                             }
                         }

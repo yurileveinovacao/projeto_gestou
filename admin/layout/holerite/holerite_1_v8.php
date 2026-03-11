@@ -35,6 +35,8 @@ $codIntegraca = null;
 $cpfConsultas = null;
 $valorLiquido = null;
 $encDois_Cpfs = null;
+$encontra_competencia_date = 0;
+$competencia_date1 = '';
 
 // Variavel que recebe a descricao da importacao
 $descricaoRecibo = $_SESSION['descricao'];
@@ -79,14 +81,24 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
         }
 
         //LOCALIZAR COMPETENCIA
-        //if (preg_match('/[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ ]+\/\d{4}/i', $var_text)) {
-        if (preg_match('/[0-9]{2}\/[0-9]{2}\/[0-9]{4}\s[a-z A-Z]\s[0-9]{2}\/[0-9]{2}\/[0-9]{4}/i', $var_text)) {
+        if (preg_match('/[0-9]{2}\/[0-9]{2}\/[0-9]{4}\s*[a-zA-Z]\s*[0-9]{2}\/[0-9]{2}\/[0-9]{4}/i', $var_text)) {
             $competencia = $var_text;
+        } else if ($encontra_competencia_date >= 1 && $encontra_competencia_date <= 5) {
+            if (preg_match('/[0-9]{2}\/[0-9]{2}\/[0-9]{4}/', $var_text, $date_match)) {
+                $competencia = $competencia_date1 . " a " . $date_match[0];
+                $encontra_competencia_date = 0;
+            } else {
+                $encontra_competencia_date++;
+            }
+        } else if (empty($competencia) && preg_match('/[0-9]{2}\/[0-9]{2}\/[0-9]{4}/', $var_text, $date_match)) {
+            $competencia_date1 = $date_match[0];
+            $encontra_competencia_date = 1;
         }
 
         // Verifica e identifica o CNPJ, caso enconte numera o registro
         if (preg_match('/[0-9]{14}/i', $var_text)) {
-            $cnpj = remover_nao_numericos($var_text);
+            preg_match('/[0-9]{14}/', $var_text, $cnpj_match);
+            $cnpj = $cnpj_match[0];
             if ($cnpj == $cnpjCompleto) {
                 $cnpj_consulta = $cnpj;
             }
@@ -95,7 +107,7 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
         if ($cnpj_consulta == $cnpjCompleto) {
             $retorno_cnpj = 1;
 
-            if ($encontra_codintegracao == 1) {
+            if ($encontra_codintegracao >= 1 && $encontra_codintegracao <= 5) {
                 // Encontra 000000 na string
                 //if (preg_match('/[0-9]{6}/i', $var_text)) {
                 if (preg_match('/[0-9]{6}\s(\w+\s)+/i', $var_text)) {
@@ -126,6 +138,8 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
                     }
                     $regarq =   $contagem_Cpf;
                     unset($encontra_codintegracao);
+                } else {
+                    $encontra_codintegracao++;
                 }
             }
             //ENCONTROU VALOR LIQUIDO/////////////////////////////////////////////////////////////////////////////////////////
@@ -226,8 +240,10 @@ if (empty($dois_cpfs)) {
                                 }
                                 // echo "Paginas a gravar:" . $pagina_loop . "<br>";
                             }
-                            // Salvamento do arquivo em diretorio 
+                            // Salvamento do arquivo em diretorio
                             if ($desativaInsercao  == 0) {
+                                $output_dir = '../../../upload/beneficios/holerite/' . $raiz_cnpj;
+                                if (!is_dir($output_dir)) { mkdir($output_dir, 0777, true); }
                                 $pdf->Output('F', '../../../upload/beneficios/holerite/' . $raiz_cnpj . '/' . $validador . '.pdf');
                             }
                         }
