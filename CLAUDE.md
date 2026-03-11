@@ -79,7 +79,7 @@ gcloud run deploy gestou \
   --vpc-connector=gestou-connector \
   --add-cloudsql-instances=gestou-489010:us-central1:gestou-db \
   --set-env-vars="DB_HOST=/cloudsql/gestou-489010:us-central1:gestou-db,DB_PORT=5432,DB_NAME=gestou,DB_USER=gestou,APP_URL=https://gestou.leveinovacao.com.br,SMTP_HOST=smtp.gmail.com,SMTP_PORT=587,SMTP_USER=contato@leveinovacao.com.br,SMTP_FROM=contato@leveinovacao.com.br,SMTP_FROM_NAME=GESTOU,STORAGE_DRIVER=local,CONTACT_EMAIL=contato@leveinovacao.com.br" \
-  --set-secrets="DB_PASS=db-password:latest,SMTP_PASS=smtp-password:latest" \
+  --set-secrets="DB_PASS=db-password:latest,SMTP_PASS=smtp-password:latest,GOOGLE_VISION_API_KEY=google-vision-api-key:latest" \
   --allow-unauthenticated
 ```
 
