@@ -28,6 +28,7 @@ $dataInclusao = $datinc;
 
 $encLiquidoP1 = 0;
 $encLiquidoP2 = 0;
+$last_monetary = '';
 $contagem_Cpf = 0;
 $contagCpfPag = 0;
 $codIntegraca = null;
@@ -137,20 +138,15 @@ foreach ($json_base->analyzeResult->readResults as $key) {
                 $encontra_cod_integracao = 1;
             }
 
-            if ($encLiquidoP2 == 1 && $encLiquidoP1 == 1) {
-                $valorLiquido = $var_text;
-                $valorLiquido_consulta = str_replace("*", "", $var_text);
-                if ($valorLiquido_consulta != "") {
-                    $concat_valor_liquido = $concat_valor_liquido . "||" . $valorLiquido;
-                    // echo "<br>VALOR LIQUIDO:" . $valorLiquido . "<br>";
-                    unset($encLiquidoP1);
-                }
-                unset($encLiquidoP2);
+            // Rastrear último valor monetário
+            if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text)) {
+                $last_monetary = $var_text;
             }
 
-            // Verifica e identifica o valor liquido
-            if (preg_match('/VALOR LIQUIDO/i', $var_text)) {
-                $encLiquidoP2 = 1;
+            // Faixa IRRF: o valor monetário imediatamente anterior é o valor líquido
+            if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary)) {
+                $concat_valor_liquido = $concat_valor_liquido . "||" . $last_monetary;
+                $encLiquidoP1 = 0;
             }
 
             // Verifica e identifica o valor liquido
@@ -170,7 +166,8 @@ foreach ($json_base->analyzeResult->readResults as $key) {
 
     // Reset variveis
     unset($cnpj_consulta, $contagCpfPag, $pagina_ini, $pagina_fim, $complemento);
-    unset($encLiquidoP2, $encLiquidoP1);
+    unset($encLiquidoP1);
+    $last_monetary = '';
 }
 
 if ($exibeRegistros != 0) {
