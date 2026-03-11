@@ -39,6 +39,7 @@ $contagem_cpf = 0;
 $contagem_cpf_pagina = 0;
 $busca_por_cpf = 0;
 $busca_por_pis = 0;
+$encontra_pis_next = 0;
 
 
 // Foreach para realizar o loop das páginas
@@ -64,23 +65,8 @@ foreach ($json_base->analyzeResult->readResults as $key) {
             echo "<br>Valores Registro:" . $var_text . "<br>";
         }
         //////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Identificar Periodo de
-        //////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        // Verifica se a linha começa com um número (para ignorar as linhas que não contêm datas)
-        if (preg_match('/^\d/', $var_text)) {
-            // Extrai a data usando uma expressão regular
-            preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $var_text, $matches);
-
-            // Verifica se uma data foi encontrada e adiciona ao array
-            if (isset($matches[0])) {
-                $datas[] = $matches[0];
-            }
-        }
-        //////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
         // Verifica e identifica o CNPJ, caso enconte numera o registro
+        // (movido ANTES da coleta de datas para evitar capturar data de emissão do cabeçalho)
         if (preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/i', $var_text)) {
             $cnpj = str_replace(".", "", str_replace("/", "", str_replace("-", "", $var_text)));
             $cnpj = limpar_texto($cnpj);
@@ -97,6 +83,21 @@ foreach ($json_base->analyzeResult->readResults as $key) {
 
         if ($cnpj_consulta == $cnpj_completo) {
             $retorno_cnpj = 1;
+
+            // Identificar Periodo de — só coleta datas após CNPJ confirmado
+            // (evita capturar data de emissão do cabeçalho)
+            // Aceita data sozinha ou com texto após (ex: "20/12/2022 TER" do Google Vision)
+            if (preg_match('/^(\d{2}\/\d{2}\/\d{4})/', $var_text, $matches)) {
+                $datas[] = $matches[1];
+            }
+            // Fallback Google Vision: data concatenada com outro texto na mesma linha
+            if (empty($datas) || count($datas) < 2) {
+                if (preg_match('/\b(\d{2}\/\d{2}\/\d{4})\b/', $var_text, $matches_gv)) {
+                    if (empty($datas) || end($datas) !== $matches_gv[1]) {
+                        $datas[] = $matches_gv[1];
+                    }
+                }
+            }
 
             if ($encontra_cpf == 1) {
 
@@ -138,49 +139,57 @@ foreach ($json_base->analyzeResult->readResults as $key) {
                 unset($encontra_cpf);
             }
 
+            // Google Vision: flag da iteração anterior (label "PIS" sem número)
+            if ($encontra_pis_next == 1) {
+                $regex_pis = '/[0-9]{10}([0-9]|[1-9][0-9]|(1[0-9]{2})|(2[0-7][0-9])|(28[0-7]))\b/';
+                if (preg_match($regex_pis, $var_text, $resposta)) {
+                    $pis = limpar_texto($resposta[0]);
+                    $pis = limpa_zero($pis);
+                    if ($pis != $pis_consulta) {
+                        $pis_consulta = $pis;
+                        $contagem_cpf++;
+                        $contagem_cpf_pagina++;
+                        $pagina_ini = $page_number;
+                        $concat_cpf = $concat_cpf . "||" . $pis_consulta;
+                        $concat_pagina_ini = $concat_pagina_ini . "||" . $pagina_ini;
+                        $pagina_fim = $page_number;
+                        if ($contagem_cpf_pagina > 1) { $dois_cpfs = 1; }
+                    } else {
+                        $pagina_fim = $page_number;
+                        $pagina_espelhada = 1;
+                    }
+                    $regarq = $contagem_cpf;
+                }
+                unset($encontra_pis_next);
+            }
+
             if (preg_match('/PIS/i', $var_text)) {
-                $encontra_pis = 1;
                 $busca_por_pis = 1;
                 $busca_por_cpf = 0;
 
+                //REGEX PIS — tenta extrair da mesma linha
+                $regex_pis = '/[0-9]{10}([0-9]|[1-9][0-9]|(1[0-9]{2})|(2[0-7][0-9])|(28[0-7]))\b/';
+                if (preg_match($regex_pis, $var_text, $resposta)) {
+                    $pis = limpar_texto($resposta[0]);
+                    $pis = limpa_zero($pis);
 
-                if ($encontra_pis == 1) {
-
-                    //REGEX PIS
-                    if (preg_match('/[0-9]{10}([0-9]|[1-9][0-9]|(1[0-9]{2})|(2[0-7][0-9])|(28[0-7]))\b/', $var_text)) {
-                        $regex = '/[0-9]{10}([0-9]|[1-9][0-9]|(1[0-9]{2})|(2[0-7][0-9])|(28[0-7]))\b/';
-                        preg_match($regex, $var_text, $resposta);
-
-                        $pis = $resposta[0];
-                        $pis = limpar_texto($pis);
-                        $pis = limpa_zero($pis);
-
-                        if ($pis != $pis_consulta) {
-
-                            $pis_consulta = $pis;
-                            $contagem_cpf++;
-                            $contagem_cpf_pagina++;
-
-                            $pagina_ini = $page_number;
-
-                            $concat_cpf = $concat_cpf . "||" . $pis_consulta;
-                            $concat_pagina_ini = $concat_pagina_ini . "||" . $pagina_ini;
-
-                            $pagina_fim = $page_number;
-
-                            if ($contagem_cpf_pagina > 1) {
-                                $dois_cpfs = 1;
-                                // echo "2 CPFS diferentes por pagina";
-                            }
-                            // echo "<br>CPF cont page:" . $dois_cpfs . "<br>";
-                        } else {
-                            $pagina_fim = $page_number;
-                            $pagina_espelhada = 1;
-                            // echo "<br>CPF IGUAL O DO REGISTRO ANTERIOR:" . $pis_consulta . "<br>";
-                        }
-                        $regarq =   $contagem_cpf;
+                    if ($pis != $pis_consulta) {
+                        $pis_consulta = $pis;
+                        $contagem_cpf++;
+                        $contagem_cpf_pagina++;
+                        $pagina_ini = $page_number;
+                        $concat_cpf = $concat_cpf . "||" . $pis_consulta;
+                        $concat_pagina_ini = $concat_pagina_ini . "||" . $pagina_ini;
+                        $pagina_fim = $page_number;
+                        if ($contagem_cpf_pagina > 1) { $dois_cpfs = 1; }
+                    } else {
+                        $pagina_fim = $page_number;
+                        $pagina_espelhada = 1;
                     }
-                    unset($encontra_pis);
+                    $regarq = $contagem_cpf;
+                } else {
+                    // Google Vision: label "PIS" sem número — buscar na próxima linha
+                    $encontra_pis_next = 1;
                 }
             }
             // Verifica e identifica o valor liquido
@@ -287,9 +296,11 @@ if (empty($dois_cpfs)) {
                             // echo "Paginas a gravar:" . $pagina_loop . "<br>";
                         }
                     }
-                    // Salvamento do arquivo em diretorio 
+                    // Salvamento do arquivo em diretorio
                     if ($desativa_insert  == 0) {
-                        $pdf->Output('F', '../../../upload/beneficios/ponto/' . $raiz_cnpj . '/' . $validador . '.pdf');
+                        $dirPath = '../../../upload/beneficios/ponto/' . $raiz_cnpj;
+                        if (!is_dir($dirPath)) { mkdir($dirPath, 0777, true); }
+                        $pdf->Output('F', $dirPath . '/' . $validador . '.pdf');
                     }
 
                     if ($desativa_insert  == 0) {

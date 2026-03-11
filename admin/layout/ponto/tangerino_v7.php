@@ -66,22 +66,29 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         //// echo "<br>PERIODO:" . $periodo . "<br>";
         // }
 
-        // Verifica as datas e preenche o periodo
-        $pattern = '/[0-9]{2}\/?[0-9]{2}\/?[0-9]{4}/';
-        if (preg_match($pattern, $var_text, $matches)) {
-            $date = $matches[0];
-            //echo "count_data:". $count_data."<br>";
-            if ($count_data == 0) {
-                $date1 = $date;
-            } 
-            if ($count_data == 1) {
-                $date2 = $date;
-            } 
-            $count_data++;
+        // Identificar Periodo completo na mesma linha (ex: "01/10/2022 a 31/10/2022")
+        if (empty($periodo)) {
+            if (preg_match('/(\d{2}\/?\d{2}\/?\d{4})\s*a\s*(\d{2}\/?\d{2}\/?\d{4})/i', $var_text, $matches_periodo)) {
+                $periodo = $matches_periodo[1] . " a " . $matches_periodo[2];
+            }
         }
-        if (isset($date1) && isset($date2)) {
-            // As variáveis $date1 e $date2 estão preenchidas
-            $periodo = $date1." a ". $date2;
+
+        // Fallback: coleta 2 primeiras datas avulsas caso período não venha em uma linha
+        if (empty($periodo)) {
+            $pattern = '/[0-9]{2}\/?[0-9]{2}\/?[0-9]{4}/';
+            if (preg_match($pattern, $var_text, $matches)) {
+                $date = $matches[0];
+                if ($count_data == 0) {
+                    $date1 = $date;
+                }
+                if ($count_data == 1) {
+                    $date2 = $date;
+                }
+                $count_data++;
+            }
+            if (isset($date1) && isset($date2)) {
+                $periodo = $date1." a ". $date2;
+            }
         }
         //////////////////////////////////////////////////////////////////////////////////////////////////////
        
@@ -245,9 +252,11 @@ if (empty($dois_cpfs)) {
                         // echo "Paginas a gravar:" . $pagina_loop . "<br>";
                     }
                 }
-                    // Salvamento do arquivo em diretorio 
+                    // Salvamento do arquivo em diretorio
                     if ($desativa_insert  == 0) {
-                    $pdf->Output('F', '../../../upload/beneficios/ponto/' . $raiz_cnpj . '/' . $validador . '.pdf');
+                    $dirPath = '../../../upload/beneficios/ponto/' . $raiz_cnpj;
+                    if (!is_dir($dirPath)) { mkdir($dirPath, 0777, true); }
+                    $pdf->Output('F', $dirPath . '/' . $validador . '.pdf');
                 }
 
                 if ($desativa_insert  == 0) {

@@ -9,7 +9,7 @@ use setasign\Fpdi\Fpdi;
 
 $contagem_cpf = 0;
 $desativa_insert = 1; //0 ativa - 1 desativa
-$exibe_var_text = 0; //0 nao exibe - 1 exibe 
+$exibe_var_text = 0; //0 nao exibe - 1 exibe
 $exibe_registros = 1; //0 nao exibe - 1 exibe
 
 // Variavel que recebe a descricao da importacao
@@ -66,27 +66,32 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         //// echo "<br>PERIODO:" . $periodo . "<br>";
         // }
 
-        // Verifica as datas e preenche o periodo
-        $pattern = '/[0-9]{2}\/?[0-9]{2}\/?[0-9]{4}/';
-        if (preg_match($pattern, $var_text, $matches)) {
-            $date = $matches[0];
-            //echo "count_data:". $count_data."<br>";
-            if ($count_data == 0) {
-                $date1 = $date;
+        // Identificar Periodo completo na mesma linha (ex: "01/10/2022 a 31/10/2022")
+        if (empty($periodo)) {
+            if (preg_match('/(\d{2}\/?\d{2}\/?\d{4})\s*a\s*(\d{2}\/?\d{2}\/?\d{4})/i', $var_text, $matches_periodo)) {
+                $periodo = $matches_periodo[1] . " a " . $matches_periodo[2];
             }
-            if ($count_data == 1) {
-                $date2 = $date;
-            }
-            $count_data++;
-        }
-        if (isset($date1) && isset($date2)) {
-            // As variáveis $date1 e $date2 estão preenchidas
-            $periodo = $date1 . " a " . $date2;
         }
 
-        $periodo = !empty($_SESSION['periodo']) ? $_SESSION['periodo'] : $periodo;
+        // Fallback: coleta 2 primeiras datas avulsas caso período não venha em uma linha
+        if (empty($periodo)) {
+            $pattern = '/[0-9]{2}\/?[0-9]{2}\/?[0-9]{4}/';
+            if (preg_match($pattern, $var_text, $matches)) {
+                $date = $matches[0];
+                if ($count_data == 0) {
+                    $date1 = $date;
+                }
+                if ($count_data == 1) {
+                    $date2 = $date;
+                }
+                $count_data++;
+            }
+            if (isset($date1) && isset($date2)) {
+                $periodo = $date1." a ". $date2;
+            }
+        }
         //////////////////////////////////////////////////////////////////////////////////////////////////////
-
+       
 
 
         // Verifica e identifica o CNPJ, caso enconte numera o registro
@@ -110,8 +115,8 @@ foreach ($json_base->analyzeResult->readResults as $key) {
             $retorno_cnpj = 1;
 
             // Verifica e identifica o CPF
-            if (preg_match('/\b[0-9]{3}[0-9]{3}[0-9]{3}[0-9]{2}\b/i', $var_text)) {
-                // if (preg_match('/[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}/i', $var_text)) {
+             if (preg_match('/\b[0-9]{3}[0-9]{3}[0-9]{3}[0-9]{2}\b/i', $var_text)) {
+           // if (preg_match('/[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}/i', $var_text)) {
 
                 $regex = '/[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}/i';
                 preg_match($regex, $var_text, $resposta);
@@ -149,6 +154,8 @@ foreach ($json_base->analyzeResult->readResults as $key) {
                 $regarq =   $contagem_cpf;
             }
         }
+
+       
     }
     // }
 
@@ -212,7 +219,7 @@ if (empty($dois_cpfs)) {
             $pagina_fim = trim($pagina_fim_array[$i]);
 
             $tabela_usu = 'public."GESUSU"';
-            $tabela_gespon1 = 'public."GESPON1_' . $raiz_cnpj . '"';
+            $tabela_gespon1= 'public."GESPON1_' . $raiz_cnpj . '"';
 
             //CRIAR ID_VALIDADOR
             $val1 = uniqid();
@@ -235,67 +242,71 @@ if (empty($dois_cpfs)) {
                         $pdf = new FPDI();
                     }
                     if ($desativa_insert == 0) {
-                        for ($pagina_loop = $pagina_ini; $pagina_loop <= $pagina_fim; $pagina_loop++) {
+                    for ($pagina_loop = $pagina_ini; $pagina_loop <= $pagina_fim; $pagina_loop++) {
 
-                            $pdf->AddPage(); //P = RETRATO, L = PAISAGEM
-                            $pdf->setSourceFile($nomearquivo);
-                            $tplIdx = $pdf->importPage($pagina_loop);
-                            $pdf->useTemplate($tplIdx);
+                        $pdf->AddPage(); //P = RETRATO, L = PAISAGEM
+                        $pdf->setSourceFile($nomearquivo);
+                        $tplIdx = $pdf->importPage($pagina_loop);
+                        $pdf->useTemplate($tplIdx);
 
-                            // echo "Paginas a gravar:" . $pagina_loop . "<br>";
-                        }
+                        // echo "Paginas a gravar:" . $pagina_loop . "<br>";
                     }
-                    // Salvamento do arquivo em diretorio 
+                }
+                    // Salvamento do arquivo em diretorio
                     if ($desativa_insert  == 0) {
-                        $pdf->Output('F', '../../../upload/beneficios/ponto/' . $raiz_cnpj . '/' . $validador . '.pdf');
-                    }
+                    $dirPath = '../../../upload/beneficios/ponto/' . $raiz_cnpj;
+                    if (!is_dir($dirPath)) { mkdir($dirPath, 0777, true); }
+                    $pdf->Output('F', $dirPath . '/' . $validador . '.pdf');
+                }
 
-                    if ($desativa_insert  == 0) {
-                        try {
-                            // Insert na tabela
-                            $insert_tabela1 = insertGESPON1_secullum(
-                                $tabela_gespon1,
-                                $id_emp_default,
-                                NULL, //PIS
-                                $id_usu,
-                                $periodo,
-                                $datinc,
-                                NULL, //BTOTAL
-                                NULL, //BSALDO
-                                $processamento,
-                                $id_usa_default,
-                                $origem,
-                                $arquivo,
-                                $regarq
-                            );
+                if ($desativa_insert  == 0) {
+                try {
+                    // Insert na tabela
+                    $insert_tabela1 = insertGESPON1_secullum(
+                        $tabela_gespon1,
+                        $id_emp_default,
+                        NULL, //PIS
+                        $id_usu,
+                        $periodo,
+                        $datinc,
+                        NULL, //BTOTAL
+                        NULL, //BSALDO
+                        $processamento,
+                        $id_usa_default,
+                        $origem,
+                        $arquivo, 
+                        $regarq
+                    );
 
-                            $id_pon1 = $insert_tabela1['pk'];
-                        } catch (PDOException $erro) {
-                            die(($_SESSION["erro_importação"] = '1 - ' . $erro) . (header('Location:' . $erro_1)));
-                        }
-                    }
+                    $id_pon1 = $insert_tabela1['pk'];
+                } catch (PDOException $erro) {
+                    die(($_SESSION["erro_importação"] = '1 - ' . $erro) . (header('Location:' . $erro_1)));
+                }
+            }
 
-                    if ($exibe_registros != 0) {
-                        echo "<br>cpf:" . $cpf . "<br>";
-                        echo "Nome:" . $nome . "<br>";
-                        echo "Valor Liquido:" . $valor_liquido . "<br>";
-                        echo "Pagina INI:" . $pagina_ini . "<br>";
-                        echo "Pagina FIM:" . $pagina_fim . "<br>";
-                        echo "Periodo:" . $periodo . "<br>";
-                        echo "CPF's por arquivo:" . $regarq . "<br>";
-                    }
+                if ($exibe_registros != 0) {
+                    echo "<br>cpf:" . $cpf . "<br>";
+                    echo "Nome:" . $nome . "<br>";
+                    echo "Valor Liquido:" . $valor_liquido . "<br>";
+                    echo "Pagina INI:" . $pagina_ini . "<br>";
+                    echo "Pagina FIM:" . $pagina_fim . "<br>";
+                    echo "Periodo:" . $periodo . "<br>";
+                    echo "CPF's por arquivo:" . $regarq . "<br>";
+                }
+
+
                 } else {
-                    // echo "Nenhum resultado encontrado para o Cod. de Integração.".$cpf.".<br>";
-                    if ($exibe_registros != 0) {
-                        echo "<br>cpf:" . $cpf . "<br>";
-                        echo "DATA:" . $datinc . "<br>";
-                        echo "ORGIGEM:" . $origem . "<br>";
-                        echo "DESCRICAO:" . $descricao_recibo . "<br>";
-                        echo "ID_PROCESSAMENTO:" . $processamento . "<br>";
-                        echo "ID_EMP:" . $id_emp_default . "<br>";
-                        echo "REGARQ:" . $regarq . "<br>";
-                        echo "Pagina:" . $pagina_ini . "<br>";
-                    }
+                   // echo "Nenhum resultado encontrado para o Cod. de Integração.".$cpf.".<br>";
+                   if ($exibe_registros != 0) {
+                    echo "<br>cpf:" . $cpf . "<br>";
+                    echo "DATA:".$datinc."<br>";
+                    echo "ORGIGEM:".$origem."<br>";
+                    echo "DESCRICAO:".$descricao_recibo."<br>";
+                    echo "ID_PROCESSAMENTO:".$processamento."<br>";
+                    echo "ID_EMP:".$id_emp_default."<br>";
+                    echo "REGARQ:".$regarq."<br>";
+                    echo "Pagina:" . $pagina_ini . "<br>";
+                }
 
                     if ($desativa_insert  == 0) {
                         try {
@@ -303,15 +314,15 @@ if (empty($dois_cpfs)) {
                             $tipo = 'CPF';
 
                             $insert_tabela2 = insertGESPON_LOG(
-
+                  
                                 $id_emp_default,
-                                $cpf, //IDENTIFICADOR
-                                $tipo, //TIPO DE INDENTIFICADOR
-                                $descricao_recibo, //DESCRIÇAO IMPORTAÇAO
+                                $cpf,//IDENTIFICADOR
+                                $tipo,//TIPO DE INDENTIFICADOR
+                                $descricao_recibo,//DESCRIÇAO IMPORTAÇAO
                                 $origem, //ARQUIVO DE ORIGEM
-                                $processamento, //LOTE PROCESSAMENTO
-                                $regarq, //PAGINAS POR ARQUIVO
-                                $pagina_ini, //PAGINA INCONSISTENCIA
+                                $processamento,//LOTE PROCESSAMENTO
+                                $regarq,//PAGINAS POR ARQUIVO
+                                $pagina_ini,//PAGINA INCONSISTENCIA
                                 $datinc
                             );
 
@@ -320,24 +331,25 @@ if (empty($dois_cpfs)) {
                             die(($_SESSION["erro_importação"] = '1 - ' . $erro) . (header('Location:' . $erro_1)));
                         }
                     }
+
                 }
             }
         }
 
         if ($desativa_insert  == 0) {
-            echo "<script language=javascript>
+        echo "<script language=javascript>
         location.href = '../../lotes_processados';
         </script>";
-        }
+    }
     } else {
         if ($desativa_insert  == 0) {
-            ($_SESSION['erro_importação'] = 'O arquivo selecionado não corresponde a essa empresa!') . (header('Location:' . $erro_1));
-        }
+        ($_SESSION['erro_importação'] = 'O arquivo selecionado não corresponde a essa empresa!') . (header('Location:' . $erro_1));
+         }
     }
 } else {
     if ($desativa_insert  == 0) {
-        ($_SESSION['erro_importação'] = 'O arquivo selecionado esta apresentando mais de um colaborador por pagina!') . (header('Location:' . $erro_1));
-    }
+    ($_SESSION['erro_importação'] = 'O arquivo selecionado esta apresentando mais de um colaborador por pagina!') . (header('Location:' . $erro_1));
+}
 }
 
 function uniqidReal($lenght = 13)
