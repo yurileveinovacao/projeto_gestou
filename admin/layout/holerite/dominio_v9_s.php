@@ -160,30 +160,27 @@ foreach ($json_base->analyzeResult->readResults as $key) {
                 }
             }
 
-            // (valor liquido agora é detectado via "Faixa IRRF" abaixo)
+            // Identificar Código do funcionário (standalone, não como parte do cabeçalho da tabela)
+            // Google Vision separa "Código" como header de coluna em linha própria
+            if (preg_match('/^Codigo$/i', $var_text)) {
+                $encontra_cod_integracao = 1;
             }
-        }
 
-        // Identificar Código do funcionário (standalone, não como parte do cabeçalho da tabela)
-        // Google Vision separa "Código" como header de coluna em linha própria
-        if (preg_match('/^Codigo$/i', $var_text)) {
-            $encontra_cod_integracao = 1;
-        }
+            // Rastrear último valor monetário visto (para detecção via Faixa IRRF)
+            if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text)) {
+                $last_monetary = $var_text;
+            }
 
-        // Rastrear último valor monetário visto (para detecção via Faixa IRRF)
-        if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text)) {
-            $last_monetary = $var_text;
-        }
+            // Detectar valor líquido: o valor monetário imediatamente antes de "Faixa IRRF"
+            // Mais robusto que "Valor Liquido" header, que no Google Vision pode ficar separado do valor
+            if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary)) {
+                $concat_valor_liquido = $concat_valor_liquido . "||" . $last_monetary;
+            }
 
-        // Detectar valor líquido: o valor monetário imediatamente antes de "Faixa IRRF"
-        // Mais robusto que "Valor Liquido" header, que no Google Vision pode ficar separado do valor
-        if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary)) {
-            $concat_valor_liquido = $concat_valor_liquido . "||" . $last_monetary;
-        }
-
-        // Verifica e identifica o valor liquido
-        if (preg_match('/(A )?TRANSPORTAR/i', $var_text)) {
-            $complemento = 1;
+            // Verifica e identifica o valor liquido
+            if (preg_match('/(A )?TRANSPORTAR/i', $var_text)) {
+                $complemento = 1;
+            }
         }
 
         $prev_text = $var_text;
