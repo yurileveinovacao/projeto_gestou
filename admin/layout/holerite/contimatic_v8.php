@@ -99,6 +99,10 @@ foreach ($json_base->analyzeResult->readResults as $key) {
             $competencia = $var_text;
             $encontra_mensal = 1;
         }
+        // Google Vision: "MENSAL" aparece antes de "Junho/2022", longe do CNPJ
+        if (preg_match('/^MENSAL$/i', trim($var_text))) {
+            $encontra_mensal = 1;
+        }
 
         // Verifica e identifica o CNPJ, caso enconte numera o registro
         if (preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/i', $var_text)) {
@@ -121,49 +125,56 @@ foreach ($json_base->analyzeResult->readResults as $key) {
                 $regex = '/\d+/i';
                 if (preg_match($regex, $var_text, $resposta)) {
 
-                    $cpf = $resposta[0];
-                    $cpf = remover_nao_numericos($cpf);
-
-                    if ($cpf != $cpfConsultas) {
-
-                        $encontra_valor_liquido = 1; //SEMPRE QUE ACHAR O CPF VAI BUSCAR O VALOR LIQUIDO DO CPF ENCONTRADO
-                        $cpfConsultas = $cpf;
-                        $contagem_Cpf++;
-                        $contagCpfPag++;
-                        $pagina_ini = $page_number;
-                        $concat_cpf .= "||" . $cpfConsultas;
-                        $concat_pagina_ini .= "||" . $pagina_ini;
-                        $pagina_fim = $page_number;
-
-                        if ($contagCpfPag > 1) {
-                            $encDois_Cpfs = 1;
-                            // echo "2 CPFS diferentes por pagina";
-                        }
-                        // echo "<br>CPF cont page:" . $encDois_Cpfs . "<br>";
+                    // Google Vision: pular valor do "Secao" (1º número após headers separados)
+                    if (!empty($skip_first_number)) {
+                        $skip_first_number = 0;
+                        $encontra_cod_integracao++;
                     } else {
-                        $pagina_fim = $page_number;
-                        $pagina_espelhada = 1;
-                        // echo "<br>CPF IGUAL O DO REGISTRO ANTERIOR:" . $cpfConsultas . "<br>";
+                        $cpf = $resposta[0];
+                        $cpf = remover_nao_numericos($cpf);
+
+                        if ($cpf != $cpfConsultas) {
+
+                            $encontra_valor_liquido = 1; //SEMPRE QUE ACHAR O CPF VAI BUSCAR O VALOR LIQUIDO DO CPF ENCONTRADO
+                            $cpfConsultas = $cpf;
+                            $contagem_Cpf++;
+                            $contagCpfPag++;
+                            $pagina_ini = $page_number;
+                            $concat_cpf .= "||" . $cpfConsultas;
+                            $concat_pagina_ini .= "||" . $pagina_ini;
+                            $pagina_fim = $page_number;
+
+                            if ($contagCpfPag > 1) {
+                                $encDois_Cpfs = 1;
+                                // echo "2 CPFS diferentes por pagina";
+                            }
+                            // echo "<br>CPF cont page:" . $encDois_Cpfs . "<br>";
+                        } else {
+                            $pagina_fim = $page_number;
+                            $pagina_espelhada = 1;
+                            // echo "<br>CPF IGUAL O DO REGISTRO ANTERIOR:" . $cpfConsultas . "<br>";
+                        }
+
+                        $regarq =   $contagem_Cpf;
+
+                        unset($encontra_cod_integracao);
                     }
-
-                    $regarq =   $contagem_Cpf;
-
-                    unset($encontra_cod_integracao);
                 } else {
                     $encontra_cod_integracao++;
                 }
             }
 
-            if ($encLiquidoP2 == 1 && $encLiquidoP1 == 1) {
-                $valorLiquido = $var_text;
-                $valorLiquido_consulta = str_replace("*", "", $var_text);
-                if ($valorLiquido_consulta != "") {
-                    $concat_valor_liquido = $concat_valor_liquido . "||" . $valorLiquido;
-                    // echo "<br>VALOR LIQUIDO:" . $valorLiquido . "<br>";
-                    unset($encLiquidoP1);
-                }
-            }
-            unset($encLiquidoP2);
+            // (valor liquido agora detectado via "Faixa IRRF" abaixo)
+        }
+
+        // Rastrear último valor monetário visto
+        if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text)) {
+            $last_monetary = $var_text;
+        }
+
+        // Detectar valor líquido: valor monetário antes de "Faixa IRRF"
+        if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary)) {
+            $concat_valor_liquido = $concat_valor_liquido . "||" . $last_monetary;
         }
 
         // Caso encontre a filial, ele atribui valor da proxima casa para formar o cod usuario
@@ -182,8 +193,14 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         if (preg_match('/Folha/i', $var_text)) {
             $encontra_filial = 1;
             $encontra_cod_integracao = 1;
+            // Google Vision: "Secao" e "Folha" são headers separados,
+            // "0" (Secao) vem antes de "1" (Folha). Pular 1º número.
+            if (preg_match('/Secao/i', $prev_text_conti)) {
+                $skip_first_number = 1;
+            }
             //echo 'ENCONTROU FOLHA' . '<br>';
         }
+        $prev_text_conti = $var_text;
 
         // Verifica e identifica o valor liquido
         if (preg_match('/Total Liquido/i', $var_text)) {

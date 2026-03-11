@@ -159,22 +159,15 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
                     $encontra_cpf_nextline = 1;
                 }
             }
-            //ENCONTROU VALOR LIQUIDO/////////////////////////////////////////////////////////////////////////////////////////
-            if ($encLiquidoP2 == 1) {
-                $valorLiquido = $var_text;
-                $valorLiquido_consulta = str_replace("*", "", $var_text);
-                if ($valorLiquido_consulta != "") {
-                    $concat_valor_liquido .= "||" . $valorLiquido;
-                    // echo "<br>VALOR LIQUIDO:" . $valorLiquido . "<br>";
-                    unset($encLiquidoP1);
-                }
-                unset($encLiquidoP2);
+            // Rastrear último valor monetário visto
+            if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text)) {
+                $last_monetary = $var_text;
             }
 
-            if ($encLiquidoP1 == 1) {
-                if (preg_match('/TOTAL LIQUIDO/i', $var_text)) {
-                    $encLiquidoP2 = 1;
-                }
+            // Detectar valor líquido: o valor monetário imediatamente antes de "Faixa IRRF"
+            // Google Vision pode separar "TOTAL" de "LIQUIDO........R$", quebrando detecção original
+            if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary)) {
+                $concat_valor_liquido .= "||" . $last_monetary;
             }
 
             // Verifica e identifica o valor liquido

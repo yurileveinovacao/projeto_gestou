@@ -66,6 +66,8 @@ foreach ($json_base->analyzeResult->readResults as $key) {
     // Variavel que recebe o numero da página atual
     $page_number = $key->page;
 
+    $prev_text = '';
+
     // Foreach para realizar o loop do conteudo de cada pagina
     foreach ($key->lines as $key2) {
 
@@ -114,8 +116,10 @@ foreach ($json_base->analyzeResult->readResults as $key) {
 
             if ($encontra_cod_integracao >= 1 && $encontra_cod_integracao <= 5) {
 
-                $regex = '/\d+/i';
-                if (preg_match($regex, $var_text, $resposta)) {
+                // Se a linha seguinte ao "Codigo" é "Descricao", era header da tabela, não do funcionário
+                if (preg_match('/^Descri/i', $var_text)) {
+                    $encontra_cod_integracao = 0;
+                } elseif (preg_match('/\d+/i', $var_text, $resposta)) {
                     $cpf = $resposta[0];
                     $cpf = remover_nao_numericos($cpf);
 
@@ -156,49 +160,33 @@ foreach ($json_base->analyzeResult->readResults as $key) {
                 }
             }
 
-            if ($encLiquidoP2 == 1 && $encLiquidoP1 == 1) {
-
-                $valorLiquido = $var_text;
-                $valorLiquido_consulta = str_replace("*", "", $var_text);
-                if ($valorLiquido_consulta != "") {
-                    $concat_valor_liquido = $concat_valor_liquido . "||" . $valorLiquido;
-                    //echo "<br>VALOR LIQUIDO:" . $valorLiquido . "<br>";
-                    unset($encLiquidoP1);
-                } else {
-
-                    $valorliq = 1;
-                    unset($encLiquidoP1);
-                }
-                unset($encLiquidoP2);
+            // (valor liquido agora é detectado via "Faixa IRRF" abaixo)
             }
         }
 
-        // Caso encontre a filial, ele atribui valor da proxima casa para formar o cod usuario
-        if ($encontra_filial >= 1 && $encontra_filial <= 5) {
-            $codIntegraca = remover_nao_numericos($var_text);
-            if (!empty($codIntegraca)) {
-                unset($encontra_filial);
-            } else {
-                $encontra_filial++;
-            }
-        }
-
-        // Identificar Filial
-        if (preg_match('/Filial/i', $var_text)) {
-            $encontra_filial = 1;
+        // Identificar Código do funcionário (standalone, não como parte do cabeçalho da tabela)
+        // Google Vision separa "Código" como header de coluna em linha própria
+        if (preg_match('/^Codigo$/i', $var_text)) {
             $encontra_cod_integracao = 1;
-            //echo 'ENCONTROU FOLHA' . '<br>';
         }
 
-        // Verifica e identifica o valor liquido
-        if (preg_match('/Valor Liquido/i', $var_text)) {
-            $encLiquidoP1 = 1;
+        // Rastrear último valor monetário visto (para detecção via Faixa IRRF)
+        if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text)) {
+            $last_monetary = $var_text;
+        }
+
+        // Detectar valor líquido: o valor monetário imediatamente antes de "Faixa IRRF"
+        // Mais robusto que "Valor Liquido" header, que no Google Vision pode ficar separado do valor
+        if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary)) {
+            $concat_valor_liquido = $concat_valor_liquido . "||" . $last_monetary;
         }
 
         // Verifica e identifica o valor liquido
         if (preg_match('/(A )?TRANSPORTAR/i', $var_text)) {
             $complemento = 1;
         }
+
+        $prev_text = $var_text;
     }
 
     // verificação de empty($complemento) com a condição !empty($pagina_fim)

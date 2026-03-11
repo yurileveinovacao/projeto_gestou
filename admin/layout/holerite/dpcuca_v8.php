@@ -27,7 +27,6 @@ $idEmpDefault = $id_emp_default;
 $dataInclusao = $datinc;
 
 $encLiquidoP1 = 0;
-$encLiquidoP2 = 0;
 $contagem_Cpf = 0;
 $contagCpfPag = 0;
 $codIntegraca = null;
@@ -36,6 +35,9 @@ $valorLiquido = null;
 $encDois_Cpfs = null;
 $achoucompete = 0;
 $encontra_cpf_nextline = 0;
+$encontra_total_venc = 0;
+$encontra_total_desc = 0;
+$total_venc_atual = '';
 
 // Variavel que recebe a descricao da importacao
 $descricao_recibo = $_SESSION['descricao'];
@@ -158,27 +160,36 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
                     $encontra_cpf_nextline = 1;
                 }
             }
-            //ENCONTROU VALOR LIQUIDO/////////////////////////////////////////////////////////////////////////////////////////
-
-
-            if ($encLiquidoP2 == 1 && $encLiquidoP1 == 1) {
-                $valorLiquido = $var_text;
-
-                $valorLiquido_consulta = str_replace("*", "", $var_text);
-                if ($valorLiquido_consulta != "") {
-                    $concat_valor_liquido .= "||" . $valorLiquido;
-                    // echo "<br>VALOR LIQUIDO:" . $valorLiquido . "<br>";
-                    unset($encLiquidoP1);
+            // Rastrear Total de Vencimentos (flag counter)
+            if (preg_match('/Total\s*(de\s*)?vencimentos/i', $var_text)) {
+                $encontra_total_venc = 1;
+            }
+            if ($encontra_total_venc >= 1 && $encontra_total_venc <= 5) {
+                if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text, $m_tv)) {
+                    $total_venc_atual = $m_tv[1];
+                    $encontra_total_venc = 0;
+                } else {
+                    $encontra_total_venc++;
                 }
-                unset($encLiquidoP2);
             }
 
-            // Verifica e identifica o valor liquido
-            if (preg_match('/Vr. Liquido/i', $var_text)) {
-                if ($encLiquidoP1 == 1) {
-                    $encLiquidoP2 = 1;
+            // Rastrear Total de Descontos e computar vliq = venc - desc
+            if (preg_match('/Total\s*(de\s*)?descontos/i', $var_text)) {
+                $encontra_total_desc = 1;
+            }
+            if ($encontra_total_desc >= 1 && $encontra_total_desc <= 5) {
+                if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text, $m_td)) {
+                    $total_desc_atual = $m_td[1];
+                    $encontra_total_desc = 0;
+                    if (!empty($total_venc_atual) && !empty($cpfConsultas) && $encLiquidoP1 == 1) {
+                        $vliq = formatar_decimal($total_venc_atual) - formatar_decimal($total_desc_atual);
+                        $vliq_formatted = number_format($vliq, 2, ',', '.');
+                        $concat_valor_liquido .= "||" . $vliq_formatted;
+                        $encLiquidoP1 = 0;
+                        $total_venc_atual = '';
+                    }
                 } else {
-                    $encLiquidoP2 = 0;
+                    $encontra_total_desc++;
                 }
             }
 

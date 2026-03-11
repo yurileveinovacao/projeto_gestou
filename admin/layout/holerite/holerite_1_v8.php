@@ -154,9 +154,14 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
                 unset($encLiquidoP1);
             }
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // Identificar Filial
+            // Identificar Filial (CNPJ 14 dígitos)
             if (preg_match('/[0-9]{14}/i', $var_text)) {
                 $encontra_filial = 1;
+                $encontra_codintegracao = 1;
+            }
+            // Google Vision: range de datas aparece ANTES do código do funcionário
+            // Trigger alternativo para quando o código vem antes do CNPJ na ordem do OCR
+            if (preg_match('/\d{2}\/\d{2}\/\d{4}\s+a\s+\d{2}\/\d{2}\/\d{4}/', $var_text)) {
                 $encontra_codintegracao = 1;
             }
             // Verifica e identifica o valor liquido
