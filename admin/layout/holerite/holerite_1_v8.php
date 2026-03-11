@@ -143,15 +143,15 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
                 }
             }
             //ENCONTROU VALOR LIQUIDO/////////////////////////////////////////////////////////////////////////////////////////
-            if ($encLiquidoP1 == 1 && $encLiquidoP0 == 1) {
-                $valorLiquido = $var_text;
-                $valor_liquido_consulta = str_replace("*", "", $var_text);
-                if ($valor_liquido_consulta !== "") {
-                    $concat_valor_liquido .= "||" . $valorLiquido;
-                    //echo "<br>VALOR LIQUIDO:" . $valorLiquido . "<br>";
-                    unset($encLiquidoP0);
+            if ($encLiquidoP1 >= 1 && $encLiquidoP0 == 1) {
+                if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text, $m_vliq)) {
+                    $concat_valor_liquido .= "||" . $m_vliq[0];
+                    $encLiquidoP0 = 0;
+                    $encLiquidoP1 = 0;
+                } else {
+                    $encLiquidoP1++;
+                    if ($encLiquidoP1 > 5) { $encLiquidoP1 = 0; }
                 }
-                unset($encLiquidoP1);
             }
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // Identificar Filial (CNPJ 14 dígitos)
