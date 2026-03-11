@@ -270,7 +270,7 @@ if (empty($encDois_Cpfs)) {
                                     NULL, //$data_credito
                                     NULL, //$vlr_vencimento
                                     NULL, //$vlr_desconto
-                                    NULL, //$vlr_liquido
+                                    $valorLiquido, //$vlr_liquido
                                     NULL, //$faixa_irrf
                                     NULL, //$vlr_basesalario
                                     NULL, //$vlr_baseinss
