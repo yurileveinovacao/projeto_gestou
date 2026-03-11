@@ -82,20 +82,21 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         }
         //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        //LOCALIZAR COMPETENCIA
-        if (preg_match('/(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\/\d{4}/i', $var_text, $matches)) {
-            $competencia = $matches[0];
-        } else if ($competenciaEmLinhas >= 1 && $competenciaEmLinhas <= 5) {
-            // Busca apenas o ano, sem concatenar texto intermediário
-            if (preg_match('/\b(\d{4})\b/', $var_text, $m_ano)) {
-                $competencia .= $m_ano[1];
-                $competenciaEmLinhas = 0;
-            } else {
-                $competenciaEmLinhas++;
+        //LOCALIZAR COMPETENCIA (só busca se ainda não encontrou uma completa com ano)
+        if (!preg_match('/\d{4}/', $competencia)) {
+            if ($competenciaEmLinhas >= 1 && $competenciaEmLinhas <= 5) {
+                if (preg_match('/\b(\d{4})\b/', $var_text, $m_ano)) {
+                    $competencia .= $m_ano[1];
+                    $competenciaEmLinhas = 0;
+                } else {
+                    $competenciaEmLinhas++;
+                }
+            } elseif (preg_match('/(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\/\d{4}/i', $var_text, $matches)) {
+                $competencia = $matches[0];
+            } elseif ($competenciaEmLinhas == 0 && preg_match('/(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/i', $var_text, $m_comp2)) {
+                $competencia = $m_comp2[1] . " ";
+                $competenciaEmLinhas = 1;
             }
-        } else if ($competenciaEmLinhas == 0 && preg_match('/(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/i', $var_text, $m_comp2)) {
-            $competencia = $m_comp2[1] . " ";
-            $competenciaEmLinhas = 1;
         }
 
         // Verifica e identifica o CNPJ, caso enconte numera o registro
