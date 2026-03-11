@@ -159,15 +159,34 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
                     $encontra_cpf_nextline = 1;
                 }
             }
-            // Rastrear último valor monetário visto
+            // Capturar valor líquido (flag TOTAL LIQUIDO da iteração anterior)
+            if ($encLiquidoP2 == 1 && $encLiquidoP1 == 1) {
+                if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text, $m_vliq)) {
+                    $concat_valor_liquido .= "||" . $m_vliq[0];
+                    $encLiquidoP1 = 0;
+                }
+                $encLiquidoP2 = 0;
+            }
+
+            // Rastrear último valor monetário (para fallback Faixa IRRF)
             if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text)) {
                 $last_monetary = $var_text;
             }
 
-            // Detectar valor líquido: o valor monetário imediatamente antes de "Faixa IRRF"
-            // Google Vision pode separar "TOTAL" de "LIQUIDO........R$", quebrando detecção original
-            if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary)) {
+            // Primário: detectar "TOTAL LIQUIDO" — valor vem na próxima linha ou inline
+            if (preg_match('/TOTAL\s*LIQUIDO/i', $var_text)) {
+                if (preg_match('/TOTAL\s*LIQUIDO.*?(\d[\d\.]*,\d{2})/i', $var_text, $m_vliq_inline)) {
+                    $concat_valor_liquido .= "||" . $m_vliq_inline[1];
+                    $encLiquidoP1 = 0;
+                } else {
+                    $encLiquidoP2 = 1;
+                }
+            }
+
+            // Fallback: Faixa IRRF (só se vliq ainda não encontrado para este CPF)
+            if ($encLiquidoP1 == 1 && preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary)) {
                 $concat_valor_liquido .= "||" . $last_monetary;
+                $encLiquidoP1 = 0;
             }
 
             // Verifica e identifica o valor liquido
