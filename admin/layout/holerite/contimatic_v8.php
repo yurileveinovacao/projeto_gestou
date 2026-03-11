@@ -98,11 +98,7 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         }
 
 
-        if (preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/i', $var_text)) {
-            $competencia = $var_text;
-            $encontra_mensal = 1;
-        }
-        // Google Vision: "MENSAL" aparece antes de "Junho/2022", longe do CNPJ
+        // Google Vision: "MENSAL" aparece standalone antes de "Junho/2022"
         if (preg_match('/^MENSAL$/i', trim($var_text))) {
             $encontra_mensal = 1;
         }
