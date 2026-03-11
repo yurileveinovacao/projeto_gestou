@@ -28,7 +28,6 @@ $dataInclusao = $datinc;
 
 $encLiquidoP1 = 0;
 $encLiquidoP2 = 0;
-$last_monetary = '';
 $contagem_Cpf = 0;
 $contagCpfPag = 0;
 $codIntegraca = null;
@@ -134,19 +133,29 @@ foreach ($json_base->analyzeResult->readResults as $key) {
             }
 
             // Identificar código do usuario e nome
-            if (preg_match('/^FOLHA$/i', $var_text)) {
+            // Google Vision retorna "CÓDIGO" standalone (str_replace converte Ó→O)
+            if (preg_match('/^CODIGO$/i', $var_text)) {
                 $encontra_cod_integracao = 1;
             }
 
-            // Rastrear último valor monetário
-            if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text)) {
-                $last_monetary = $var_text;
+            // Capturar valor líquido (flag da iteração anterior)
+            if ($encLiquidoP2 == 1 && $encLiquidoP1 == 1) {
+                if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text, $m_vliq)) {
+                    $concat_valor_liquido = $concat_valor_liquido . "||" . $m_vliq[0];
+                    $encLiquidoP1 = 0;
+                }
+                $encLiquidoP2 = 0;
             }
 
-            // Faixa IRRF: o valor monetário imediatamente anterior é o valor líquido
-            if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary)) {
-                $concat_valor_liquido = $concat_valor_liquido . "||" . $last_monetary;
-                $encLiquidoP1 = 0;
+            // Detecta "VALOR LIQUIDO" — valor vem na próxima linha
+            if (preg_match('/VALOR LIQUIDO/i', $var_text)) {
+                // Tentar capturar inline (ex: "VALOR LIQUIDO => 1.419,61")
+                if (preg_match('/VALOR LIQUIDO.*?(\d[\d\.]*,\d{2})/i', $var_text, $m_vliq_inline)) {
+                    $concat_valor_liquido = $concat_valor_liquido . "||" . $m_vliq_inline[1];
+                    $encLiquidoP1 = 0;
+                } else {
+                    $encLiquidoP2 = 1;
+                }
             }
 
             // Verifica e identifica o valor liquido
@@ -166,8 +175,7 @@ foreach ($json_base->analyzeResult->readResults as $key) {
 
     // Reset variveis
     unset($cnpj_consulta, $contagCpfPag, $pagina_ini, $pagina_fim, $complemento);
-    unset($encLiquidoP1);
-    $last_monetary = '';
+    unset($encLiquidoP2, $encLiquidoP1);
 }
 
 if ($exibeRegistros != 0) {
