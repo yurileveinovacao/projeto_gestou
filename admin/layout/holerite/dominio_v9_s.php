@@ -94,10 +94,10 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         }
 
         //LOCALIZAR COMPETENCIA
-        if (preg_match('/\b(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro) de \d{4}\b/i', $var_text)) {
-            $competencia = $var_text;
-        } else    if ($competenciaEmLinhas == 0 && preg_match('/\b(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/i', $var_text)) {
-            $competencia = $var_text . " ";
+        if (preg_match('/\b(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro) de \d{4}\b/i', $var_text, $m_comp)) {
+            $competencia = $m_comp[0];
+        } else    if ($competenciaEmLinhas == 0 && preg_match('/\b(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/i', $var_text, $m_comp2)) {
+            $competencia = $m_comp2[1] . " ";
             $competenciaEmLinhas = 1;
         }
 

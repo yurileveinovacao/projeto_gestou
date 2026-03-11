@@ -93,8 +93,8 @@ foreach ($json_base->analyzeResult->readResults as $key) {
             } else {
                 $competenciaEmLinhas++;
             }
-        } else if ($competenciaEmLinhas == 0 && preg_match('/(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/i', $var_text)) {
-            $competencia = $var_text . " ";
+        } else if ($competenciaEmLinhas == 0 && preg_match('/(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/i', $var_text, $m_comp2)) {
+            $competencia = $m_comp2[1] . " ";
             $competenciaEmLinhas = 1;
         }
 
