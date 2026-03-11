@@ -84,8 +84,8 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
 
         //LOCALIZAR COMPETENCIA
         if ($achoucompete == 0) {
-            if (preg_match('/[0-9]{2}\/?[0-9]{2}\/?[0-9]{4}/i', $var_text)) {
-                $competencia = $var_text;
+            if (preg_match('/([0-9]{2}\/[0-9]{2}\/[0-9]{4})/', $var_text, $m_comp)) {
+                $competencia = $m_comp[1];
                 $achoucompete = 1;
             }
         }
