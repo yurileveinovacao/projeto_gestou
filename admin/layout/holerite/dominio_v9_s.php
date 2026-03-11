@@ -34,6 +34,8 @@ $cpfConsultas = null;
 $valorLiquido = null;
 $encDois_Cpfs = null;
 $competenciaEmLinhas = 0;
+$cod_pendente_valor = '';
+$cod_pendente_confirm = 0;
 
 // Variavel que recebe a descricao da importacao
 $descricao_recibo = $_SESSION['descricao'];
@@ -113,17 +115,11 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         if ($cnpj_consulta == $cnpjCompleto) {
             $retorno_cnpj = 1;
 
-            if ($encontra_cod_integracao >= 1 && $encontra_cod_integracao <= 5) {
-
-                // Se a linha seguinte ao "Codigo" é "Descricao", era header da tabela, não do funcionário
-                if (preg_match('/^Descri/i', $var_text)) {
-                    $encontra_cod_integracao = 0;
-                } elseif (preg_match('/\d+/i', $var_text, $resposta)) {
-                    $cpf = $resposta[0];
-                    $cpf = remover_nao_numericos($cpf);
-
+            // Passo 3: Confirmar cod_integracao pendente via "Nome" (ou cancelar via "Descri"/timeout)
+            if ($cod_pendente_confirm >= 1 && $cod_pendente_confirm <= 5) {
+                if (preg_match('/Nome/i', $var_text)) {
+                    $cpf = $cod_pendente_valor;
                     if ($cpf != $cpfConsultas) {
-                        $encLiquidoP2 = 1; //SEMPRE QUE ACHAR O CPF VAI BUSCAR O VALOR LIQUIDO DO CPF ENCONTRADO
                         $cpfConsultas = $cpf;
                         $contagem_Cpf++;
                         $contagCpfPag++;
@@ -131,36 +127,37 @@ foreach ($json_base->analyzeResult->readResults as $key) {
                         $concat_cpf .= "||" . $cpfConsultas;
                         $concat_pagina_ini .= "||" . $pagina_ini;
                         $pagina_fim = $page_number;
-
                         $valorliq = 0;
                         $forcavalor = 0;
-
-                        if ($contagCpfPag > 1) {
-                            $encDois_Cpfs = 1;
-                            // echo "2 CPFS diferentes por pagina";
-                        }
-                        // echo "<br>CPF cont page:" . $encDois_Cpfs . "<br>";
+                        if ($contagCpfPag > 1) { $encDois_Cpfs = 1; }
                     } else {
-
-                        if ($valorliq == 1) {
-
-                            $encLiquidoP2 = 1;
-                            unset($valorliq);
-                        }
-
+                        if (isset($valorliq) && $valorliq == 1) { unset($valorliq); }
                         $pagina_fim = $page_number;
                         $pagina_espelhada = 1;
-                        // echo "<br>CPF IGUAL O DO REGISTRO ANTERIOR:" . $cpfConsultas . "<br>";
                     }
-                    $regarq =   $contagem_Cpf;
-                    unset($encontra_cod_integracao);
+                    $regarq = $contagem_Cpf;
+                    $cod_pendente_confirm = 0;
+                } elseif (preg_match('/Descri/i', $var_text)) {
+                    $cod_pendente_confirm = 0;
+                } else {
+                    $cod_pendente_confirm++;
+                }
+            }
+
+            // Passo 2: Buscar número após "Codigo" — armazena como pendente
+            if ($encontra_cod_integracao >= 1 && $encontra_cod_integracao <= 5) {
+                if (preg_match('/^Descri/i', $var_text)) {
+                    $encontra_cod_integracao = 0;
+                } elseif (preg_match('/\d+/i', $var_text, $resposta)) {
+                    $cod_pendente_valor = remover_nao_numericos($resposta[0]);
+                    $cod_pendente_confirm = 1;
+                    $encontra_cod_integracao = 0;
                 } else {
                     $encontra_cod_integracao++;
                 }
             }
 
-            // Identificar Código do funcionário (standalone, não como parte do cabeçalho da tabela)
-            // Google Vision separa "Código" como header de coluna em linha própria
+            // Passo 1: Trigger em "Codigo" standalone
             if (preg_match('/^Codigo$/i', $var_text)) {
                 $encontra_cod_integracao = 1;
             }
