@@ -86,8 +86,9 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         if (preg_match('/(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\/\d{4}/i', $var_text, $matches)) {
             $competencia = $matches[0];
         } else if ($competenciaEmLinhas >= 1 && $competenciaEmLinhas <= 5) {
-            $competencia .= $var_text . " ";
-            if (preg_match('/\b\d{4}\b/', $var_text)) {
+            // Busca apenas o ano, sem concatenar texto intermediário
+            if (preg_match('/\b(\d{4})\b/', $var_text, $m_ano)) {
+                $competencia .= $m_ano[1];
                 $competenciaEmLinhas = 0;
             } else {
                 $competenciaEmLinhas++;

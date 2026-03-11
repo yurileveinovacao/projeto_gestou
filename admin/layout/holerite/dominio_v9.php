@@ -84,9 +84,9 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         }
         //////////////////////////////////////////////////////////////////////////////////////////////////////
         if ($competenciaEmLinhas >= 1 && $competenciaEmLinhas <= 5) {
-            $competencia .= $var_text . " ";
-            // Verifica se encontrou o ano no formato "2023"
-            if (preg_match('/\b\d{4}\b/', $var_text)) {
+            // Busca apenas o ano, sem concatenar texto intermediário
+            if (preg_match('/\b(\d{4})\b/', $var_text, $m_ano)) {
+                $competencia .= $m_ano[1];
                 $competenciaEmLinhas = 0;
             } else {
                 $competenciaEmLinhas++;
