@@ -33,6 +33,9 @@ $codIntegraca = null;
 $cpfConsultas = null;
 $valorLiquido = null;
 $encDois_Cpfs = null;
+$cod_pendente_confirm = 0;
+$encontra_cod_integracao = 0;
+$last_monetary = '';
 
 // Variavel que recebe a descricao da importacao
 $descricao_recibo = $_SESSION['descricao'];
@@ -120,51 +123,52 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         if ($cnpj_consulta == $cnpjCompleto) {
             $retorno_cnpj = 1;
 
+            // Passo 3: Confirmar cod pendente via "Nome" (cancelar via "Descri")
+            if ($cod_pendente_confirm >= 1 && $cod_pendente_confirm <= 5) {
+                if (preg_match('/^Nome$/i', trim($var_text))) {
+                    // Confirmado: próxima linha com número é o código do funcionário
+                    $encontra_cod_integracao = 1;
+                    $cod_pendente_confirm = 0;
+                } elseif (preg_match('/Descri/i', $var_text)) {
+                    $cod_pendente_confirm = 0;
+                } else {
+                    $cod_pendente_confirm++;
+                }
+            }
+
+            // Passo 2: Buscar número (cod do funcionário) nas próximas linhas
             if ($encontra_cod_integracao >= 1 && $encontra_cod_integracao <= 5) {
+                if (preg_match('/^(\d+)/', $var_text, $resposta)) {
+                    $cpf = $resposta[1];
 
-                $regex = '/\d+/i';
-                if (preg_match($regex, $var_text, $resposta)) {
+                    if ($cpf != $cpfConsultas) {
+                        $encontra_valor_liquido = 1;
+                        $cpfConsultas = $cpf;
+                        $contagem_Cpf++;
+                        $contagCpfPag++;
+                        $pagina_ini = $page_number;
+                        $concat_cpf .= "||" . $cpfConsultas;
+                        $concat_pagina_ini .= "||" . $pagina_ini;
+                        $pagina_fim = $page_number;
 
-                    // Google Vision: pular valor do "Secao" (1º número após headers separados)
-                    if (!empty($skip_first_number)) {
-                        $skip_first_number = 0;
-                        $encontra_cod_integracao++;
-                    } else {
-                        $cpf = $resposta[0];
-                        $cpf = remover_nao_numericos($cpf);
-
-                        if ($cpf != $cpfConsultas) {
-
-                            $encontra_valor_liquido = 1; //SEMPRE QUE ACHAR O CPF VAI BUSCAR O VALOR LIQUIDO DO CPF ENCONTRADO
-                            $cpfConsultas = $cpf;
-                            $contagem_Cpf++;
-                            $contagCpfPag++;
-                            $pagina_ini = $page_number;
-                            $concat_cpf .= "||" . $cpfConsultas;
-                            $concat_pagina_ini .= "||" . $pagina_ini;
-                            $pagina_fim = $page_number;
-
-                            if ($contagCpfPag > 1) {
-                                $encDois_Cpfs = 1;
-                                // echo "2 CPFS diferentes por pagina";
-                            }
-                            // echo "<br>CPF cont page:" . $encDois_Cpfs . "<br>";
-                        } else {
-                            $pagina_fim = $page_number;
-                            $pagina_espelhada = 1;
-                            // echo "<br>CPF IGUAL O DO REGISTRO ANTERIOR:" . $cpfConsultas . "<br>";
+                        if ($contagCpfPag > 1) {
+                            $encDois_Cpfs = 1;
                         }
-
-                        $regarq =   $contagem_Cpf;
-
-                        unset($encontra_cod_integracao);
+                    } else {
+                        $pagina_fim = $page_number;
+                        $pagina_espelhada = 1;
                     }
+                    $regarq = $contagem_Cpf;
+                    $encontra_cod_integracao = 0;
                 } else {
                     $encontra_cod_integracao++;
                 }
             }
 
-            // (valor liquido agora detectado via "Faixa IRRF" abaixo)
+            // Passo 1: Trigger em "Codigo" standalone
+            if (preg_match('/^Codigo$/i', trim($var_text))) {
+                $cod_pendente_confirm = 1;
+            }
         }
 
         // Rastrear último valor monetário visto
@@ -176,31 +180,6 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary)) {
             $concat_valor_liquido = $concat_valor_liquido . "||" . $last_monetary;
         }
-
-        // Caso encontre a filial, ele atribui valor da proxima casa para formar o cod usuario
-        if ($encontra_filial >= 1 && $encontra_filial <= 5) {
-            $codIntegraca = remover_nao_numericos($var_text);
-            if (!empty($codIntegraca)) {
-                $codusu = $var_text;
-                $cod_integracao = remover_nao_numericos($codusu);
-                unset($encontra_filial);
-            } else {
-                $encontra_filial++;
-            }
-        }
-
-        // Identificar Filial
-        if (preg_match('/Folha/i', $var_text)) {
-            $encontra_filial = 1;
-            $encontra_cod_integracao = 1;
-            // Google Vision: "Secao" e "Folha" são headers separados,
-            // "0" (Secao) vem antes de "1" (Folha). Pular 1º número.
-            if (preg_match('/Secao/i', $prev_text_conti)) {
-                $skip_first_number = 1;
-            }
-            //echo 'ENCONTROU FOLHA' . '<br>';
-        }
-        $prev_text_conti = $var_text;
 
         // Verifica e identifica o valor liquido
         if (preg_match('/Total Liquido/i', $var_text)) {
