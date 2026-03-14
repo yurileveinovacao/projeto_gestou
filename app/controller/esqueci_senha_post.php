@@ -123,6 +123,7 @@ function atualizar_senha_usuario($id_usu, $codigo)
 function iniciar_sessao_recuperacao_senha($cpf)
 {
     // Inicia a sessão para recuperação de senha
+    global $pdo;
     session_name("troca_senha");
     require_once __DIR__."/../../config/session.php"; session_start();
 

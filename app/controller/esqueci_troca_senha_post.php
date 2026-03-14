@@ -55,6 +55,7 @@ if (isset($_POST['btn_submit'])) {
 function variavel_sessao_recuperacao_senha()
 {
     // Inicia a sessão para recuperação de senha
+    global $pdo;
     session_name("troca_senha");
     require_once __DIR__."/../../config/session.php"; session_start();
 

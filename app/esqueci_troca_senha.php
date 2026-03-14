@@ -1,3 +1,9 @@
+<?php
+require_once __DIR__."/../config/database.php";
+session_name("troca_senha");
+require_once __DIR__."/../config/session.php";
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -46,9 +52,6 @@
 			<div class="wrap-login100 p-t-35 p-b-50">
 
 				<?php
-				session_name("troca_senha");
-				require_once __DIR__."/../config/session.php"; session_start();
-
 				if (!isset($_SESSION['troca_senha_cpf'])) {
 
 					echo "
