@@ -28,8 +28,8 @@ Início: 2026-03-05
 | Fase 2 — Infraestrutura GCP | ✅ Completa | 9 recursos em us-central1 |
 | Fase 3 — Migração de Dados | ✅ Completa | 307 tabelas, 43k arquivos |
 | Fase 4A — Deploy | ✅ Completa | Cloud Run, domain mapping, SSL |
-| **Fase 4B — OCR Templates** | **🔧 Em andamento** | **1/16 tarefas** |
-| Fase 5 — App Android TWA | ⬜ Pendente | 0/21 |
+| Fase 4B — OCR Templates | ✅ Completa | 16/16 tarefas, 23 templates corrigidos |
+| **Fase 5 — App Android TWA** | **🔧 Em andamento** | **15/21** |
 | Fase 6 — Cutover | ⬜ Pendente | 0/13 |
 
 Plano detalhado: docs/plano-migracao-gestou-consolidado.md
@@ -51,3 +51,40 @@ Histórico PRD original: docs/progress-prd-original.txt
 - Copiado plano consolidado para docs/plano-migracao-gestou-consolidado.md
 - Atualizado CLAUDE.md com regras e referências atuais
 - Adicionado scripts/test-*.php ao .gitignore
+
+### 2026-03-09~13 — Fase 4B: Completa (OCR Templates)
+- **IRRF (4 templates):** dirf_v4, dirf2_v4, dirf_v5, dirf_v4_ignora_cnpj — detecção antecipada de ano + mkdir + formato "Exercicio de YYYY"
+- **Ponto (5 templates):** ponto_1_v7, pontosecullum_p_v7, pontosecullum_v7, saturno_v1, tangerino_v7 — corrigidos para Google Vision
+- **Holerite (14 templates):** acedata_v8, contimatic_v8, contimatic_v9, dominio_v8/v8_i/v8_mg/v9/v9_mr/v9_s, dpcuca_v8, folhamatic_v9/v10, holerite_1_v8, photeus_v8 — corrigidos competência, cod_integracao, valor líquido, mkdir
+- Fixes específicos: competência multi-line, cod_integracao com confirmação "Nome", vliq via "TOTAL LIQUIDO" e "Faixa IRRF", acedata CODIGO trigger
+- Total: 23 templates corrigidos, ~20 commits de fix
+
+### 2026-03-13~14 — Fase 5: Track B (PWA) + Track C (TWA) — 15/21 tarefas
+
+**Track B — PWA (7/7 completo):**
+- Ícones PWA gerados via PHP GD: 192x192, 512x512, maskable-512x512 (fundo #4A0E8F)
+- manifest.json: standalone, portrait, start_url=/app/login, scope=/app/
+- sw.js: network-first para páginas, cache-first para assets, fallback offline.html
+- offline.html: página auto-contida com branding Gestou
+- pwa_head.php + pwa_register.php: includes injetados em 47 páginas PHP
+- Lighthouse PWA score: **100**
+- Deploy Cloud Run com PWA: revision gestou-00042-jt2
+
+**Track C — TWA Build (8/8 completo):**
+- Keystore: gestou-keystore.jks (alias: gestou, RSA 2048, validade 10000 dias)
+- SHA-256: B6:F2:31:F7:02:75:9E:7F:2C:F5:F3:FA:AF:AF:32:44:44:16:82:46:55:4B:FA:B4:69:09:0C:A6:66:41:22:D2
+- Projeto Gradle TWA: androidbrowserhelper:2.5.0, GestouLauncherActivity, target SDK 34
+- APK assinado: gestou-release-signed.apk (2.5MB)
+- .well-known/assetlinks.json: Digital Asset Links configurado e validado em produção
+- Deploy Cloud Run com assetlinks: verificação OK em https://gestou.leveinovacao.com.br/.well-known/assetlinks.json
+- Teste no emulador Android 34: TWA funcionando tela cheia sem barra do Chrome
+- Commits: f305ed1 (PWA, 57 arquivos) + c59be4b (TWA, 20 arquivos)
+
+**Track A — Play Console (0/6 pendente, depende do cliente):**
+- [ ] Solicitar número D-U-N-S (Dun & Bradstreet) — gratuito, 5-30 dias úteis
+- [ ] Criar conta organizacional no Play Console (US$ 25)
+- [ ] Verificar identidade e organização
+- [ ] Configurar perfil do desenvolvedor
+- [ ] Criar assets da Store (feature graphic, screenshots)
+- [ ] Escrever descrições e configurar listing
+- Após Track A: upload AAB, teste interno, promover para produção

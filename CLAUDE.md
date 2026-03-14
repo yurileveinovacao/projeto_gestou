@@ -99,9 +99,10 @@ psql -h 127.0.0.1 -p 5434 -U gestou -d gestou
 
 ## Status Atual
 
-**Fase 4B — Compatibilidade OCR Templates** (em andamento, 1/16 tarefas)
-- IRRF: 3 templates corrigidos (dirf_v4, dirf2_v4, dirf_v5), faltam holerites e pontos
-- Próximo: analisar e corrigir 14 templates de holerite + 5 de ponto
+**Fase 5 — App Android TWA** (em andamento, 15/21 tarefas)
+- Track A: Conta Play Console (D-U-N-S, cadastro) — **pendente do cliente** (0/6)
+- Track B: PWA — **completo** (7/7) — Lighthouse score 100, deploy feito
+- Track C: Build TWA — **completo** (8/8) — APK assinado, assetlinks validado, teste OK no emulador
 
 ## Referência
 
