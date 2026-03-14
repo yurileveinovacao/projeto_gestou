@@ -35,6 +35,7 @@ $pagina = "H";
   <link href="https://www.cssscript.com/demo/sticky.css" rel="stylesheet" type="text/css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" referrerpolicy="no-referrer" />
 
+<?php include __DIR__.'/pwa_head.php'; ?>
 </head>
 
 <body id="page-top">
@@ -229,6 +230,7 @@ $pagina = "H";
     }
   </script>
 
+<?php include __DIR__.'/pwa_register.php'; ?>
 </body>
 
 </html>

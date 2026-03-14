@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "br.com.leveinovacao.gestou",
+      "sha256_cert_fingerprints": [
+        "B6:F2:31:F7:02:75:9E:7F:2C:F5:F3:FA:AF:AF:32:44:44:16:82:46:55:4B:FA:B4:69:09:0C:A6:66:41:22:D2"
+      ]
+    }
+  }
+]

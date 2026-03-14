@@ -28,6 +28,7 @@ if (isset($_SESSION["id_irr_imposto"])) {
     <link href="vendor/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css">
     <!-- <link href="css/ruang-admin.min.css" rel="stylesheet"> -->
     <link href="css/ruang-admin.css" rel="stylesheet">
+<?php include __DIR__.'/pwa_head.php'; ?>
 </head>
 
 <body id="page-top">
@@ -235,6 +236,7 @@ if (isset($_SESSION["id_irr_imposto"])) {
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="js/ruang-admin.min.js"></script>
+<?php include __DIR__.'/pwa_register.php'; ?>
 </body>
 
 </html>

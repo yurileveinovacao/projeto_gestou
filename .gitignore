@@ -80,3 +80,13 @@ desktop.ini
 *.swo
 *~
 cloud-sql-proxy
+
+# ========================================
+# TWA BUILD ARTIFACTS
+# ========================================
+app/twa/.gradle/
+app/twa/app/build/
+app/twa/local.properties
+app/twa/*.jks
+app/twa/*.keystore
+app/twa/*.aab

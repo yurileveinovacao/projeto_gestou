@@ -36,6 +36,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
 	<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous" />
+<?php include __DIR__.'/pwa_head.php'; ?>
 </head>
 
 <body>
@@ -138,6 +139,7 @@
 	<script src="js/jquery.maskedinput-1.1.4.pack.js" type="text/javascript"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-masker/1.1.0/vanilla-masker.min.js" type="text/javascript"></script>
 
+<?php include __DIR__.'/pwa_register.php'; ?>
 </body>
 
 </html>

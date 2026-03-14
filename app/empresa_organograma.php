@@ -25,6 +25,7 @@ require 'util.php';
   <!-- <link href="css/ruang-admin.min.css" rel="stylesheet"> -->
   <link href="css/ruang-admin.css" rel="stylesheet">
   <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+<?php include __DIR__.'/pwa_head.php'; ?>
 </head>
 
 <body id="page-top">
@@ -124,6 +125,7 @@ require 'util.php';
       $('#dataTableHover').DataTable(); // ID From dataTable with Hover
     });
   </script>
+<?php include __DIR__.'/pwa_register.php'; ?>
 </body>
 
 </html>

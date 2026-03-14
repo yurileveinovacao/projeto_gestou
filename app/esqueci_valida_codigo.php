@@ -38,6 +38,7 @@ if (isset($_SESSION['cod_liberado'])) {
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
 	<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous" />
+<?php include __DIR__.'/pwa_head.php'; ?>
 </head>
 
 <body>
@@ -100,6 +101,7 @@ if (isset($_SESSION['cod_liberado'])) {
 	<!-- <script src="vendor_sweeetalert/sweetalert2.js"></script> -->
 	<script src="vendor_sweeetalert/sweetalert2.all.min.js"></script>
 
+<?php include __DIR__.'/pwa_register.php'; ?>
 </body>
 
 </html>

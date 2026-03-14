@@ -62,6 +62,7 @@ require 'util.php';
 
     <!-- optionally if you need translation for your language then include the locale file as mentioned below (replace LANG.js with your language locale) -->
     <script src="https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.2.5/js/locales/LANG.js"></script>
+<?php include __DIR__.'/pwa_head.php'; ?>
 </head>
 
 <body id="page-top">
@@ -276,6 +277,7 @@ require 'util.php';
     <link rel="stylesheet" href="vendor_sweeetalert/sweetalert2.min.css">
     <!-- <script src="vendor_sweeetalert/sweetalert2.js"></script> -->
     <script src="vendor_sweeetalert/sweetalert2.all.min.js"></script>
+<?php include __DIR__.'/pwa_register.php'; ?>
 </body>
 
 </html>

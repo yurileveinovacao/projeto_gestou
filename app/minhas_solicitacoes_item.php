@@ -28,6 +28,7 @@ require 'util.php';
     <!-- <script src="vendor_sweeetalert/sweetalert2.js"></script> -->
     <script src="vendor_sweeetalert/sweetalert2.all.min.js"></script>
 
+<?php include __DIR__.'/pwa_head.php'; ?>
 </head>
 
 <body id="page-top">
@@ -209,6 +210,7 @@ require 'util.php';
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="js/ruang-admin.min.js"></script>
+<?php include __DIR__.'/pwa_register.php'; ?>
 </body>
 
 </html>

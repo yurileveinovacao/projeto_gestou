@@ -35,6 +35,7 @@ require_once __DIR__."/../config/session.php"; session_start();
 	<!--===============================================================================================-->
 
 	<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous" />
+<?php include __DIR__.'/pwa_head.php'; ?>
 </head>
 
 <body>
@@ -191,6 +192,7 @@ require_once __DIR__."/../config/session.php"; session_start();
 		cel.addEventListener('input', inputHandler.bind(undefined, celMask, 16), false);
 	</script>
 
+<?php include __DIR__.'/pwa_register.php'; ?>
 </body>
 
 </html>

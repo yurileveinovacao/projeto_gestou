@@ -30,6 +30,7 @@ require_once __DIR__.'/../config/database.php';
     <link href="vendor/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css">
     <!-- <link href="css/ruang-admin.min.css" rel="stylesheet"> -->
     <link href="css/ruang-admin.css" rel="stylesheet">
+<?php include __DIR__.'/pwa_head.php'; ?>
 </head>
 
 <body id="page-top">
@@ -869,6 +870,7 @@ require_once __DIR__.'/../config/database.php';
     <script src="js/ruang-admin.min.js"></script>
     <script src="vendor/chart.js/Chart.min.js"></script>
     <script src="js/demo/chart-area-demo.js"></script>
+<?php include __DIR__.'/pwa_register.php'; ?>
 </body>
 
 </html>

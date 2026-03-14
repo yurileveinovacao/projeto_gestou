@@ -82,6 +82,7 @@ foreach (select_organograma($id_emp_default) as $organograma) {
   }
   </style>
 
+<?php include __DIR__.'/pwa_head.php'; ?>
 </head>
 
 <body>
@@ -116,6 +117,7 @@ foreach (select_organograma($id_emp_default) as $organograma) {
       </div>
     </div>
   </div>
+<?php include __DIR__.'/pwa_register.php'; ?>
 </body>
 
 </html>

@@ -31,6 +31,7 @@ if (isset($_SESSION['id_not_item'])) {
     <link href="vendor/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css">
     <!-- <link href="css/ruang-admin.min.css" rel="stylesheet"> -->
     <link href="css/ruang-admin.css" rel="stylesheet">
+<?php include __DIR__.'/pwa_head.php'; ?>
 </head>
 
 <body id="page-top">
@@ -154,6 +155,7 @@ if (isset($_SESSION['id_not_item'])) {
     <script src="vendor_sweeetalert/sweetalert2.all.min.js"></script>
 
 
+<?php include __DIR__.'/pwa_register.php'; ?>
 </body>
 
 </html>
