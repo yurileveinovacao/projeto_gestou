@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Gestou - Holerite Digital</string>
+    <string name="launcher_name">Gestou</string>
+    <string name="asset_statements">
+        [{
+            \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+            \"target\": {
+                \"namespace\": \"web\",
+                \"site\": \"https://gestou.leveinovacao.com.br\"
+            }
+        }]
+    </string>
+</resources>

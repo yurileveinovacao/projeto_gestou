@@ -1,0 +1,2 @@
+rootProject.name = 'gestou-twa'
+include ':app'

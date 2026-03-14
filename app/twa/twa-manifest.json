@@ -1,0 +1,45 @@
+{
+  "packageId": "br.com.leveinovacao.gestou",
+  "host": "gestou.leveinovacao.com.br",
+  "name": "Gestou - Holerite Digital",
+  "launcherName": "Gestou",
+  "display": "standalone",
+  "themeColor": "#4A0E8F",
+  "themeColorDark": "#3A0B73",
+  "navigationColor": "#4A0E8F",
+  "navigationColorDark": "#3A0B73",
+  "navigationDividerColor": "#4A0E8F",
+  "navigationDividerColorDark": "#3A0B73",
+  "backgroundColor": "#4A0E8F",
+  "enableNotifications": false,
+  "startUrl": "/app/login",
+  "iconUrl": "https://gestou.leveinovacao.com.br/app/icons/icon-512x512.png",
+  "maskableIconUrl": "https://gestou.leveinovacao.com.br/app/icons/icon-maskable-512x512.png",
+  "shortcuts": [],
+  "signing": {
+    "keyPath": "/media/rafo/dados/IA/gestou/www/www/app/twa/gestou-keystore.jks",
+    "alias": "gestou"
+  },
+  "appVersionCode": 1,
+  "appVersionName": "1.0.0",
+  "signingKey": {
+    "path": "/media/rafo/dados/IA/gestou/www/www/app/twa/gestou-keystore.jks",
+    "alias": "gestou"
+  },
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://gestou.leveinovacao.com.br/app/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://gestou.leveinovacao.com.br/app/",
+  "minSdkVersion": 19,
+  "orientation": "portrait",
+  "fingerprints": [
+    {
+      "name": "gestou",
+      "value": "B6:F2:31:F7:02:75:9E:7F:2C:F5:F3:FA:AF:AF:32:44:44:16:82:46:55:4B:FA:B4:69:09:0C:A6:66:41:22:D2"
+    }
+  ]
+}
