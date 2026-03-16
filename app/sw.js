@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gestou-v1';
+const CACHE_NAME = 'gestou-v2';
 
 const PRECACHE_URLS = [
   '/app/offline.html'

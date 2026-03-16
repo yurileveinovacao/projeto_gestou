@@ -66,7 +66,7 @@ require_once 'app/iuds_app.php';
                     <div class="copyright text-center my-auto">
                         <span>
                             Ambiente Seguro&nbsp;&nbsp;<img src="app/img/logo/icone_seguro.png" height="12"></img> <br><br>
-                            Desenvolvido por LFP Serviços
+                            Leve Inovação Estratégica Ltda — CNPJ 53.094.687/0001-38
                         </span>
                     </div>
                 </div>

@@ -25,7 +25,7 @@ try {
 
     // Define o destinatário
     // $mail->addAddress($email_email, $nome_email);
-    $mail->addAddress('tiezzi.junior@lfpservicos.com.br', 'TIEZZI');
+    $mail->addAddress('contato@leveinovacao.com.br', 'TIEZZI');
     // Define Cópia Oculta
     // $mail->addBCC('ti@comercialpivato.com.br');
     // Conteúdo da mensagem

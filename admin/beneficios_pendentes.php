@@ -314,7 +314,7 @@ $id_emp_default = $_SESSION['id_emp_default'];
         <footer class="sticky-footer bg-white">
             <div class="container my-auto">
                 <div class="copyright text-center my-auto">
-                    <span>Copyright &copy; LFP Serviços 2021</span>
+                    <span>Copyright &copy; Leve Inovação Estratégica Ltda — CNPJ 53.094.687/0001-38 — <?php echo date('Y'); ?></span>
                 </div>
             </div>
         </footer>

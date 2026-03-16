@@ -526,11 +526,11 @@
                                                                         </tr>
                                                                         <tr>
                                                                             <td class="coluna-esquerda">RAZÃO SOCIAL:</td>
-                                                                            <td class="coluna-direita">LFP SERVIÇOS</td>
+                                                                            <td class="coluna-direita">Leve Inovação Estratégica Ltda</td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td class="coluna-esquerda">E-MAIL</td>
-                                                                            <td class="coluna-direita">yuri.pereira@lfpservicos.com.br</td>
+                                                                            <td class="coluna-direita">contato@leveinovacao.com.br</td>
                                                                         </tr>
                                                                         <tr>
                                                                             <td class="coluna-esquerda">TELEFONE:</td>

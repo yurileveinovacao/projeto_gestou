@@ -21,7 +21,7 @@ try {
   $mail->AddEmbeddedImage('../img/images_email/youtube.png', 'youtube');
   $mail->AddEmbeddedImage('../img/images_email/password_code.png', 'topo');
 
-  $email = "yuri.pereira@lfpservicos.com.br";
+  $email = "contato@leveinovacao.com.br";
   $nome = "Yuri Pereira";
 
   // Define o destinatário
