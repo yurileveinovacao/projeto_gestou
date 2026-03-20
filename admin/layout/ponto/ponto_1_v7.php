@@ -99,7 +99,8 @@ foreach ($json_base->analyzeResult->readResults as $key) {
                 }
             }
 
-            if ($encontra_cpf == 1) {
+            // Google Vision: flag CPF ativo — buscar número CPF nas próximas linhas (até 5)
+            if ($encontra_cpf >= 1) {
 
                 //echo 'ENTROU BUSCA POR CPF'.'<br>';
 
@@ -135,8 +136,11 @@ foreach ($json_base->analyzeResult->readResults as $key) {
                         //echo "<br>CPF IGUAL O DO REGISTRO ANTERIOR:" . $pis_consulta . "<br>";
                     }
                     $regarq =   $contagem_cpf;
+                    $encontra_cpf = 0;
+                } else {
+                    $encontra_cpf++;
+                    if ($encontra_cpf > 5) { $encontra_cpf = 0; }
                 }
-                unset($encontra_cpf);
             }
 
             // Google Vision: flag da iteração anterior (label "PIS" sem número)
@@ -226,7 +230,7 @@ foreach ($json_base->analyzeResult->readResults as $key) {
     } else {
         $tipo_pagina = "Página Espelhada";
     }
-    unset($cnpj_consulta);
+    // $cnpj_consulta persiste entre páginas — Google Vision pode retornar CPF antes do CNPJ
     unset($contagem_cpf_pagina);
     unset($pagina_ini);
     unset($pagina_fim);

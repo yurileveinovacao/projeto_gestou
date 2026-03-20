@@ -8,7 +8,7 @@ require_once '../vendor_fpdi/autoload.php'; //chamada da biblioteca do FPDI
 use setasign\Fpdi\Fpdi;
 
 $desativaInsercao = 0; //0 ativa - 1 desativa
-$exibeVarTexto = 0; //0 nao exibe - 1 exibe 
+$exibeVarTexto = 0; //0 nao exibe - 1 exibe
 $exibeRegistros = 0; //0 nao exibe - 1 exibe
 
 //Variavies estao vindo do util.php/////////////////////////////////////////////////////////////////////
@@ -129,6 +129,7 @@ foreach ($json_base->analyzeResult->readResults as $key) {
                         $pagina_fim = $page_number;
                         $valorliq = 0;
                         $forcavalor = 0;
+                        $encLiquidoP1 = 1;
                         if ($contagCpfPag > 1) { $encDois_Cpfs = 1; }
                     } else {
                         if (isset($valorliq) && $valorliq == 1) { unset($valorliq); }
@@ -169,8 +170,9 @@ foreach ($json_base->analyzeResult->readResults as $key) {
 
             // Detectar valor líquido: o valor monetário imediatamente antes de "Faixa IRRF"
             // Mais robusto que "Valor Liquido" header, que no Google Vision pode ficar separado do valor
-            if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary)) {
+            if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary) && $encLiquidoP1 == 1) {
                 $concat_valor_liquido = $concat_valor_liquido . "||" . $last_monetary;
+                $encLiquidoP1 = 0;
             }
 
             // Verifica e identifica o valor liquido

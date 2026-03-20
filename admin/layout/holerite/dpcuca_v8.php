@@ -9,7 +9,7 @@ use setasign\Fpdi\Fpdi;
 
 //VARIAVEIS DE CONTROLE
 $desativaInsercao = 0; //0 ativa - 1 desativa
-$exibeVarTexto = 0; //0 nao exibe - 1 exibe 
+$exibeVarTexto = 0; //0 nao exibe - 1 exibe
 $exibeRegistros = 0; //0 nao exibe - 1 exibe
 
 //Variavies estao vindo do util.php/////////////////////////////////////////////////////////////////////
@@ -35,9 +35,7 @@ $valorLiquido = null;
 $encDois_Cpfs = null;
 $achoucompete = 0;
 $encontra_cpf_nextline = 0;
-$encontra_total_venc = 0;
-$encontra_total_desc = 0;
-$total_venc_atual = '';
+$encontra_vr_liquido = 0;
 
 // Variavel que recebe a descricao da importacao
 $descricao_recibo = $_SESSION['descricao'];
@@ -160,36 +158,29 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
                     $encontra_cpf_nextline = 1;
                 }
             }
-            // Rastrear Total de Vencimentos (flag counter)
-            if (preg_match('/Total\s*(de\s*)?vencimentos/i', $var_text)) {
-                $encontra_total_venc = 1;
-            }
-            if ($encontra_total_venc >= 1 && $encontra_total_venc <= 5) {
-                if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text, $m_tv)) {
-                    $total_venc_atual = $m_tv[1];
-                    $encontra_total_venc = 0;
-                } else {
-                    $encontra_total_venc++;
-                }
-            }
-
-            // Rastrear Total de Descontos e computar vliq = venc - desc
-            if (preg_match('/Total\s*(de\s*)?descontos/i', $var_text)) {
-                $encontra_total_desc = 1;
-            }
-            if ($encontra_total_desc >= 1 && $encontra_total_desc <= 5) {
-                if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text, $m_td)) {
-                    $total_desc_atual = $m_td[1];
-                    $encontra_total_desc = 0;
-                    if (!empty($total_venc_atual) && !empty($cpfConsultas) && $encLiquidoP1 == 1) {
-                        $vliq = formatar_decimal($total_venc_atual) - formatar_decimal($total_desc_atual);
-                        $vliq_formatted = number_format($vliq, 2, ',', '.');
-                        $concat_valor_liquido .= "||" . $vliq_formatted;
+            // Capturar Vr. Liquido diretamente do OCR (mais confiável que calcular venc - desc)
+            if (preg_match('/Vr\.?\s*Liquido/i', $var_text)) {
+                // Valor na mesma linha
+                if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text, $m_vl)) {
+                    if (!empty($cpfConsultas) && $encLiquidoP1 == 1) {
+                        $concat_valor_liquido .= "||" . $m_vl[1];
                         $encLiquidoP1 = 0;
-                        $total_venc_atual = '';
                     }
                 } else {
-                    $encontra_total_desc++;
+                    // Valor na próxima linha
+                    $encontra_vr_liquido = 1;
+                }
+            }
+            if ($encontra_vr_liquido >= 1 && $encontra_vr_liquido <= 5) {
+                if (preg_match('/^(\d[\d\.]*,\d{2})$/', trim($var_text), $m_vl)) {
+                    if (!empty($cpfConsultas) && $encLiquidoP1 == 1) {
+                        $concat_valor_liquido .= "||" . $m_vl[1];
+                        $encLiquidoP1 = 0;
+                    }
+                    $encontra_vr_liquido = 0;
+                } else {
+                    $encontra_vr_liquido++;
+                    if ($encontra_vr_liquido > 5) { $encontra_vr_liquido = 0; }
                 }
             }
 

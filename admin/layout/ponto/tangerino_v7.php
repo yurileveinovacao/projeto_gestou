@@ -9,7 +9,7 @@ use setasign\Fpdi\Fpdi;
 
 $contagem_cpf = 0;
 $desativa_insert = 0; //0 ativa - 1 desativa
-$exibe_var_text = 0; //0 nao exibe - 1 exibe 
+$exibe_var_text = 0; //0 nao exibe - 1 exibe
 $exibe_registros = 0; //0 nao exibe - 1 exibe
 
 // Variavel que recebe a descricao da importacao
@@ -178,7 +178,7 @@ foreach ($json_base->analyzeResult->readResults as $key) {
     } else {
         $tipo_pagina = "Página Espelhada";
     }
-    unset($cnpj_consulta);
+    // $cnpj_consulta persiste entre páginas — Google Vision pode retornar CPF antes do CNPJ
     unset($contagem_cpf_pagina);
     unset($pagina_ini);
     unset($pagina_fim);

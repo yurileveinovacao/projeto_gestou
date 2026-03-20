@@ -175,9 +175,10 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
             }
 
             // Detectar valor líquido: o valor monetário imediatamente antes de "Faixa IRRF"
-            if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary)) {
+            if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary) && $encLiquidoP1 == 1) {
                 $concat_valor_liquido .= "||" . $last_monetary;
                 $last_monetary = '';
+                $encLiquidoP1 = 0;
             }
 
             // Verifica e identifica o valor liquido

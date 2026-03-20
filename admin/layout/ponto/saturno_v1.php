@@ -205,7 +205,7 @@ foreach ($json_base->analyzeResult->readResults as $key) {
     } else {
         $tipo_pagina = "Página Espelhada";
     }
-    unset($cnpj_consulta);
+    // $cnpj_consulta persiste entre páginas — Google Vision pode retornar CPF antes do CNPJ
     unset($contagem_cpf_pagina);
     unset($pagina_ini);
     unset($pagina_fim);
