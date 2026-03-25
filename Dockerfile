@@ -33,8 +33,8 @@ RUN sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf \
 # Allow .htaccess overrides
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 
-# Increase PHP upload limits (default is 2M, insufficient for batch PDFs)
-RUN echo "upload_max_filesize=20M\npost_max_size=25M" > /usr/local/etc/php/conf.d/uploads.ini
+# PHP settings: upload limits + error logging to stderr (Cloud Run captures stderr)
+RUN echo "upload_max_filesize=20M\npost_max_size=25M\nmemory_limit=512M\nlog_errors=On\nerror_log=/dev/stderr\ndisplay_errors=Off" > /usr/local/etc/php/conf.d/php-settings.ini
 
 # Copy application code and vendors
 COPY . /var/www/html/

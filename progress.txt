@@ -80,6 +80,32 @@ Histórico PRD original: docs/progress-prd-original.txt
 - Teste no emulador Android 34: TWA funcionando tela cheia sem barra do Chrome
 - Commits: f305ed1 (PWA, 57 arquivos) + c59be4b (TWA, 20 arquivos)
 
+### 2026-03-14 — Fix: Sessão PostgreSQL no fluxo de recuperação de senha
+- **Bug:** `PgSessionHandler::__construct()` recebia `$pdo = NULL` nos controllers de recuperação de senha
+- **Causa:** `$pdo` é global mas não estava acessível dentro de funções que incluíam `config/session.php`
+- **Fix:** Adicionado `global $pdo` em 3 controllers + movida inicialização de sessão para antes do HTML em `esqueci_troca_senha.php`
+- Arquivos: `esqueci_senha_post.php`, `esqueci_valida_codigo_post.php`, `esqueci_troca_senha_post.php`, `esqueci_troca_senha.php`
+- Commit: d90de6a — deploy: revision gestou-00045-l8p
+
+### 2026-03-23 — Fix: Memory limit + Cloud Run 2GB RAM
+- **Bug:** PDFs grandes (69+ páginas) causavam `Fatal error: Allowed memory size of 134217728 bytes exhausted` no `config/ocr.php:75` (curl_exec)
+- **Causa:** PHP `memory_limit` padrão de 128MB insuficiente. PDF de 69 páginas consome 278MB de pico (base64 + 14 batches de OCR)
+- **Fix 1:** Adicionado `memory_limit=512M` no Dockerfile (`php-settings.ini`)
+- **Fix 2:** Adicionado `log_errors=On`, `error_log=/dev/stderr`, `display_errors=Off` — PHP errors agora aparecem nos logs do Cloud Run
+- **Fix 3:** Cloud Run RAM aumentada de 1Gi para **2Gi** — com 5 Apache workers × 512MB, 1GB era insuficiente e causava lentidão generalizada
+- Deploy: revision gestou-00068-xg9
+
+### 2026-03-25 — Fix: OCR por coordenadas + template dominio_v9_s adaptado
+- **Bug:** Google Vision retorna texto em ordem aleatória a cada chamada, causando capturas inconsistentes (49-67 de 69 páginas)
+- **Causa:** `fullTextAnnotation.text` não tem ordem determinística; "Código" e "Nome" ficam na mesma linha Y e o Google inverte arbitrariamente
+- **Fix 1 (config/ocr.php):** `convertGoogleToAzureFormat()` reescrita para usar coordenadas de bounding box dos blocos (Y→X), garantindo ordem determinística
+- **Fix 2 (config/ocr.php):** Limpeza de espaços em pontuação (`37.095.795 / 0001-79` → `37.095.795/0001-79`)
+- **Fix 3 (dominio_v9_s.php):** Aceita "Nome" antes do número (`$nome_ja_encontrado`), trigger "Codigo 567" (bloco junto), timeout 5→8
+- **Fix 4 (dominio_v9_s.php):** Valor líquido: `preg_match_all` para extrair último valor da linha, exclui labels (Faixa IRRF, Base Calc, F.G.T.S)
+- **Resultado:** 69/69 páginas, 0 falsos positivos, determinístico (3 runs = mesmo resultado)
+- Deploy: revision gestou-00074-gr5
+- **NOTA:** A mudança no config/ocr.php afeta todos os 83 templates — validado em dominio_v9_s e pontosecullum_p_v7
+
 **Track A — Play Console (0/6 pendente, depende do cliente):**
 - [ ] Solicitar número D-U-N-S (Dun & Bradstreet) — gratuito, 5-30 dias úteis
 - [ ] Criar conta organizacional no Play Console (US$ 25)

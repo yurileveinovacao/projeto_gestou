@@ -36,6 +36,7 @@ $encDois_Cpfs = null;
 $competenciaEmLinhas = 0;
 $cod_pendente_valor = '';
 $cod_pendente_confirm = 0;
+$nome_ja_encontrado = false;
 
 // Variavel que recebe a descricao da importacao
 $descricao_recibo = $_SESSION['descricao'];
@@ -116,7 +117,7 @@ foreach ($json_base->analyzeResult->readResults as $key) {
             $retorno_cnpj = 1;
 
             // Passo 3: Confirmar cod_integracao pendente via "Nome" (ou cancelar via "Descri"/timeout)
-            if ($cod_pendente_confirm >= 1 && $cod_pendente_confirm <= 5) {
+            if ($cod_pendente_confirm >= 1 && $cod_pendente_confirm <= 8) {
                 if (preg_match('/Nome/i', $var_text)) {
                     $cpf = $cod_pendente_valor;
                     if ($cpf != $cpfConsultas) {
@@ -146,26 +147,65 @@ foreach ($json_base->analyzeResult->readResults as $key) {
             }
 
             // Passo 2: Buscar número após "Codigo" — armazena como pendente
-            if ($encontra_cod_integracao >= 1 && $encontra_cod_integracao <= 5) {
+            // Google Vision pode retornar "Nome" antes do número; nesse caso marcamos $nome_ja_encontrado
+            if ($encontra_cod_integracao >= 1 && $encontra_cod_integracao <= 8) {
                 if (preg_match('/^Descri/i', $var_text)) {
                     $encontra_cod_integracao = 0;
-                } elseif (preg_match('/\d+/i', $var_text, $resposta)) {
+                    $nome_ja_encontrado = false;
+                } elseif (preg_match('/^\d+$/i', $var_text, $resposta)) {
                     $cod_pendente_valor = remover_nao_numericos($resposta[0]);
-                    $cod_pendente_confirm = 1;
+                    if ($nome_ja_encontrado) {
+                        // "Nome" já apareceu antes do número — confirmar direto
+                        $cpf = $cod_pendente_valor;
+                        if ($cpf != $cpfConsultas) {
+                            $cpfConsultas = $cpf;
+                            $contagem_Cpf++;
+                            $contagCpfPag++;
+                            $pagina_ini = $page_number;
+                            $concat_cpf .= "||" . $cpfConsultas;
+                            $concat_pagina_ini .= "||" . $pagina_ini;
+                            $pagina_fim = $page_number;
+                            $valorliq = 0;
+                            $forcavalor = 0;
+                            $encLiquidoP1 = 1;
+                            if ($contagCpfPag > 1) { $encDois_Cpfs = 1; }
+                        } else {
+                            if (isset($valorliq) && $valorliq == 1) { unset($valorliq); }
+                            $pagina_fim = $page_number;
+                            $pagina_espelhada = 1;
+                        }
+                        $regarq = $contagem_Cpf;
+                        $nome_ja_encontrado = false;
+                    } else {
+                        $cod_pendente_confirm = 1;
+                    }
                     $encontra_cod_integracao = 0;
+                } elseif (preg_match('/Nome/i', $var_text)) {
+                    $nome_ja_encontrado = true;
+                    $encontra_cod_integracao++;
                 } else {
                     $encontra_cod_integracao++;
                 }
             }
 
-            // Passo 1: Trigger em "Codigo" standalone
-            if (preg_match('/^Codigo$/i', $var_text)) {
-                $encontra_cod_integracao = 1;
+            // Passo 1: Trigger em "Codigo" standalone ou "Codigo 567" (bloco junto via coordenadas)
+            if ($encontra_cod_integracao == 0 && $cod_pendente_confirm == 0) {
+                if (preg_match('/^Codigo$/i', $var_text)) {
+                    $encontra_cod_integracao = 1;
+                    $nome_ja_encontrado = false;
+                } elseif (preg_match('/^Codigo\s+(\d+)$/i', $var_text, $m_cod_junto)) {
+                    $cod_pendente_valor = remover_nao_numericos($m_cod_junto[1]);
+                    $cod_pendente_confirm = 1;
+                    $nome_ja_encontrado = false;
+                }
             }
 
             // Rastrear último valor monetário visto (para detecção via Faixa IRRF)
-            if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text)) {
-                $last_monetary = $var_text;
+            // Ignorar linhas com labels que coordenadas podem juntar com valores num bloco
+            // Extrair apenas o último valor monetário da linha (coordenadas podem juntar múltiplos valores)
+            if (preg_match_all('/(\d[\d\.]*,\d{2})/', $var_text, $m_monetary)
+                && !preg_match('/Faixa IRRF|Base Calc|F\.G\.T\.S|Salario Base|Sal\. Contr/i', $var_text)) {
+                $last_monetary = end($m_monetary[1]);
             }
 
             // Detectar valor líquido: o valor monetário imediatamente antes de "Faixa IRRF"

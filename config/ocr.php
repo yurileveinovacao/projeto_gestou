@@ -111,8 +111,9 @@ function googleVisionOCR($pdfFilePath)
 /**
  * Converts Google Cloud Vision response to Azure Computer Vision format
  *
- * Google format: fullTextAnnotation → pages → blocks → paragraphs → words → symbols
- * Azure format: analyzeResult → readResults → lines → text/words
+ * Uses block bounding box coordinates to produce deterministic line ordering
+ * (top-to-bottom, left-to-right) instead of relying on fullTextAnnotation.text
+ * which returns lines in arbitrary/varying order.
  *
  * Templates in admin/layout/ expect the Azure format:
  *   $json->analyzeResult->readResults[n]->page
@@ -135,27 +136,64 @@ function convertGoogleToAzureFormat($googlePageResponses)
 
         $lines = array();
 
-        if (isset($pageResponse->fullTextAnnotation->text)) {
-            $text = $pageResponse->fullTextAnnotation->text;
-            $textLines = explode("\n", $text);
+        if (isset($pageResponse->fullTextAnnotation->pages[0])) {
+            // Extract blocks with their bounding box coordinates
+            $page = $pageResponse->fullTextAnnotation->pages[0];
+            $blocks = array();
 
-            foreach ($textLines as $lineText) {
-                $lineText = rtrim($lineText);
-                if ($lineText !== '') {
-                    // Build words array for full Azure compatibility
-                    $words = array();
-                    $wordTexts = preg_split('/\s+/', $lineText);
-                    foreach ($wordTexts as $wordText) {
-                        if ($wordText !== '') {
-                            $words[] = (object)array('text' => $wordText);
+            foreach ($page->blocks as $block) {
+                $minY = 99;
+                $minX = 99;
+                $blockText = '';
+
+                foreach ($block->paragraphs as $para) {
+                    foreach ($para->words as $word) {
+                        $wordText = '';
+                        foreach ($word->symbols as $sym) {
+                            $wordText .= $sym->text;
                         }
-                    }
+                        $blockText .= ($blockText !== '' ? ' ' : '') . $wordText;
 
-                    $lines[] = (object)array(
-                        'text' => $lineText,
-                        'words' => $words
-                    );
+                        $y = isset($word->boundingBox->normalizedVertices[0]->y) ? $word->boundingBox->normalizedVertices[0]->y : 0;
+                        $x = isset($word->boundingBox->normalizedVertices[0]->x) ? $word->boundingBox->normalizedVertices[0]->x : 0;
+                        if ($y < $minY) $minY = $y;
+                        if ($x < $minX) $minX = $x;
+                    }
                 }
+
+                if ($blockText !== '') {
+                    // Clean up spacing around punctuation (Google Vision separates / - : . as individual words)
+                    $blockText = preg_replace('/\s*\/\s*/', '/', $blockText);
+                    $blockText = preg_replace('/\s*-\s*/', '-', $blockText);
+                    $blockText = preg_replace('/\s+:/', ':', $blockText);
+                    $blockText = preg_replace('/\s+\./', '.', $blockText);
+                    $blocks[] = array('text' => $blockText, 'y' => $minY, 'x' => $minX);
+                }
+            }
+
+            // Sort blocks by Y position (top to bottom), then X (left to right)
+            // Tolerance of 0.006 (~5px on 841px page) groups blocks on the same visual line
+            usort($blocks, function ($a, $b) {
+                if (abs($a['y'] - $b['y']) < 0.006) {
+                    return $a['x'] <=> $b['x'];
+                }
+                return $a['y'] <=> $b['y'];
+            });
+
+            // Convert blocks to Azure line format
+            foreach ($blocks as $b) {
+                $words = array();
+                $wordTexts = preg_split('/\s+/', $b['text']);
+                foreach ($wordTexts as $wordText) {
+                    if ($wordText !== '') {
+                        $words[] = (object)array('text' => $wordText);
+                    }
+                }
+
+                $lines[] = (object)array(
+                    'text' => $b['text'],
+                    'words' => $words
+                );
             }
         }
 

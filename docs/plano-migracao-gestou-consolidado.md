@@ -32,7 +32,7 @@ Usuário → gestou.leveinovacao.com.br (Cloudflare DNS, proxy OFF)
 | Fase 2 — Infraestrutura GCP | ✅ Completa | 9/9 |
 | Fase 3 — Migração de Dados | ✅ Completa | 8/8 |
 | Fase 4A — Deploy | ✅ Completa | 10/10 |
-| **Fase 4B — Compatibilidade OCR Templates** | **🔧 Em andamento** | **1/16** |
+| Fase 4B — Compatibilidade OCR Templates | ✅ Completa | 16/16 |
 | **Fase 5 — App Android TWA** | **⬜ Pendente** | **0/21** |
 | **Fase 6 — Cutover** | **⬜ Pendente** | **0/13** |
 
@@ -56,54 +56,23 @@ Deploy no Cloud Run, domain mapping, SSL, login nos 3 módulos, email SMTP, OCR 
 
 ---
 
-## Fase 4B — Compatibilidade OCR Templates com Google Vision
+## Fase 4B — Compatibilidade OCR Templates com Google Vision ✅
 
-### Contexto
+Concluída em 2026-03-13. Todos os 23 templates corrigidos para compatibilidade com Google Vision (~20 commits).
 
-A migração de Azure Computer Vision para Google Cloud Vision alterou a ordem de retorno do texto OCR. No Azure, o texto vinha em ordem visual (esquerda→direita, cima→baixo). No Google Vision, campos como "EXERCÍCIO: 2026" podem vir em linhas separadas e antes de outros campos como CNPJ.
+### Correções aplicadas
 
-### Problemas identificados
+- **IRRF (4):** dirf_v4, dirf2_v4, dirf_v5, dirf_v4_ignora_cnpj — detecção antecipada de ano + mkdir + formato "Exercicio de YYYY"
+- **Ponto (5):** ponto_1_v7, pontosecullum_p_v7, pontosecullum_v7, saturno_v1, tangerino_v7
+- **Holerite (14):** acedata_v8, contimatic_v8/v9, dominio_v8/v8_i/v8_mg/v9/v9_mr/v9_s, dpcuca_v8, folhamatic_v9/v10, holerite_1_v8, photeus_v8
 
-1. **Detecção de ano/competência** — código busca o ano APÓS o CNPJ, mas Google Vision retorna o ano ANTES
-2. **Falta mkdir** — diretórios dinâmicos por CNPJ não existem no GCS FUSE
+### Problemas resolvidos
 
-### Templates afetados
-
-**IRRF (3 em uso + 1 inativo):**
-
-| Template | Em uso | Status |
-|----------|--------|--------|
-| dirf_v4.php | ✅ | ✅ Corrigido |
-| dirf2_v4.php | ✅ | ⬜ Pendente |
-| dirf_v5.php | ✅ | ⬜ Pendente |
-| dirf_v4_ignora_cnpj.php | ❌ | ⬜ Baixa prioridade |
-
-**Holerite (14 em uso):** acedata_v8, contimatic_v8, contimatic_v9, dominio_v8, dominio_v8_i, dominio_v8_mg, dominio_v9, dominio_v9_mr, dominio_v9_s, dpcuca_v8, folhamatic_v9, folhamatic_v10, holerite_1_v8, photeus_v8, totvs_rm_v8
-
-**Ponto (5 em uso):** ponto_1_v7, pontosecullum_p_v7, pontosecullum_v7, saturno_v1, tangerino_v7
-
-### Tarefas
-
-| # | Tarefa | Estimativa |
-|---|--------|------------|
-| 1 | Analisar e corrigir dirf2_v4.php (ano + mkdir) | 1h |
-| 2 | Analisar e corrigir dirf_v5.php (ano + mkdir) | 1h |
-| 3 | Testar IRRF dirf2_v4 com PDF real | 30min |
-| 4 | Testar IRRF dirf_v5 com PDF real | 30min |
-| 5 | Analisar padrão de competência nos holerites (template modelo) | 1h |
-| 6 | Aplicar fix de detecção nos 14 templates de holerite | 3h |
-| 7 | Aplicar mkdir nos 14 templates de holerite | 1h |
-| 8 | Testar holerite com PDF real (mín. 2 templates diferentes) | 1h |
-| 9 | Analisar padrão de período nos pontos (template modelo) | 1h |
-| 10 | Aplicar fix de detecção nos 5 templates de ponto | 1h |
-| 11 | Aplicar mkdir nos 5 templates de ponto | 30min |
-| 12 | Testar ponto com PDF real (mín. 1 template) | 30min |
-| 13 | Rebuild e deploy Docker | 15min |
-| 14 | Commit e push das alterações | 15min |
-| 15 | Atualizar documentação | 30min |
-| 16 | Validação final — importar 1 de cada tipo (holerite + ponto + IRRF) | 1h |
-
-**Estimativa total: ~10-12h**
+1. Detecção de ano/competência — Google Vision retorna ano antes do CNPJ (busca antecipada)
+2. mkdir dinâmico — diretórios por CNPJ não existem no GCS FUSE
+3. Competência multi-line — mês e ano em linhas separadas no Google Vision
+4. cod_integracao — confirmação via "Nome" para evitar capturar código da tabela
+5. Valor líquido — detecção via "TOTAL LIQUIDO" e fallback "Faixa IRRF"
 
 ---
 
@@ -256,6 +225,8 @@ O app antigo era um WebView wrapper (5.1MB, package `br.com.gestou`) apontando p
 | 05/03 | mkdir dinâmico nos templates | GCS FUSE não tem diretórios pré-criados |
 | 05/03 | Detecção antecipada de ano nos templates | Google Vision retorna texto em ordem diferente do Azure |
 | 05/03 | TWA em vez de WebView wrapper | Google recomenda, performance superior, sem código nativo |
+| 23/03 | memory_limit=512M + Cloud Run 2GB RAM | PDFs grandes (69+ págs) estouravam 128MB; 5 workers × 512MB exigem 2GB |
+| 23/03 | log_errors=stderr + display_errors=Off | Erros PHP agora visíveis nos logs do Cloud Run |
 
 ---
 
@@ -264,7 +235,7 @@ O app antigo era um WebView wrapper (5.1MB, package `br.com.gestou`) apontando p
 | Serviço | Custo estimado |
 |---------|---------------|
 | Cloud SQL (db-f1-micro, 10GB) | ~US$ 8-12 |
-| Cloud Run (min 0, max 3, 1GB, gen2) | ~US$ 0-25 |
+| Cloud Run (min 0, max 3, 2GB, gen2) | ~US$ 0-35 |
 | Cloud Storage (~10GB) | ~US$ 0.25 |
 | VPC Connector | ~US$ 10-15 |
 | Vision API (~500 págs/mês) | ~US$ 0.75 |

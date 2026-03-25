@@ -24,7 +24,7 @@ Hospedado no GCP (Cloud Run + Cloud SQL).
 |-----------|-------|
 | Projeto GCP | gestou-489010 |
 | Região | us-central1 |
-| Cloud Run Service | gestou (gen2, porta 8080, 1Gi RAM, 0-3 instâncias) |
+| Cloud Run Service | gestou (gen2, porta 8080, 2Gi RAM, 0-3 instâncias) |
 | Cloud SQL Instance | gestou-489010:us-central1:gestou-db (PostgreSQL 17, db-f1-micro) |
 | GCS Bucket | gs://gestou-uploads-489010 |
 | Artifact Registry | us-central1-docker.pkg.dev/gestou-489010/gestou-repo |
@@ -73,7 +73,7 @@ gcloud run deploy gestou \
   --region=us-central1 \
   --platform=managed \
   --port=8080 \
-  --memory=1Gi \
+  --memory=2Gi \
   --min-instances=0 \
   --max-instances=3 \
   --vpc-connector=gestou-connector \
