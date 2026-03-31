@@ -9,7 +9,7 @@ use setasign\Fpdi\Fpdi;
 
 $contagem_cpf = 0;
 $desativa_insert = 0; //0 ativa - 1 desativa
-$exibe_var_text = 0; //0 nao exibe - 1 exibe
+$exibe_var_text = 0; //0 nao exibe - 1 exibe 
 $exibe_registros = 0; //0 nao exibe - 1 exibe
 
 // Variavel que recebe a descricao da importacao
@@ -66,29 +66,22 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         //// echo "<br>PERIODO:" . $periodo . "<br>";
         // }
 
-        // Identificar Periodo completo na mesma linha (ex: "01/10/2022 a 31/10/2022")
-        if (empty($periodo)) {
-            if (preg_match('/(\d{2}\/?\d{2}\/?\d{4})\s*a\s*(\d{2}\/?\d{2}\/?\d{4})/i', $var_text, $matches_periodo)) {
-                $periodo = $matches_periodo[1] . " a " . $matches_periodo[2];
-            }
+        // Verifica as datas e preenche o periodo
+        $pattern = '/[0-9]{2}\/?[0-9]{2}\/?[0-9]{4}/';
+        if (preg_match($pattern, $var_text, $matches)) {
+            $date = $matches[0];
+            //echo "count_data:". $count_data."<br>";
+            if ($count_data == 0) {
+                $date1 = $date;
+            } 
+            if ($count_data == 1) {
+                $date2 = $date;
+            } 
+            $count_data++;
         }
-
-        // Fallback: coleta 2 primeiras datas avulsas caso período não venha em uma linha
-        if (empty($periodo)) {
-            $pattern = '/[0-9]{2}\/?[0-9]{2}\/?[0-9]{4}/';
-            if (preg_match($pattern, $var_text, $matches)) {
-                $date = $matches[0];
-                if ($count_data == 0) {
-                    $date1 = $date;
-                }
-                if ($count_data == 1) {
-                    $date2 = $date;
-                }
-                $count_data++;
-            }
-            if (isset($date1) && isset($date2)) {
-                $periodo = $date1." a ". $date2;
-            }
+        if (isset($date1) && isset($date2)) {
+            // As variáveis $date1 e $date2 estão preenchidas
+            $periodo = $date1." a ". $date2;
         }
         //////////////////////////////////////////////////////////////////////////////////////////////////////
        
@@ -178,7 +171,7 @@ foreach ($json_base->analyzeResult->readResults as $key) {
     } else {
         $tipo_pagina = "Página Espelhada";
     }
-    // $cnpj_consulta persiste entre páginas — Google Vision pode retornar CPF antes do CNPJ
+    unset($cnpj_consulta);
     unset($contagem_cpf_pagina);
     unset($pagina_ini);
     unset($pagina_fim);
@@ -252,11 +245,9 @@ if (empty($dois_cpfs)) {
                         // echo "Paginas a gravar:" . $pagina_loop . "<br>";
                     }
                 }
-                    // Salvamento do arquivo em diretorio
+                    // Salvamento do arquivo em diretorio 
                     if ($desativa_insert  == 0) {
-                    $dirPath = '../../../upload/beneficios/ponto/' . $raiz_cnpj;
-                    if (!is_dir($dirPath)) { mkdir($dirPath, 0777, true); }
-                    $pdf->Output('F', $dirPath . '/' . $validador . '.pdf');
+                    $pdf->Output('F', '../../../upload/beneficios/ponto/' . $raiz_cnpj . '/' . $validador . '.pdf');
                 }
 
                 if ($desativa_insert  == 0) {

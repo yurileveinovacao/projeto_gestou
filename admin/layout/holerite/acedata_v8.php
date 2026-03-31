@@ -82,14 +82,13 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         //////////////////////////////////////////////////////////////////////////////////////////////////////
 
         //LOCALIZAR COMPETENCIA
-        if (preg_match('/[A-Za-z]+\/\d{4}/i', $var_text, $match_competencia)) {
-            $competencia = $match_competencia[0];
+        if (preg_match('/[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ ]+\S\/\d{4}/i', $var_text)) {
+            $competencia = $var_text;
         }
 
         // Verifica e identifica o CNPJ, caso enconte numera o registro
         if (preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/i', $var_text)) {
-            preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/', $var_text, $cnpj_match);
-            $cnpj = remover_nao_numericos($cnpj_match[0]);
+            $cnpj = remover_nao_numericos($var_text);
             if ($cnpj == $cnpjCompleto) {
                 $cnpj_consulta = $cnpj;
             }
@@ -98,9 +97,10 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         if ($cnpj_consulta == $cnpjCompleto) {
             $retorno_cnpj = 1;
 
-            if ($encontra_cod_integracao >= 1 && $encontra_cod_integracao <= 5) {
-                if (preg_match('/[0-9]+/i', $var_text, $codusu)) {
+            if ($encontra_cod_integracao == 1) {
+                if (preg_match('/[0-9]+/i', $var_text)) {
 
+                    preg_match('/[0-9]+/i', $var_text, $codusu);
                     $cod_integracao = $codusu[0];
                     unset($encontra_cod_integracao);
                     $cpf  =   $cod_integracao;
@@ -127,35 +127,28 @@ foreach ($json_base->analyzeResult->readResults as $key) {
                         // echo "<br>CPF IGUAL O DO REGISTRO ANTERIOR:" . $cpfConsultas . "<br>";
                     }
                     $regarq =   $contagem_Cpf;
-                } else {
-                    $encontra_cod_integracao++;
                 }
             }
 
             // Identificar código do usuario e nome
-            // Google Vision retorna "CÓDIGO" standalone (str_replace converte Ó→O)
-            if (preg_match('/^CODIGO$/i', $var_text)) {
+            if (preg_match('/^FOLHA$/i', $var_text)) {
                 $encontra_cod_integracao = 1;
             }
 
-            // Capturar valor líquido (flag da iteração anterior)
             if ($encLiquidoP2 == 1 && $encLiquidoP1 == 1) {
-                if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text, $m_vliq)) {
-                    $concat_valor_liquido = $concat_valor_liquido . "||" . $m_vliq[0];
-                    $encLiquidoP1 = 0;
+                $valorLiquido = $var_text;
+                $valorLiquido_consulta = str_replace("*", "", $var_text);
+                if ($valorLiquido_consulta != "") {
+                    $concat_valor_liquido = $concat_valor_liquido . "||" . $valorLiquido;
+                    // echo "<br>VALOR LIQUIDO:" . $valorLiquido . "<br>";
+                    unset($encLiquidoP1);
                 }
-                $encLiquidoP2 = 0;
+                unset($encLiquidoP2);
             }
 
-            // Detecta "VALOR LIQUIDO" — valor vem na próxima linha
+            // Verifica e identifica o valor liquido
             if (preg_match('/VALOR LIQUIDO/i', $var_text)) {
-                // Tentar capturar inline (ex: "VALOR LIQUIDO => 1.419,61")
-                if (preg_match('/VALOR LIQUIDO.*?(\d[\d\.]*,\d{2})/i', $var_text, $m_vliq_inline)) {
-                    $concat_valor_liquido = $concat_valor_liquido . "||" . $m_vliq_inline[1];
-                    $encLiquidoP1 = 0;
-                } else {
-                    $encLiquidoP2 = 1;
-                }
+                $encLiquidoP2 = 1;
             }
 
             // Verifica e identifica o valor liquido
@@ -237,10 +230,8 @@ if (empty($encDois_Cpfs)) {
                                 // echo "Paginas a gravar:" . $pagina_loop . "<br>";
                             }
 
-                            // Salvamento do arquivo em diretorio
+                            // Salvamento do arquivo em diretorio 
                             if ($desativaInsercao  == 0) {
-                                $output_dir = '../../../upload/beneficios/holerite/' . $raiz_cnpj;
-                                if (!is_dir($output_dir)) { mkdir($output_dir, 0777, true); }
                                 $pdf->Output('F', '../../../upload/beneficios/holerite/' . $raiz_cnpj . '/' . $validador . '.pdf');
                             }
                         }

@@ -28,15 +28,12 @@ $dataInclusao = $datinc;
 
 $encLiquidoP1 = 0;
 $encLiquidoP2 = 0;
-$last_monetary = '';
 $contagem_Cpf = 0;
 $contagCpfPag = 0;
 $codIntegraca = null;
 $cpfConsultas = null;
 $valorLiquido = null;
 $encDois_Cpfs = null;
-$encontra_cpf_nextline = 0;
-$encontra_competencia = 0;
 
 // Variavel que recebe a descricao da importacao
 $descricao_recibo = $_SESSION['descricao'];
@@ -82,27 +79,15 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
         //////////////////////////////////////////////////////////////////////////////////////////////////////
 
         //LOCALIZAR COMPETENCIA
-        if ($encontra_competencia >= 1 && $encontra_competencia <= 5) {
-            if (preg_match('/[A-Za-z]+\/?\d{4}/i', $var_text, $compet)) {
-                $competencia = $compet[0];
-                $encontra_competencia = 0;
-            } else {
-                $encontra_competencia++;
-            }
-        }
         if (preg_match('/Competencia:/i', $var_text)) {
-            if (preg_match('/([A-Za-z]+)\/?(\d{4})/i', $var_text, $compet)) {
-                $competencia = $compet[0];
-            } else {
-                $encontra_competencia = 1;
-            }
+            preg_match('/([A-Z])\w+\/?([0-9])\w+/i', $var_text, $compet);
+            $competencia = $compet[0];
         }
 
 
         // Verifica e identifica o CNPJ, caso enconte numera o registro
         if (preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/i', $var_text)) {
-            preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/', $var_text, $cnpj_match);
-            $cnpj = remover_nao_numericos($cnpj_match[0]);
+            $cnpj = remover_nao_numericos($var_text);
             if ($cnpj == $cnpjCompleto) {
                 $cnpj_consulta = $cnpj;
             }
@@ -111,36 +96,12 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
         if ($cnpj_consulta == $cnpjCompleto) {
             $retorno_cnpj = 1;
 
-            // Flag CPF next-line
-            if ($encontra_cpf_nextline >= 1 && $encontra_cpf_nextline <= 5) {
-                if (preg_match('/[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}/i', $var_text, $resposta)) {
-                    $cpf = $resposta[0];
-                    $cpf = remover_nao_numericos($cpf);
-                    $encontra_cpf_nextline = 0;
-                    if ($cpf != $cpfConsultas) {
-                        $encLiquidoP1 = 1;
-                        $cpfConsultas = $cpf;
-                        $contagem_Cpf++;
-                        $contagCpfPag++;
-                        $pagina_ini = $page_number;
-                        $concat_cpf .= "||" . $cpfConsultas;
-                        $concat_pagina_ini .= "||" . $pagina_ini;
-                        $pagina_fim = $page_number;
-                        if ($contagCpfPag > 1) { $encDois_Cpfs = 1; }
-                    } else {
-                        $pagina_fim = $page_number;
-                        $pagina_espelhada = 1;
-                    }
-                    $regarq = $contagem_Cpf;
-                } else {
-                    $encontra_cpf_nextline++;
-                }
-            }
-
             // Verifica e identifica o CPF
             if (preg_match('/CPF:/i', $var_text)) {
-                if (preg_match('/[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}/i', $var_text, $resposta)) {
+                if (preg_match('/[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}/i', $var_text)) {
 
+                    $regex = '/[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}/i';
+                    preg_match($regex, $var_text, $resposta);
                     $cpf = $resposta[0];
                     $cpf = remover_nao_numericos($cpf);
 
@@ -165,20 +126,26 @@ foreach ($jsonBase->analyzeResult->readResults as $key) {
                         // echo "<br>CPF IGUAL O DO REGISTRO ANTERIOR:" . $cpfConsultas . "<br>";
                     }
                     $regarq =   $contagem_Cpf;
-                } else {
-                    $encontra_cpf_nextline = 1;
                 }
             }
-            // Rastrear último valor monetário visto (para detecção via Faixa IRRF)
-            if (preg_match('/(\d[\d\.]*,\d{2})/', $var_text)) {
-                $last_monetary = $var_text;
+            //ENCONTROU VALOR LIQUIDO/////////////////////////////////////////////////////////////////////////////////////////
+         
+            if ($encLiquidoP2 == 1) {
+                $valorLiquido = $var_text;
+                $valorLiquido_consulta = str_replace("*", "", $var_text);
+                if ($valorLiquido_consulta != "") {
+                    $concat_valor_liquido .= "||" . $valorLiquido;
+                    // echo "<br>VALOR LIQUIDO:" . $valorLiquido . "<br>";
+                    unset($encLiquidoP1);
+                }
+                unset($encLiquidoP2);
             }
 
-            // Detectar valor líquido: o valor monetário imediatamente antes de "Faixa IRRF"
-            if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary) && $encLiquidoP1 == 1) {
-                $concat_valor_liquido .= "||" . $last_monetary;
-                $last_monetary = '';
-                $encLiquidoP1 = 0;
+            // Verifica e identifica o valor liquido
+            if ($encLiquidoP1 == 1) {
+                if (preg_match('/LIQUIDO/i', $var_text)) {
+                    $encLiquidoP2 = 1;
+                }
             }
 
             // Verifica e identifica o valor liquido
@@ -259,10 +226,8 @@ if (empty($encDois_Cpfs)) {
                                 // echo "Paginas a gravar:" . $pagina_loop . "<br>";
                             }
 
-                            // Salvamento do arquivo em diretorio
+                            // Salvamento do arquivo em diretorio 
                             if ($desativaInsercao  == 0) {
-                                $output_dir = '../../../upload/beneficios/holerite/' . $raiz_cnpj;
-                                if (!is_dir($output_dir)) { mkdir($output_dir, 0777, true); }
                                 $pdf->Output('F', '../../../upload/beneficios/holerite/' . $raiz_cnpj . '/' . $validador . '.pdf');
                             }
                         }

@@ -8,7 +8,7 @@ require_once '../vendor_fpdi/autoload.php'; //chamada da biblioteca do FPDI
 use setasign\Fpdi\Fpdi;
 
 $desativaInsercao = 0; //0 ativa - 1 desativa
-$exibeVarTexto = 0; //0 nao exibe - 1 exibe
+$exibeVarTexto = 0; //0 nao exibe - 1 exibe 
 $exibeRegistros = 0; //0 nao exibe - 1 exibe
 
 //Variavies estao vindo do util.php/////////////////////////////////////////////////////////////////////
@@ -34,9 +34,6 @@ $cpfConsultas = null;
 $valorLiquido = null;
 $encDois_Cpfs = null;
 $competenciaEmLinhas = 0;
-$cod_pendente_valor = '';
-$cod_pendente_confirm = 0;
-$nome_ja_encontrado = false;
 
 // Variavel que recebe a descricao da importacao
 $descricao_recibo = $_SESSION['descricao'];
@@ -69,8 +66,6 @@ foreach ($json_base->analyzeResult->readResults as $key) {
     // Variavel que recebe o numero da página atual
     $page_number = $key->page;
 
-    $prev_text = '';
-
     // Foreach para realizar o loop do conteudo de cada pagina
     foreach ($key->lines as $key2) {
 
@@ -86,27 +81,25 @@ foreach ($json_base->analyzeResult->readResults as $key) {
             echo "<br>Valores Registro:" . $var_text . "<br>";
         }
         //////////////////////////////////////////////////////////////////////////////////////////////////////
-        //LOCALIZAR COMPETENCIA (só busca se ainda não encontrou uma completa com ano)
-        if (!preg_match('/\d{4}/', $competencia)) {
-            if ($competenciaEmLinhas >= 1 && $competenciaEmLinhas <= 5) {
-                if (preg_match('/\b(\d{4})\b/', $var_text, $m_ano)) {
-                    $competencia .= $m_ano[1];
-                    $competenciaEmLinhas = 0;
-                } else {
-                    $competenciaEmLinhas++;
-                }
-            } elseif (preg_match('/\b(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro) de \d{4}\b/i', $var_text, $m_comp)) {
-                $competencia = $m_comp[0];
-            } elseif ($competenciaEmLinhas == 0 && preg_match('/\b(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/i', $var_text, $m_comp2)) {
-                $competencia = $m_comp2[1] . " ";
-                $competenciaEmLinhas = 1;
+        if ($competenciaEmLinhas == 1) {
+            $competencia .= $var_text . " ";
+            // Verifica se encontrou o ano no formato "2023"
+            if (preg_match('/\b\d{4}\b/', $var_text)) {
+                $competenciaEmLinhas = 2;
             }
+        }
+
+        //LOCALIZAR COMPETENCIA
+        if (preg_match('/\b(Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro) de \d{4}\b/i', $var_text)) {
+            $competencia = $var_text;
+        } else    if ($competenciaEmLinhas == 0 && preg_match('/\b(Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/i', $var_text)) {
+            $competencia = $var_text . " ";
+            $competenciaEmLinhas = 1;
         }
 
         // Verifica e identifica o CNPJ, caso enconte numera o registro
         if (preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/i', $var_text)) {
-            preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/', $var_text, $cnpj_match);
-            $cnpj = remover_nao_numericos($cnpj_match[0]);
+            $cnpj = remover_nao_numericos($var_text);
             if ($cnpj == $cnpjCompleto) {
                 $cnpj_consulta = $cnpj;
             }
@@ -116,112 +109,89 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         if ($cnpj_consulta == $cnpjCompleto) {
             $retorno_cnpj = 1;
 
-            // Passo 3: Confirmar cod_integracao pendente via "Nome" (ou cancelar via "Descri"/timeout)
-            if ($cod_pendente_confirm >= 1 && $cod_pendente_confirm <= 8) {
-                if (preg_match('/Nome/i', $var_text)) {
-                    $cpf = $cod_pendente_valor;
-                    if ($cpf != $cpfConsultas) {
-                        $cpfConsultas = $cpf;
-                        $contagem_Cpf++;
-                        $contagCpfPag++;
-                        $pagina_ini = $page_number;
-                        $concat_cpf .= "||" . $cpfConsultas;
-                        $concat_pagina_ini .= "||" . $pagina_ini;
-                        $pagina_fim = $page_number;
-                        $valorliq = 0;
-                        $forcavalor = 0;
-                        $encLiquidoP1 = 1;
-                        if ($contagCpfPag > 1) { $encDois_Cpfs = 1; }
-                    } else {
-                        if (isset($valorliq) && $valorliq == 1) { unset($valorliq); }
-                        $pagina_fim = $page_number;
-                        $pagina_espelhada = 1;
+            if ($encontra_cod_integracao == 1) {
+
+                $regex = '/\d+/i';
+                preg_match($regex, $var_text, $resposta);
+
+                $cpf = $resposta[0];
+                $cpf = remover_nao_numericos($cpf);
+
+                if ($cpf != $cpfConsultas) {
+                    $encLiquidoP2 = 1; //SEMPRE QUE ACHAR O CPF VAI BUSCAR O VALOR LIQUIDO DO CPF ENCONTRADO
+                    $cpfConsultas = $cpf;
+                    $contagem_Cpf++;
+                    $contagCpfPag++;
+                    $pagina_ini = $page_number;
+                    $concat_cpf .= "||" . $cpfConsultas;
+                    $concat_pagina_ini .= "||" . $pagina_ini;
+                    $pagina_fim = $page_number;
+
+                    $valorliq = 0;
+                    $forcavalor = 0;
+
+                    if ($contagCpfPag > 1) {
+                        $encDois_Cpfs = 1;
+                        // echo "2 CPFS diferentes por pagina";
                     }
-                    $regarq = $contagem_Cpf;
-                    $cod_pendente_confirm = 0;
-                } elseif (preg_match('/Descri/i', $var_text)) {
-                    $cod_pendente_confirm = 0;
+                    // echo "<br>CPF cont page:" . $encDois_Cpfs . "<br>";
                 } else {
-                    $cod_pendente_confirm++;
-                }
-            }
 
-            // Passo 2: Buscar número após "Codigo" — armazena como pendente
-            // Google Vision pode retornar "Nome" antes do número; nesse caso marcamos $nome_ja_encontrado
-            if ($encontra_cod_integracao >= 1 && $encontra_cod_integracao <= 8) {
-                if (preg_match('/^Descri/i', $var_text)) {
-                    $encontra_cod_integracao = 0;
-                    $nome_ja_encontrado = false;
-                } elseif (preg_match('/^\d+$/i', $var_text, $resposta)) {
-                    $cod_pendente_valor = remover_nao_numericos($resposta[0]);
-                    if ($nome_ja_encontrado) {
-                        // "Nome" já apareceu antes do número — confirmar direto
-                        $cpf = $cod_pendente_valor;
-                        if ($cpf != $cpfConsultas) {
-                            $cpfConsultas = $cpf;
-                            $contagem_Cpf++;
-                            $contagCpfPag++;
-                            $pagina_ini = $page_number;
-                            $concat_cpf .= "||" . $cpfConsultas;
-                            $concat_pagina_ini .= "||" . $pagina_ini;
-                            $pagina_fim = $page_number;
-                            $valorliq = 0;
-                            $forcavalor = 0;
-                            $encLiquidoP1 = 1;
-                            if ($contagCpfPag > 1) { $encDois_Cpfs = 1; }
-                        } else {
-                            if (isset($valorliq) && $valorliq == 1) { unset($valorliq); }
-                            $pagina_fim = $page_number;
-                            $pagina_espelhada = 1;
-                        }
-                        $regarq = $contagem_Cpf;
-                        $nome_ja_encontrado = false;
-                    } else {
-                        $cod_pendente_confirm = 1;
+                    if ($valorliq == 1) {
+
+                        $encLiquidoP2 = 1;
+                        unset($valorliq);
                     }
-                    $encontra_cod_integracao = 0;
-                } elseif (preg_match('/Nome/i', $var_text)) {
-                    $nome_ja_encontrado = true;
-                    $encontra_cod_integracao++;
+
+                    $pagina_fim = $page_number;
+                    $pagina_espelhada = 1;
+                    // echo "<br>CPF IGUAL O DO REGISTRO ANTERIOR:" . $cpfConsultas . "<br>";
+                }
+                $regarq =   $contagem_Cpf;
+                unset($encontra_cod_integracao);
+            }
+
+            if ($encLiquidoP2 == 1 && $encLiquidoP1 == 1) {
+
+                $valorLiquido = $var_text;
+                $valorLiquido_consulta = str_replace("*", "", $var_text);
+                if ($valorLiquido_consulta != "") {
+                    $concat_valor_liquido = $concat_valor_liquido . "||" . $valorLiquido;
+                    //echo "<br>VALOR LIQUIDO:" . $valorLiquido . "<br>";
+                    unset($encLiquidoP1);
                 } else {
-                    $encontra_cod_integracao++;
+
+                    $valorliq = 1;
+                    unset($encLiquidoP1);
                 }
-            }
-
-            // Passo 1: Trigger em "Codigo" standalone ou "Codigo 567" (bloco junto via coordenadas)
-            if ($encontra_cod_integracao == 0 && $cod_pendente_confirm == 0) {
-                if (preg_match('/^Codigo$/i', $var_text)) {
-                    $encontra_cod_integracao = 1;
-                    $nome_ja_encontrado = false;
-                } elseif (preg_match('/^Codigo\s+(\d+)$/i', $var_text, $m_cod_junto)) {
-                    $cod_pendente_valor = remover_nao_numericos($m_cod_junto[1]);
-                    $cod_pendente_confirm = 1;
-                    $nome_ja_encontrado = false;
-                }
-            }
-
-            // Rastrear último valor monetário visto (para detecção via Faixa IRRF)
-            // Ignorar linhas com labels que coordenadas podem juntar com valores num bloco
-            // Extrair apenas o último valor monetário da linha (coordenadas podem juntar múltiplos valores)
-            if (preg_match_all('/(\d[\d\.]*,\d{2})/', $var_text, $m_monetary)
-                && !preg_match('/Faixa IRRF|Base Calc|F\.G\.T\.S|Salario Base|Sal\. Contr/i', $var_text)) {
-                $last_monetary = end($m_monetary[1]);
-            }
-
-            // Detectar valor líquido: o valor monetário imediatamente antes de "Faixa IRRF"
-            // Mais robusto que "Valor Liquido" header, que no Google Vision pode ficar separado do valor
-            if (preg_match('/Faixa IRRF/i', $var_text) && !empty($cpfConsultas) && !empty($last_monetary) && $encLiquidoP1 == 1) {
-                $concat_valor_liquido = $concat_valor_liquido . "||" . $last_monetary;
-                $encLiquidoP1 = 0;
-            }
-
-            // Verifica e identifica o valor liquido
-            if (preg_match('/(A )?TRANSPORTAR/i', $var_text)) {
-                $complemento = 1;
+                unset($encLiquidoP2);
             }
         }
 
-        $prev_text = $var_text;
+        // Caso encontre a filial, ele atribui valor da proxima casa para formar o cod usuario
+        if ($encontra_filial == 1) {
+            $codusu = $var_text;
+            $codIntegraca = $codusu;
+            $codIntegraca = remover_nao_numericos($codIntegraca);
+            unset($encontra_filial);
+        }
+
+        // Identificar Filial
+        if (preg_match('/Filial/i', $var_text)) {
+            $encontra_filial = 1;
+            $encontra_cod_integracao = 1;
+            //echo 'ENCONTROU FOLHA' . '<br>';
+        }
+
+        // Verifica e identifica o valor liquido
+        if (preg_match('/Valor Liquido/i', $var_text)) {
+            $encLiquidoP1 = 1;
+        }
+
+        // Verifica e identifica o valor liquido
+        if (preg_match('/(A )?TRANSPORTAR/i', $var_text)) {
+            $complemento = 1;
+        }
     }
 
     // verificação de empty($complemento) com a condição !empty($pagina_fim)
@@ -296,10 +266,8 @@ if (empty($encDois_Cpfs)) {
                                 // echo "Paginas a gravar:" . $pagina_loop . "<br>";
                             }
 
-                            // Salvamento do arquivo em diretorio
+                            // Salvamento do arquivo em diretorio 
                             if ($desativaInsercao  == 0) {
-                                $output_dir = '../../../upload/beneficios/holerite/' . $raiz_cnpj;
-                                if (!is_dir($output_dir)) { mkdir($output_dir, 0777, true); }
                                 $pdf->Output('F', '../../../upload/beneficios/holerite/' . $raiz_cnpj . '/' . $validador . '.pdf');
                             }
                         }

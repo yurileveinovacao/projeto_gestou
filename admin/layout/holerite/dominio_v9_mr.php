@@ -32,8 +32,6 @@ $codIntegraca = null;
 $cpfConsultas = null;
 $valorLiquido = null;
 $encDois_Cpfs = null;
-$encontra_cpf_nextline = 0;
-$competenciaEmLinhas = 0;
 
 // Variavel que recebe a descricao da importacao
 $descricao_recibo = $_SESSION['descricao'];
@@ -82,28 +80,13 @@ foreach ($json_base->analyzeResult->readResults as $key) {
         }
         //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        //LOCALIZAR COMPETENCIA (só busca se ainda não encontrou uma completa com ano)
-        if (!preg_match('/\d{4}/', $competencia)) {
-            if ($competenciaEmLinhas >= 1 && $competenciaEmLinhas <= 5) {
-                if (preg_match('/\b(\d{4})\b/', $var_text, $m_ano)) {
-                    $competencia .= $m_ano[1];
-                    $competenciaEmLinhas = 0;
-                } else {
-                    $competenciaEmLinhas++;
-                }
-            } elseif (preg_match('/(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\/\d{4}/i', $var_text, $matches)) {
-                $competencia = $matches[0];
-            } elseif ($competenciaEmLinhas == 0 && preg_match('/(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/i', $var_text, $m_comp2)) {
-                $competencia = $m_comp2[1] . " ";
-                $competenciaEmLinhas = 1;
-            }
-        }
+        //LOCALIZAR COMPETENCIA
+        $competencia = preg_match('/(Janeiro|Fevereiro|Marco|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\/\d{4}/i', $var_text, $matches) ? $matches[0] : $competencia;
 
         // Verifica e identifica o CNPJ, caso enconte numera o registro
         if (preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/i', $var_text)) {
 
-            preg_match('/[0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}/', $var_text, $cnpj_match);
-            $cnpj = remover_nao_numericos($cnpj_match[0]);
+            $cnpj = remover_nao_numericos($var_text);
 
             if ($cnpj == $cnpjCompleto) {
 
@@ -112,68 +95,41 @@ foreach ($json_base->analyzeResult->readResults as $key) {
             }
         }
 
-        // Flag CPF next-line
-        if ($encontra_cpf_nextline >= 1 && $encontra_cpf_nextline <= 5) {
-            if (preg_match('/(\d{3}\.){2}\d{3}\-\d{2}/i', $var_text, $match)) {
-                $cpf = remover_nao_numericos($match[0]);
-                $encontra_cpf_nextline = 0;
-                $cpf_anterior = $cpf_anterior <> $cpf ? 1 : 2;
-                if ($cpf_anterior == 1) {
-                    if (!empty($cpf)) {
-                        $concat_cpf = $concat_cpf . "||" . $cpf;
-                        $contagem_Cpf++;
-                        $pagina_ini = $page_number;
-                        $concat_pagina_ini .= "||" . $pagina_ini;
-                        $pagina_fim = $page_number;
-                        $concat_pagina_fim .= "||" . $pagina_fim;
-                    }
-                } else if ($cpf_anterior == 2) {
-                    if (!empty($cpf)) {
-                        $concat_cpf = $concat_cpf . "||" . $cpf;
-                        $contagem_Cpf++;
-                        $pagina_ini = $pagina_ini;
-                        $concat_pagina_ini .= "||" . $pagina_ini;
-                        $pagina_fim = $page_number;
-                        $concat_pagina_fim .= "||" . $pagina_fim;
-                    }
-                }
-            } else {
-                $encontra_cpf_nextline++;
-            }
-        }
-
         // IDENTIFICA OS CPFs E CONCATENA
         if (preg_match('/(CPF:)/i', $var_text)) {
 
             $cpf = preg_match('/(\d{3}\.){2}\d{3}\-\d{2}/i', $var_text, $match) ? remover_nao_numericos($match[0]) : '';
 
-            if (empty($cpf)) {
-                $encontra_cpf_nextline = 1;
-            } else {
-                $cpf_anterior = $cpf_anterior <> $cpf ? 1 : 2;
+            $cpf_anterior = $cpf_anterior <> $cpf ? 1 : 2;
 
-                if ($cpf_anterior == 1) { // PAGINAS COM CPFS DIFERENTES
+            if ($cpf_anterior == 1) { // PAGINAS COM CPFS DIFERENTES
+                
+                if (!empty($cpf)) {
+    
+                    $concat_cpf = $concat_cpf . "||" . $cpf;
+                    $contagem_Cpf++;
+                    $pagina_ini = $page_number;
+                    $concat_pagina_ini .= "||" . $pagina_ini;
+                    $pagina_fim = $page_number;
+                    $concat_pagina_fim .= "||" . $pagina_fim;
+                }
+            } else if ($cpf_anterior == 2) { // PAGINAS COM CPFS IGUAIS
 
-                    if (!empty($cpf)) {
+                if (!empty($cpf)) {
+    
+                    // $concat_cpf = $concat_cpf . "||" . $cpf;
+                    // $array_pag_fim = explode("||", $concat_pagina_fim);
+                    // array_pop($array_pag_fim);
+                    // $concat_pagina_fim = implode("||", $array_pag_fim);
+                    // $pagina_fim = $page_number;
+                    // $concat_pagina_fim .= "||" . $pagina_fim;
 
-                        $concat_cpf = $concat_cpf . "||" . $cpf;
-                        $contagem_Cpf++;
-                        $pagina_ini = $page_number;
-                        $concat_pagina_ini .= "||" . $pagina_ini;
-                        $pagina_fim = $page_number;
-                        $concat_pagina_fim .= "||" . $pagina_fim;
-                    }
-                } else if ($cpf_anterior == 2) { // PAGINAS COM CPFS IGUAIS
-
-                    if (!empty($cpf)) {
-
-                        $concat_cpf = $concat_cpf . "||" . $cpf;
-                        $contagem_Cpf++;
-                        $pagina_ini = $pagina_ini;
-                        $concat_pagina_ini .= "||" . $pagina_ini;
-                        $pagina_fim = $page_number;
-                        $concat_pagina_fim .= "||" . $pagina_fim;
-                    }
+                    $concat_cpf = $concat_cpf . "||" . $cpf;
+                    $contagem_Cpf++;
+                    $pagina_ini = $pagina_ini;
+                    $concat_pagina_ini .= "||" . $pagina_ini;
+                    $pagina_fim = $page_number;
+                    $concat_pagina_fim .= "||" . $pagina_fim;
                 }
             }
 
@@ -283,10 +239,8 @@ if (empty($encDois_Cpfs)) {
                                 // echo "Paginas a gravar:" . $pagina_loop . "<br>";
                             }
 
-                            // Salvamento do arquivo em diretorio
+                            // Salvamento do arquivo em diretorio 
                             if ($desativaInsercao  == 0) {
-                                $output_dir = '../../../upload/beneficios/holerite/' . $raiz_cnpj;
-                                if (!is_dir($output_dir)) { mkdir($output_dir, 0777, true); }
                                 $pdf->Output('F', '../../../upload/beneficios/holerite/' . $raiz_cnpj . '/' . $validador . '.pdf');
                             }
                         }
@@ -304,7 +258,7 @@ if (empty($encDois_Cpfs)) {
                                     NULL, //$data_credito
                                     NULL, //$vlr_vencimento
                                     NULL, //$vlr_desconto
-                                    ($valorLiquido !== '' ? $valorLiquido : NULL), //$vlr_liquido
+                                    $valorLiquido, //$vlr_liquido
                                     NULL, //$faixa_irrf
                                     NULL, //$vlr_basesalario
                                     NULL, //$vlr_baseinss
