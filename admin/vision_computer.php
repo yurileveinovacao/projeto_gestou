@@ -27,14 +27,12 @@ if ((isset($_POST["descricao"])) or (isset($_FILES)) or (isset($_POST["periodo"]
     if (move_uploaded_file($_FILES['file']['tmp_name'], $location)) {
       // echo $location;
 
-      $nome_url = '{"url":"' . $app_url . '/admin/uploads/' . $filename . '"}';
-
-      // echo "NOME_URL: " . $nome_url;
-
       //-----------------------------------------------------------------------------------------------------
+      // Azure Computer Vision — enviar PDF como binary (application/octet-stream)
 
       $azure_endpoint = getenv('AZURE_VISION_ENDPOINT') ?: 'https://testegestou.cognitiveservices.azure.com';
       $azure_key = getenv('AZURE_VISION_KEY');
+      $pdfContent = file_get_contents($location);
 
       $curl = curl_init();
 
@@ -48,22 +46,28 @@ if ((isset($_POST["descricao"])) or (isset($_FILES)) or (isset($_POST["periodo"]
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_HEADER => true,
-        CURLOPT_POSTFIELDS => $nome_url,
+        CURLOPT_POSTFIELDS => $pdfContent,
         CURLOPT_HTTPHEADER => array(
           'Ocp-Apim-Subscription-Key: ' . $azure_key,
-          'Content-Type: application/json'
+          'Content-Type: application/octet-stream'
         ),
       ));
 
       $response = curl_exec($curl);
+      $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
       curl_close($curl);
+
+      error_log("AZURE OCR STEP1: HTTP $httpCode, response_len=" . strlen($response));
+      error_log("AZURE OCR STEP1 headers: " . substr($response, 0, 500));
 
       sleep(10);
 
       $p_inicio_key = strpos($response, 'apim-request-id:');
       $p_final_key = strpos($response, 'Strict-Transport-Security:');
       $key = trim(substr($response, $p_inicio_key + 16, ($p_final_key - $p_inicio_key) - 16));
+
+      error_log("AZURE OCR request-id key: [$key]");
 
       $curl = curl_init();
       curl_setopt_array($curl, array(
@@ -81,8 +85,13 @@ if ((isset($_POST["descricao"])) or (isset($_FILES)) or (isset($_POST["periodo"]
       ));
 
       $response = curl_exec($curl);
+      $httpCode2 = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
       curl_close($curl);
+
+      error_log("AZURE OCR STEP2: HTTP $httpCode2, response_len=" . strlen($response));
+      error_log("AZURE OCR STEP2 status: " . substr($response, 0, 200));
+
       echo 'RESPOSTA 2 =' . $response;
 
       $_SESSION["text_vis"] = $response;

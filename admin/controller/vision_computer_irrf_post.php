@@ -29,14 +29,12 @@ if ((isset($_POST["btn_submit"])) and (isset($_FILES))) {
     if (move_uploaded_file($_FILES['file']['tmp_name'], $location)) {
       // echo $location;
 
-      $nome_url = '{"url":"' . $app_url . '/admin/uploads/' . $filename . '"}';
-
-      // echo "NOME_URL: " . $nome_url;
-
       //-----------------------------------------------------------------------------------------------------
+      // Azure Computer Vision — enviar PDF como binary (application/octet-stream)
 
       $azure_endpoint = getenv('AZURE_VISION_ENDPOINT') ?: 'https://testegestou.cognitiveservices.azure.com';
       $azure_key = getenv('AZURE_VISION_KEY');
+      $pdfContent = file_get_contents($location);
 
       $curl = curl_init();
 
@@ -50,10 +48,10 @@ if ((isset($_POST["btn_submit"])) and (isset($_FILES))) {
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_HEADER => true,
-        CURLOPT_POSTFIELDS => $nome_url,
+        CURLOPT_POSTFIELDS => $pdfContent,
         CURLOPT_HTTPHEADER => array(
           'Ocp-Apim-Subscription-Key: ' . $azure_key,
-          'Content-Type: application/json'
+          'Content-Type: application/octet-stream'
         ),
       ));
 
