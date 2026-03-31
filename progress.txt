@@ -106,6 +106,18 @@ Histórico PRD original: docs/progress-prd-original.txt
 - Deploy: revision gestou-00074-gr5
 - **NOTA:** A mudança no config/ocr.php afeta todos os 83 templates — validado em dominio_v9_s e pontosecullum_p_v7
 
+### 2026-03-30 — Retorno ao Azure Computer Vision (branch ocr/azure-test)
+- **Decisão:** Google Vision tem problemas crônicos de ordenação de texto que exigiam ajustes complexos nos templates. Azure já funcionava corretamente com os templates originais.
+- **Branch:** `ocr/azure-test` criada a partir de `migration/gcp`
+- **Revertidos:** 21 arquivos (templates holerite/ponto/irrf + controllers OCR) para estado pré-Google Vision
+- **Azure:** Conta criada (testegestou.cognitiveservices.azure.com), tier S1, região East US
+- **Envio binário:** PDF enviado como `application/octet-stream` em vez de URL (Cloud Run não tem URL pública para uploads)
+- **Secrets GCP:** `azure-vision-endpoint`, `azure-vision-key` criados no Secret Manager
+- **Resultado:** 64/64 valores idênticos ao sistema de produção — **0 divergências**
+- **Custo Azure:** ~$0.50/mês para ~500 páginas (S1: $1/1000 transações)
+- Deploy: revision gestou-00080-wbc
+- **NOTA:** Branch `migration/gcp` mantém versão Google Vision com coordenadas como backup
+
 **Track A — Play Console (0/6 pendente, depende do cliente):**
 - [ ] Solicitar número D-U-N-S (Dun & Bradstreet) — gratuito, 5-30 dias úteis
 - [ ] Criar conta organizacional no Play Console (US$ 25)
