@@ -138,23 +138,19 @@
     },
     {
       "id": "MIG-009",
-      "title": "Migrar OCR de Azure Vision para Google Cloud Vision",
-      "description": "Criar /config/ocr.php com Google Vision API e converter response para formato Azure. Refatorar 2 arquivos.",
+      "title": "OCR — Retorno ao Azure Computer Vision (envio binário)",
+      "description": "Inicialmente migrado para Google Vision, mas revertido para Azure Computer Vision devido a problemas crônicos de ordenação de texto no Google. Azure chamado diretamente nos controllers via envio binário (octet-stream).",
       "acceptanceCriteria": [
-        "Arquivo /config/ocr.php existe com função googleVisionOCR($pdfFilePath)",
-        "Função lê GOOGLE_VISION_API_KEY de getenv()",
-        "Função envia PDF em base64 para Google Vision API (síncrono)",
-        "Função convertGoogleToAzureFormat() converte response para formato Azure (readResults.lines.words)",
-        "admin/vision_computer.php usa /config/ocr.php em vez de Azure",
-        "admin/controller/vision_computer_irrf_post.php usa /config/ocr.php em vez de Azure",
-        "Zero resultados para: grep -rn 'Ocp-Apim-Subscription-Key' admin/ --include='*.php'",
-        "Zero resultados para: grep -rn 'cognitiveservices.azure.com' admin/ --include='*.php'",
-        "Zero resultados para: grep -rn 'sleep(10)' admin/vision_computer.php admin/controller/vision_computer_irrf_post.php",
-        "NENHUM arquivo em admin/layout/ foi alterado"
+        "admin/vision_computer.php envia PDF como application/octet-stream para Azure Computer Vision API",
+        "admin/controller/vision_computer_irrf_post.php usa Azure Computer Vision API",
+        "Secrets GCP: azure-vision-endpoint e azure-vision-key configurados no Secret Manager",
+        "Templates em admin/layout/ inalterados (formato Azure nativo)",
+        "Resultado OCR validado: 64/64 valores idênticos ao sistema de produção — 0 divergências",
+        "config/ocr.php (Google Vision) mantido como legado mas NÃO utilizado"
       ],
       "priority": 9,
       "passes": true,
-      "notes": "CRÍTICO: os 83 templates em admin/layout/ NÃO devem ser alterados. Eles esperam o formato Azure (readResults → pages → lines → words). A função de conversão deve transformar o formato Google (fullTextAnnotation → pages → blocks → paragraphs → words → symbols) para o formato Azure. NUNCA alterar admin/layout/."
+      "notes": "Google Vision tinha problemas crônicos de ordenação (texto em ordem aleatória a cada chamada). Azure retorna formato nativo esperado pelos 83 templates. Custo Azure: ~$0.50/mês para ~500 páginas (S1: $1/1000 transações). Branch ocr/azure-test contém a implementação final."
     },
     {
       "id": "MIG-010",

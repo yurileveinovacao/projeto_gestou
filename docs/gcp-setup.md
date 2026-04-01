@@ -25,7 +25,7 @@ Usuário → gestou.leveinovacao.com.br (Cloudflare DNS)
 | VPC Connector | `gestou-connector` (us-central1) |
 | Domínio | `gestou.leveinovacao.com.br` |
 | DNS | Cloudflare (CNAME → ghs.googlehosted.com, proxy OFF) |
-| Secrets | `db-password`, `smtp-password` |
+| Secrets | `db-password`, `smtp-password`, `azure-vision-endpoint`, `azure-vision-key` |
 | Service Account | `469696711631-compute@developer.gserviceaccount.com` |
 
 ## Pré-requisitos
@@ -53,7 +53,7 @@ gcloud services enable \
   run.googleapis.com \
   sqladmin.googleapis.com \
   storage.googleapis.com \
-  vision.googleapis.com \
+  # vision.googleapis.com \ # Removido — OCR agora usa Azure Computer Vision
   secretmanager.googleapis.com \
   artifactregistry.googleapis.com \
   vpcaccess.googleapis.com \
@@ -142,8 +142,12 @@ echo -n "SENHA_DB" | gcloud secrets create db-password --data-file=-
 # Senha SMTP (senha de app do Google Workspace)
 echo -n "SENHA_SMTP" | gcloud secrets create smtp-password --data-file=-
 
+# Azure Computer Vision (OCR)
+echo -n "https://testegestou.cognitiveservices.azure.com" | gcloud secrets create azure-vision-endpoint --data-file=-
+echo -n "CHAVE_AZURE" | gcloud secrets create azure-vision-key --data-file=-
+
 # Dar permissão ao service account do Cloud Run
-for SECRET in db-password smtp-password; do
+for SECRET in db-password smtp-password azure-vision-endpoint azure-vision-key; do
   gcloud secrets add-iam-policy-binding $SECRET \
     --member="serviceAccount:469696711631-compute@developer.gserviceaccount.com" \
     --role="roles/secretmanager.secretAccessor"
@@ -188,7 +192,7 @@ gcloud run deploy gestou \
   --vpc-connector=gestou-connector \
   --add-cloudsql-instances=gestou-489010:us-central1:gestou-db \
   --set-env-vars="DB_HOST=/cloudsql/gestou-489010:us-central1:gestou-db,DB_PORT=5432,DB_NAME=gestou,DB_USER=gestou,APP_URL=https://gestou.leveinovacao.com.br,SMTP_HOST=smtp-relay.gmail.com,SMTP_PORT=587,SMTP_USER=contato@leveinovacao.com.br,SMTP_FROM=contato@leveinovacao.com.br,SMTP_FROM_NAME=GESTOU,STORAGE_DRIVER=local,CONTACT_EMAIL=contato@leveinovacao.com.br" \
-  --set-secrets="DB_PASS=db-password:latest,SMTP_PASS=smtp-password:latest" \
+  --set-secrets="DB_PASS=db-password:latest,SMTP_PASS=smtp-password:latest,AZURE_VISION_ENDPOINT=azure-vision-endpoint:latest,AZURE_VISION_KEY=azure-vision-key:latest" \
   --allow-unauthenticated
 ```
 
@@ -234,7 +238,7 @@ gcloud beta run domain-mappings describe \
 | Artifact Registry | ~500MB imagens | ~US$ 0.05 |
 | Secret Manager | 2 secrets | ~US$ 0.06 |
 | VPC Connector | 2-3 instâncias e2-micro | ~US$ 10-15 |
-| Cloud Vision API | ~500 páginas/mês | ~US$ 0.75 |
+| Azure Computer Vision | ~500 páginas/mês (S1) | ~US$ 0.50 |
 | **Total** | | **~US$ 20-50/mês** |
 
 ### Notas
@@ -251,4 +255,4 @@ gcloud beta run domain-mappings describe \
 | Conexão DB | Unix socket via Cloud SQL connector | IP público requer whitelist; socket é automático e seguro |
 | DNS | Cloudflare CNAME | Já utilizado para leveinovacao.com.br |
 | Sessões | PostgreSQL (PgSessionHandler) | Cloud Run é stateless; sessões em filesystem se perdem no restart |
-| OCR | Google Vision API | Substitui Azure OCR; formato de resposta convertido para compatibilidade |
+| OCR | Azure Computer Vision API | Retorno ao Azure após Google Vision apresentar ordenação aleatória de texto; 64/64 valores corretos |

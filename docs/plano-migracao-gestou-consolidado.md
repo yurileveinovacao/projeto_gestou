@@ -1,6 +1,6 @@
 # Gestou — Plano de Migração GCP (Consolidado)
 
-**Última atualização:** 05/03/2026
+**Última atualização:** 01/04/2026
 **Responsável:** Yuri (Leve Inovação Estratégica)
 
 ---
@@ -13,13 +13,13 @@ Usuário → gestou.leveinovacao.com.br (Cloudflare DNS, proxy OFF)
        → Cloud Run gen2 (us-central1, PHP 7.4 + Apache, porta 8080)
        → Cloud SQL PostgreSQL 17 (via Unix socket /cloudsql/)
        → GCS FUSE (uploads montados em /var/www/html/upload/)
-       → Google Vision API (OCR de holerites, pontos, IRRF)
+       → Azure Computer Vision API (OCR de holerites, pontos, IRRF)
        → smtp.gmail.com (envio de email via app password)
 ```
 
 **Projeto GCP:** gestou-489010
 **Bucket:** gs://gestou-uploads-489010
-**Secrets:** db-password, smtp-password, google-vision-api-key
+**Secrets:** db-password, smtp-password, azure-vision-endpoint, azure-vision-key
 **Service Account:** 469696711631-compute@developer.gserviceaccount.com
 
 ---
@@ -33,7 +33,7 @@ Usuário → gestou.leveinovacao.com.br (Cloudflare DNS, proxy OFF)
 | Fase 3 — Migração de Dados | ✅ Completa | 8/8 |
 | Fase 4A — Deploy | ✅ Completa | 10/10 |
 | Fase 4B — Compatibilidade OCR Templates | ✅ Completa | 16/16 |
-| **Fase 5 — App Android TWA** | **⬜ Pendente** | **0/21** |
+| **Fase 5 — App Android TWA** | **🔧 Em andamento** | **15/21** |
 | **Fase 6 — Cutover** | **⬜ Pendente** | **0/13** |
 
 ---
@@ -52,27 +52,21 @@ Banco restaurado (307 tabelas), uploads sincronizados (43k arquivos, 8.5GB), hea
 
 ## Fase 4A — Deploy ✅
 
-Deploy no Cloud Run, domain mapping, SSL, login nos 3 módulos, email SMTP, OCR com Google Vision, GCS FUSE funcionando.
+Deploy no Cloud Run, domain mapping, SSL, login nos 3 módulos, email SMTP, OCR com Azure Computer Vision, GCS FUSE funcionando.
 
 ---
 
-## Fase 4B — Compatibilidade OCR Templates com Google Vision ✅
+## Fase 4B — OCR Templates ✅
 
-Concluída em 2026-03-13. Todos os 23 templates corrigidos para compatibilidade com Google Vision (~20 commits).
+Inicialmente adaptados para Google Vision (23 templates corrigidos, ~20 commits). Posteriormente revertidos para Azure Computer Vision (2026-03-30) devido a problemas crônicos de ordenação de texto no Google Vision.
 
-### Correções aplicadas
+### Decisão final: Azure Computer Vision
 
-- **IRRF (4):** dirf_v4, dirf2_v4, dirf_v5, dirf_v4_ignora_cnpj — detecção antecipada de ano + mkdir + formato "Exercicio de YYYY"
-- **Ponto (5):** ponto_1_v7, pontosecullum_p_v7, pontosecullum_v7, saturno_v1, tangerino_v7
-- **Holerite (14):** acedata_v8, contimatic_v8/v9, dominio_v8/v8_i/v8_mg/v9/v9_mr/v9_s, dpcuca_v8, folhamatic_v9/v10, holerite_1_v8, photeus_v8
-
-### Problemas resolvidos
-
-1. Detecção de ano/competência — Google Vision retorna ano antes do CNPJ (busca antecipada)
-2. mkdir dinâmico — diretórios por CNPJ não existem no GCS FUSE
-3. Competência multi-line — mês e ano em linhas separadas no Google Vision
-4. cod_integracao — confirmação via "Nome" para evitar capturar código da tabela
-5. Valor líquido — detecção via "TOTAL LIQUIDO" e fallback "Faixa IRRF"
+- Google Vision retornava texto em ordem aleatória a cada chamada, exigindo ajustes complexos
+- Azure já funcionava corretamente com os templates originais
+- Validação: 64/64 valores idênticos ao sistema de produção — **0 divergências**
+- Templates revertidos para estado original (compatível Azure)
+- Custo Azure: ~$0.50/mês para ~500 páginas (S1: $1/1000 transações)
 
 ---
 
@@ -224,6 +218,7 @@ O app antigo era um WebView wrapper (5.1MB, package `br.com.gestou`) apontando p
 | 05/03 | GCS FUSE (gen2) em vez de STORAGE_DRIVER=gcs | Zero mudança de código, caminhos existentes funcionam |
 | 05/03 | mkdir dinâmico nos templates | GCS FUSE não tem diretórios pré-criados |
 | 05/03 | Detecção antecipada de ano nos templates | Google Vision retorna texto em ordem diferente do Azure |
+| 30/03 | Retorno ao Azure Computer Vision | Google Vision com ordenação aleatória; Azure 64/64 valores corretos |
 | 05/03 | TWA em vez de WebView wrapper | Google recomenda, performance superior, sem código nativo |
 | 23/03 | memory_limit=512M + Cloud Run 2GB RAM | PDFs grandes (69+ págs) estouravam 128MB; 5 workers × 512MB exigem 2GB |
 | 23/03 | log_errors=stderr + display_errors=Off | Erros PHP agora visíveis nos logs do Cloud Run |
@@ -238,7 +233,7 @@ O app antigo era um WebView wrapper (5.1MB, package `br.com.gestou`) apontando p
 | Cloud Run (min 0, max 3, 2GB, gen2) | ~US$ 0-35 |
 | Cloud Storage (~10GB) | ~US$ 0.25 |
 | VPC Connector | ~US$ 10-15 |
-| Vision API (~500 págs/mês) | ~US$ 0.75 |
+| Azure Computer Vision (~500 págs/mês) | ~US$ 0.50 |
 | Secret Manager + Artifact Registry | ~US$ 0.15 |
 | **Total** | **~US$ 20-55/mês** |
 

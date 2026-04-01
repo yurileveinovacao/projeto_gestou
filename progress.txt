@@ -11,9 +11,9 @@ Início: 2026-03-05
 - URLs centralizadas em config/app.php: $app_url (getenv APP_URL), $contact_email (getenv CONTACT_EMAIL)
 - Redirects usam caminhos relativos (/admin/login); emails/QR/print usam $app_url
 - Conexão files legados (conexao.php, conexao_pdo.php) redirecionam para config/database.php
-- OCR: config/ocr.php com googleVisionOCR() — envia PDF base64 para Google Vision files:annotate, converte para formato Azure
+- OCR: Azure Computer Vision API (envio binário octet-stream), chamado diretamente em admin/vision_computer.php e admin/controller/vision_computer_irrf_post.php
 - 83 templates em admin/layout/ (holerite/irrf/ponto) esperam formato Azure: analyzeResult.readResults[n].page, .lines[m].text
-- Google Vision files:annotate suporta até 5 páginas por request — config/ocr.php faz batching automático
+- config/ocr.php é legado (Google Vision) — NÃO USADO após retorno ao Azure
 - Vendors no .gitignore — não estão no repo, serão copiados no Docker build
 - Vendors por módulo: admin/ (~341MB, 10 dirs), app/ (~87MB, 6 dirs), master/ (~50MB, 3 dirs), raiz (~30MB, vendor/ + vendor_envio_email/)
 - Docker: php:7.4-apache, porta 8080 (Cloud Run), mod_rewrite + AllowOverride All para .htaccess
@@ -117,6 +117,12 @@ Histórico PRD original: docs/progress-prd-original.txt
 - **Custo Azure:** ~$0.50/mês para ~500 páginas (S1: $1/1000 transações)
 - Deploy: revision gestou-00080-wbc
 - **NOTA:** Branch `migration/gcp` mantém versão Google Vision com coordenadas como backup
+
+### 2026-04-01 — Validação Azure Computer Vision ✅
+- **Resultado:** Azure OCR validado pelo cliente — qualidade superior ao Google Vision
+- **Decisão final:** Manter Azure Computer Vision como OCR definitivo do sistema
+- Templates revertidos para estado original (compatível Azure) na sessão anterior
+- Documentação atualizada: CLAUDE.md, progress.txt, prd.json, plano-migracao, gcp-setup
 
 **Track A — Play Console (0/6 pendente, depende do cliente):**
 - [ ] Solicitar número D-U-N-S (Dun & Bradstreet) — gratuito, 5-30 dias úteis

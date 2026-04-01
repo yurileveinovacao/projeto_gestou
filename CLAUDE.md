@@ -31,7 +31,7 @@ Hospedado no GCP (Cloud Run + Cloud SQL).
 | VPC Connector | gestou-connector |
 | Domain | gestou.leveinovacao.com.br → ghs.googlehosted.com (CNAME, Cloudflare proxy OFF) |
 | Service Account | 469696711631-compute@developer.gserviceaccount.com |
-| Secrets (Secret Manager) | db-password, smtp-password, google-vision-api-key |
+| Secrets (Secret Manager) | db-password, smtp-password, azure-vision-endpoint, azure-vision-key |
 | SMTP | smtp.gmail.com:587 (contato@leveinovacao.com.br) |
 
 ## Regras ABSOLUTAS
@@ -44,9 +44,9 @@ Hospedado no GCP (Cloud Run + Cloud SQL).
 
 ## Templates OCR (admin/layout/)
 
-- 83 templates de OCR (holerite/irrf/ponto) — alterar APENAS quando necessário para compatibilidade com Google Vision
-- Problemas conhecidos: Google Vision retorna texto em ordem diferente do Azure (ano antes do CNPJ, campos em linhas separadas)
-- Ao corrigir templates: adicionar detecção antecipada de ano + mkdir dinâmico para GCS FUSE
+- 83 templates de OCR (holerite/irrf/ponto) — usam formato Azure Computer Vision (analyzeResult.readResults[n].lines[m].text)
+- OCR via Azure Computer Vision API (envio binário octet-stream), chamado diretamente em admin/vision_computer.php e admin/controller/vision_computer_irrf_post.php
+- Templates foram revertidos para estado original compatível com Azure após testes com Google Vision
 - Referência de fixes aplicados: progress.txt (seção Fase 4B)
 
 ## Configs centralizados (config/)
@@ -58,7 +58,7 @@ Hospedado no GCP (Cloud Run + Cloud SQL).
 | `storage.php` | Abstração local/GCS. Funções: storageUpload/Delete/Url/Exists | STORAGE_DRIVER (`local`\|`gcs`), GCS_BUCKET |
 | `app.php` | URL base e email de contato | APP_URL, CONTACT_EMAIL |
 | `session.php` | Sessões em PostgreSQL (tabela `php_sessions`). Requer database.php | (nenhuma própria — usa DB_*) |
-| `ocr.php` | Google Vision OCR com conversão para formato Azure | GOOGLE_VISION_API_KEY |
+| `ocr.php` | ⚠️ Legado (Google Vision) — NÃO USADO. OCR agora é Azure, direto nos controllers | — |
 
 ## Deploy (processo manual)
 
@@ -79,7 +79,7 @@ gcloud run deploy gestou \
   --vpc-connector=gestou-connector \
   --add-cloudsql-instances=gestou-489010:us-central1:gestou-db \
   --set-env-vars="DB_HOST=/cloudsql/gestou-489010:us-central1:gestou-db,DB_PORT=5432,DB_NAME=gestou,DB_USER=gestou,APP_URL=https://gestou.leveinovacao.com.br,SMTP_HOST=smtp.gmail.com,SMTP_PORT=587,SMTP_USER=contato@leveinovacao.com.br,SMTP_FROM=contato@leveinovacao.com.br,SMTP_FROM_NAME=GESTOU,STORAGE_DRIVER=local,CONTACT_EMAIL=contato@leveinovacao.com.br" \
-  --set-secrets="DB_PASS=db-password:latest,SMTP_PASS=smtp-password:latest,GOOGLE_VISION_API_KEY=google-vision-api-key:latest" \
+  --set-secrets="DB_PASS=db-password:latest,SMTP_PASS=smtp-password:latest,AZURE_VISION_ENDPOINT=azure-vision-endpoint:latest,AZURE_VISION_KEY=azure-vision-key:latest" \
   --allow-unauthenticated
 ```
 
