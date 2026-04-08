@@ -38,6 +38,9 @@ if ((isset($_POST['btn_situac'])) and (isset($_POST['colaborador_situac']))) {
                 $situac = 0;
 
                 updateGESUSU_SITUAC($situac, $id_emp_default, $id_usu_ativo, $datatu, $id_usa_default);
+
+                // FEA-001: preenche datarescisao automaticamente na desativação
+                updateGESUSU_DATARESCISAO($id_usu_ativo, date('Y-m-d'));
             }
         }
     } catch (PDOException $erro) {

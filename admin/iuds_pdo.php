@@ -2153,6 +2153,17 @@ function updateGESUSU_SITUAC(
     $statement->execute();
 }
 
+//Tabela GESUSU update datarescisao - FEA-001
+function updateGESUSU_DATARESCISAO($id_usu, $datarescisao)
+{
+    global $pdo;
+    $query = 'UPDATE public."GESUSU" SET datarescisao = :datarescisao WHERE id_usu = :id_usu';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':datarescisao', $datarescisao, PDO::PARAM_STR);
+    $statement->bindParam(':id_usu', $id_usu, PDO::PARAM_INT);
+    $statement->execute();
+}
+
 //Tabela GESUSU delete
 function deleteGESUSU($id_usu)
 {
@@ -9256,6 +9267,95 @@ function selectGESUSU_ativos($id_emp)
         'SELECT count(id_usu) AS conta
         FROM public."GESUSU"
         WHERE id_emp = :id_emp AND situac = 1';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [0];
+    }
+
+    return $resultset;
+}
+
+//SELECT GESUSU experiencia 45 dias count - FEA-002
+function selectGESUSU_experiencia_45d_count($id_emp)
+{
+    global $pdo;
+    $query =
+        'SELECT count(id_usu) AS conta
+        FROM public."GESUSU"
+        WHERE id_emp = :id_emp
+          AND situac = 1
+          AND dataadmissao IS NOT NULL
+          AND (CURRENT_DATE - dataadmissao) >= 45
+          AND (CURRENT_DATE - dataadmissao) <= 90';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [0];
+    }
+
+    return $resultset;
+}
+
+//SELECT GESUSU experiencia 90 dias count - FEA-002
+function selectGESUSU_experiencia_90d_count($id_emp)
+{
+    global $pdo;
+    $query =
+        'SELECT count(id_usu) AS conta
+        FROM public."GESUSU"
+        WHERE id_emp = :id_emp
+          AND situac = 1
+          AND dataadmissao IS NOT NULL
+          AND (CURRENT_DATE - dataadmissao) >= 90';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [0];
+    }
+
+    return $resultset;
+}
+
+//SELECT GESUSU experiencia listagem - FEA-002
+function selectGESUSU_experiencia_lista($id_emp, $tipo)
+{
+    global $pdo;
+    if ($tipo == 45) {
+        $query =
+            'SELECT id_usu, nome, dataadmissao,
+                (dataadmissao + 45) AS vencimento_45d,
+                (dataadmissao + 90) AS vencimento_90d,
+                (CURRENT_DATE - dataadmissao) AS dias_desde_admissao
+            FROM public."GESUSU"
+            WHERE id_emp = :id_emp
+              AND situac = 1
+              AND dataadmissao IS NOT NULL
+              AND (CURRENT_DATE - dataadmissao) >= 45
+              AND (CURRENT_DATE - dataadmissao) <= 90
+            ORDER BY dataadmissao ASC';
+    } else {
+        $query =
+            'SELECT id_usu, nome, dataadmissao,
+                (dataadmissao + 45) AS vencimento_45d,
+                (dataadmissao + 90) AS vencimento_90d,
+                (CURRENT_DATE - dataadmissao) AS dias_desde_admissao
+            FROM public."GESUSU"
+            WHERE id_emp = :id_emp
+              AND situac = 1
+              AND dataadmissao IS NOT NULL
+              AND (CURRENT_DATE - dataadmissao) >= 90
+            ORDER BY dataadmissao ASC';
+    }
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
     $statement->execute();

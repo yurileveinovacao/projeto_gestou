@@ -104,9 +104,16 @@ psql -h 127.0.0.1 -p 5434 -U gestou -d gestou
 - Track B: PWA — **completo** (7/7) — Lighthouse score 100, deploy feito
 - Track C: Build TWA — **completo** (8/8) — APK assinado, assetlinks validado, teste OK no emulador
 
+**Fase 7 — Novas Features** (planejada, 0/5)
+- FEA-001: Campo datarescisao auto-preenchido na desativação — **completa**
+- FEA-002: Contadores experiência 45d/90d no dashboard — **completa**
+- FEA-003: Alertas de experiência (email + popup + cron) — pendente (depende FEA-001/002)
+- FEA-004: Observações do colaborador com categorias — pendente
+- FEA-005: Justificativas no Fale com RH — pendente
+
 ## Referência
 
 - `progress.txt` — log ativo de progresso (Fase 4B+) e Codebase Patterns
 - `docs/plano-migracao-gestou-consolidado.md` — plano completo das Fases 4B-6
-- `prd.json` — PRD original da migração GCP (12 stories, 100% concluído)
+- `prd.json` — PRD cumulativo: MIG-001~012 (concluídas) + FEA-001~005 (novas features)
 - `docs/progress-prd-original.txt` — log histórico detalhado das 12 stories do PRD

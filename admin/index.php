@@ -273,6 +273,56 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                             </div>
                         </div>
 
+
+                        <!--
+                            EXPERIÊNCIA 45 DIAS - FEA-002
+                        -->
+                        <?php foreach (selectGESUSU_experiencia_45d_count($id_emp_default) as $select_exp_45) {
+                            $count_exp_45 = $select_exp_45['conta'];
+                        } ?>
+
+                        <div class="col-md-12 cursor-pointer card-exp-45 card-slick" num-exp-45="<?php echo $count_exp_45; ?>">
+                            <div class="card border-left-warning h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Exp. 45 dias</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $count_exp_45; ?></div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-hourglass-half fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!--
+                            EXPERIÊNCIA 90 DIAS - FEA-002
+                        -->
+                        <?php foreach (selectGESUSU_experiencia_90d_count($id_emp_default) as $select_exp_90) {
+                            $count_exp_90 = $select_exp_90['conta'];
+                        } ?>
+
+                        <div class="col-md-12 cursor-pointer card-exp-90 card-slick" num-exp-90="<?php echo $count_exp_90; ?>">
+                            <div class="card border-left-danger h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                                Exp. 90 dias</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $count_exp_90; ?></div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-hourglass-end fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- INICIO CONTENT ROW COLUMN -->
@@ -739,6 +789,30 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                                         </div>
                                     </div>
                                 </div>
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary close-modal" type="button">Voltar</button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL EXPERIÊNCIAS - FEA-002 -->
+                <div class="modal fade" id="modal-experiencias" style="padding-right: none !important;" tabindex="-1" role="dialog" aria-labelledby="modal-experiencias" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document" style="width: 70vw;">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modal-experiencias-titulo">Vencimento de Experiências</h5>
+                                <button class="close close-modal" type="button">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+
+                            <div class="modal-body" id="modal-body-experiencias" style="max-height: 470px; overflow-y: auto; scrollbar-width: thin;">
 
                             </div>
 
@@ -1331,6 +1405,78 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                 }).then((result) => {
                     if (result.isConfirmed) {
                         swal.close(); // Fecha a notificação
+                    }
+                });
+            }
+        });
+    });
+
+    // FEA-002: Clique no card Exp. 45 dias
+    $(function() {
+        $(document).on('click', '.card-exp-45', function() {
+
+            var count = $(this).attr('num-exp-45');
+
+            if (count > 0) {
+
+                var dados = {
+                    btn_experiencia: 1,
+                    tipo_experiencia: 45
+                };
+
+                $.post('controller/index_post.php', dados, function(retorno) {
+
+                    $('#modal-experiencias-titulo').text('Experiência 45 dias');
+                    $('#modal-body-experiencias').html(retorno);
+                    $('#modal-experiencias').modal('show');
+                });
+            } else {
+
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Atenção!',
+                    text: 'Nenhum colaborador com experiência de 45 dias vencendo.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        swal.close();
+                    }
+                });
+            }
+        });
+    });
+
+    // FEA-002: Clique no card Exp. 90 dias
+    $(function() {
+        $(document).on('click', '.card-exp-90', function() {
+
+            var count = $(this).attr('num-exp-90');
+
+            if (count > 0) {
+
+                var dados = {
+                    btn_experiencia: 1,
+                    tipo_experiencia: 90
+                };
+
+                $.post('controller/index_post.php', dados, function(retorno) {
+
+                    $('#modal-experiencias-titulo').text('Experiência 90 dias');
+                    $('#modal-body-experiencias').html(retorno);
+                    $('#modal-experiencias').modal('show');
+                });
+            } else {
+
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Atenção!',
+                    text: 'Nenhum colaborador com experiência de 90 dias vencendo.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        swal.close();
                     }
                 });
             }

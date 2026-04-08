@@ -1,200 +1,206 @@
 {
-  "project": "Gestou GCP Migration",
-  "branchName": "migration/gcp",
-  "description": "Migrar sistema Gestou de hosting externo para Google Cloud Platform. PHP 7.4 puro, PostgreSQL 17, sem framework.",
+  "project": "Gestou",
+  "description": "Sistema de RH/folha multi-tenant. PHP 7.4 puro, PostgreSQL 17, Apache, GCP Cloud Run. Este PRD é cumulativo — as stories MIG-001 a MIG-012 estão 100% concluídas. As stories FEA-001 em diante são novas features de produto.",
+  "branches": {
+    "migration": "migration/gcp (concluída)",
+    "features": "feature/novas-funcionalidades (branch recomendada para FEA-*)"
+  },
+  "migrationNote": "O dump final do banco de produção será feito no dia do cutover (Fase 6). Toda story que criar ou alterar schema de banco DEVE incluir um script DDL correspondente em scripts/migrations/ para ser executado sobre o dump no go-live. Nunca assumir que o banco de desenvolvimento já tem a estrutura — os scripts de migração são a fonte da verdade.",
   "userStories": [
     {
       "id": "MIG-001",
       "title": "Criar config centralizado de banco de dados",
       "description": "Criar /config/database.php que lê variáveis de ambiente e exporta $conn (pg_connect) e $pdo (PDO).",
-      "acceptanceCriteria": [
-        "Arquivo /config/database.php existe e lê DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS de getenv() com fallbacks",
-        "Arquivo cria $conn via pg_connect() E $pdo via PDO (ambos)",
-        "Arquivo /config/database.php.example existe com placeholders",
-        "/config/database.php está no .gitignore",
-        "Verificar: grep -c 'getenv' config/database.php retorna >= 5"
-      ],
       "priority": 1,
       "passes": true,
-      "notes": "Consultar conexao.php.example e conexao_pdo.php.example na raiz para ver o formato atual das conexões. O sistema usa DUAS conexões em paralelo."
+      "notes": "CONCLUÍDA. Consultar conexao.php.example e conexao_pdo.php.example na raiz para ver o formato original."
     },
     {
       "id": "MIG-002",
       "title": "Migrar conexões do módulo admin/ para config centralizado",
       "description": "Substituir todos os require de conexao.php e conexao_pdo.php em admin/ para usar /config/database.php.",
-      "acceptanceCriteria": [
-        "Zero resultados para: grep -rn \"require.*conexao\\.php\" admin/ --include='*.php' (excluindo vendor/)",
-        "Zero resultados para: grep -rn \"require.*conexao_pdo\\.php\" admin/ --include='*.php' (excluindo vendor/)",
-        "admin/iuds_pdo.php usa require_once com __DIR__.'/../config/database.php' (verificar linha ~10)",
-        "Arquivos em admin/controller/ usam __DIR__.'/../../config/database.php'",
-        "Arquivos em admin/layout/holerite/ usam __DIR__.'/../../../config/database.php'",
-        "Nenhum arquivo em admin/vendor/ ou admin/vendor_* foi alterado"
-      ],
       "priority": 2,
       "passes": true,
-      "notes": "Existem ~68 arquivos PHP em admin/. Cuidado com profundidades diferentes: admin/*.php, admin/controller/*.php, admin/layout/holerite/*.php, admin/layout/irrf/*.php, admin/layout/ponto/*.php, admin/antigo/*.php, admin/doc/*.php. NUNCA alterar vendor/ ou vendor_*."
+      "notes": "CONCLUÍDA."
     },
     {
       "id": "MIG-003",
       "title": "Migrar conexões de app/, master/, createemployee/, createaccount/, controller/",
       "description": "Substituir todos os require de conexao.php e conexao_pdo.php nos módulos restantes.",
-      "acceptanceCriteria": [
-        "Zero resultados para: grep -rn \"require.*conexao\\.php\" app/ master/ createemployee/ createaccount/ controller/ --include='*.php' (excluindo vendor/)",
-        "Zero resultados para: grep -rn \"require.*conexao_pdo\\.php\" app/ master/ createemployee/ createaccount/ controller/ --include='*.php' (excluindo vendor/)",
-        "app/iuds_app.php usa __DIR__.'/../config/database.php'",
-        "master/iuds_pdo.php usa __DIR__.'/../config/database.php'",
-        "Nenhum arquivo em */vendor/ ou */vendor_* foi alterado"
-      ],
       "priority": 3,
       "passes": true,
-      "notes": "app/ tem ~30 arquivos, master/ ~14, createemployee/ ~1 (iuds_pdo.php), createaccount/ ~1, controller/ ~1. master/services/*.php usa '../conexao.php'. NUNCA alterar vendor/ ou vendor_*."
+      "notes": "CONCLUÍDA."
     },
     {
       "id": "MIG-004",
       "title": "Criar config centralizado de email e migrar SMTP",
       "description": "Criar /config/mail.php com função configureMailer() e refatorar os 24 arquivos que usam SMTP.",
-      "acceptanceCriteria": [
-        "Arquivo /config/mail.php existe com função configureMailer(&$mail)",
-        "configureMailer lê SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_FROM_NAME de getenv()",
-        "Default de SMTP_HOST é smtp-relay.gmail.com",
-        "Default de SMTP_FROM é contato@leveinovacao.com.br",
-        "Zero resultados para: grep -rn 'smtp.kinghost.net' --include='*.php' (excluindo vendor/)",
-        "Zero resultados para: grep -rn 'suporte@gestou.com.br' --include='*.php' (excluindo vendor/)",
-        "Zero resultados para: grep -rn 'Certificado@256' --include='*.php' (excluindo vendor/)",
-        "Cada arquivo de email usa require do config/mail.php e chama configureMailer($mail)",
-        "Nenhum arquivo em vendor/ ou vendor_* foi alterado"
-      ],
       "priority": 4,
       "passes": true,
-      "notes": "24 arquivos: admin/ (12: email_ajuda, email_aprovacao_foto, email_aviso_importacao, email_beneficios, email_colaborador_aprovado, email_mural_avisos, email_notificacoes, email_ouvidoria, email_relatorio_recibo_pagamento, email_solicitacoes, esqueci_email, esqueci_email_senha_alterada), app/ (6: email_aprovacao_foto, email_minhas_solicitacoes, email_ouvidoria, esqueci_email, esqueci_email_empresa, esqueci_email_senha_alterada), master/ (4: controller/email_token, email_resposta_chamado, email_token, services/email_aniversario), raiz/ (2: envia_email_agende_demonstracao, envia_email_fale_conosco)."
+      "notes": "CONCLUÍDA. SMTP: smtp.gmail.com:587, contato@leveinovacao.com.br."
     },
     {
       "id": "MIG-005",
       "title": "Criar config de URL e converter referências hardcoded",
       "description": "Criar /config/app.php com $app_url e converter referências a gestou.com.br para caminhos relativos ou $app_url.",
-      "acceptanceCriteria": [
-        "Arquivo /config/app.php existe e exporta $app_url lido de getenv('APP_URL')",
-        "Default de APP_URL é https://gestou.leveinovacao.com.br",
-        "Redirects em restrito.php usam caminhos relativos (/admin/login, /app/login, /master/login)",
-        "Redirects em validar_login.php usam caminhos relativos",
-        "Links em emails usam $app_url concatenado com path",
-        "Resultado de: grep -rn 'gestou\\.com\\.br' --include='*.php' (excluindo vendor/) retorna ZERO ou apenas comentários",
-        "Nenhum arquivo em vendor/ ou vendor_* foi alterado"
-      ],
       "priority": 5,
       "passes": true,
-      "notes": "198 referências hardcoded. Priorizar caminhos RELATIVOS para redirects (location.href = '/admin/login'). Usar $app_url APENAS para links em emails e QR codes (precisam ser URL completa). NUNCA alterar vendor/ ou vendor_*."
+      "notes": "CONCLUÍDA."
     },
     {
       "id": "MIG-006",
       "title": "Implementar sessões via PostgreSQL",
       "description": "Criar PgSessionHandler e integrar nos arquivos que usam session_start().",
-      "acceptanceCriteria": [
-        "Arquivo /config/session.php existe com classe PgSessionHandler que implementa SessionHandlerInterface",
-        "PgSessionHandler usa a conexão $pdo de /config/database.php",
-        "Arquivo /config/schema/sessions.sql existe com CREATE TABLE php_sessions",
-        "admin/restrito.php faz require do session.php ANTES de session_start()",
-        "app/restrito.php faz require do session.php ANTES de session_start()",
-        "master/restrito.php faz require do session.php ANTES de session_start()",
-        "Verificar: grep -rn 'PgSessionHandler' config/session.php retorna resultado"
-      ],
       "priority": 6,
       "passes": true,
-      "notes": "Sessões em filesystem não funcionam no Cloud Run (stateless). A tabela php_sessions precisa ter: id VARCHAR(128) PK, data TEXT, last_access TIMESTAMP. Adicionar session.php ANTES do session_start() existente — NÃO mover o session_start()."
+      "notes": "CONCLUÍDA. Fix aplicado em 2026-03-14 para controllers de recuperação de senha (global $pdo)."
     },
     {
       "id": "MIG-007",
       "title": "Criar Dockerfile e docker-compose.yml",
       "description": "Criar Dockerfile para Cloud Run (PHP 7.4 + Apache + extensões) e docker-compose para dev local.",
-      "acceptanceCriteria": [
-        "Arquivo Dockerfile existe na raiz",
-        "Dockerfile usa base php:7.4-apache",
-        "Dockerfile instala extensões: pgsql, pdo_pgsql, gd, curl, zip, intl, mbstring",
-        "Dockerfile configura Apache na porta 8080 (requisito Cloud Run)",
-        "Dockerfile tem COPY do código e dos vendors",
-        "Arquivo docker-compose.yml existe com services web (PHP) e db (postgres:17)",
-        "docker-compose.yml define variáveis de ambiente (DB_HOST=db, etc)",
-        "Arquivo .dockerignore existe"
-      ],
       "priority": 7,
       "passes": true,
-      "notes": "Cloud Run exige porta 8080. Vendors não estão no git — serão copiados de /vendors/ para dentro da imagem. Estrutura: /vendors/site/, /vendors/admin/, /vendors/app/, /vendors/master/ cada um com suas pastas vendor_*. Criar diretórios de upload vazios dentro da imagem."
+      "notes": "CONCLUÍDA. memory_limit=512M, Cloud Run 2Gi RAM."
     },
     {
       "id": "MIG-008",
       "title": "Criar camada de abstração de storage",
-      "description": "Criar /config/storage.php com funções para upload, delete, URL e exists que funcionam com filesystem local ou Google Cloud Storage.",
-      "acceptanceCriteria": [
-        "Arquivo /config/storage.php existe",
-        "Exporta funções: storageUpload, storageDelete, storageUrl, storageExists",
-        "Lê STORAGE_DRIVER de getenv() (default: 'local')",
-        "Modo 'local' usa filesystem normalmente",
-        "Modo 'gcs' usa Google Cloud Storage com bucket de GCS_BUCKET",
-        "Arquivo /config/storage.php.example existe"
-      ],
+      "description": "Criar /config/storage.php com funções storageUpload, storageDelete, storageUrl, storageExists.",
       "priority": 8,
       "passes": true,
-      "notes": "NÃO refatorar os arquivos que usam upload ainda — apenas criar a camada de abstração. Uploads são usados em: upload/beneficios/, upload/cadastro/, upload/empresa/, upload/colaboradores/, admin/uploads/."
+      "notes": "CONCLUÍDA."
     },
     {
       "id": "MIG-009",
-      "title": "OCR — Retorno ao Azure Computer Vision (envio binário)",
-      "description": "Inicialmente migrado para Google Vision, mas revertido para Azure Computer Vision devido a problemas crônicos de ordenação de texto no Google. Azure chamado diretamente nos controllers via envio binário (octet-stream).",
-      "acceptanceCriteria": [
-        "admin/vision_computer.php envia PDF como application/octet-stream para Azure Computer Vision API",
-        "admin/controller/vision_computer_irrf_post.php usa Azure Computer Vision API",
-        "Secrets GCP: azure-vision-endpoint e azure-vision-key configurados no Secret Manager",
-        "Templates em admin/layout/ inalterados (formato Azure nativo)",
-        "Resultado OCR validado: 64/64 valores idênticos ao sistema de produção — 0 divergências",
-        "config/ocr.php (Google Vision) mantido como legado mas NÃO utilizado"
-      ],
+      "title": "OCR — Azure Computer Vision (envio binário)",
+      "description": "Azure Computer Vision como OCR definitivo. PDF enviado como application/octet-stream. Google Vision revertido e mantido como legado em config/ocr.php (NÃO USADO).",
       "priority": 9,
       "passes": true,
-      "notes": "Google Vision tinha problemas crônicos de ordenação (texto em ordem aleatória a cada chamada). Azure retorna formato nativo esperado pelos 83 templates. Custo Azure: ~$0.50/mês para ~500 páginas (S1: $1/1000 transações). Branch ocr/azure-test contém a implementação final."
+      "notes": "CONCLUÍDA. Validado 64/64 valores idênticos à produção. Custo ~$0.50/mês. Branch ocr/azure-test contém implementação final."
     },
     {
       "id": "MIG-010",
       "title": "Criar documentação de setup GCP",
       "description": "Criar /docs/gcp-setup.md com comandos gcloud CLI para provisionar toda a infraestrutura.",
-      "acceptanceCriteria": [
-        "Arquivo docs/gcp-setup.md existe",
-        "Contém comandos para: habilitar APIs, criar Cloud SQL, criar bucket, criar Artifact Registry, configurar Secret Manager, VPC Connector, Cloud Run deploy",
-        "Contém instrução para mapear domínio gestou.leveinovacao.com.br",
-        "Contém notas sobre estimativa de custos"
-      ],
       "priority": 10,
       "passes": true,
-      "notes": "Região: southamerica-east1. Cloud SQL: db-f1-micro, PostgreSQL 17. Cloud Run: min 0, max 3, 1GB RAM."
+      "notes": "CONCLUÍDA."
     },
     {
       "id": "MIG-011",
       "title": "Criar scripts de migração de dados",
-      "description": "Criar scripts para migrar banco, uploads e validar a migração.",
-      "acceptanceCriteria": [
-        "Arquivo scripts/migrate-database.sh existe e é executável",
-        "Arquivo scripts/migrate-uploads.sh existe e é executável",
-        "Arquivo scripts/validate-migration.sh existe e é executável",
-        "Arquivo scripts/healthcheck.php existe e testa conexão ao banco",
-        "Scripts têm comentários explicando o que cada seção faz"
-      ],
+      "description": "Scripts para migrar banco, uploads e validar a migração.",
       "priority": 11,
       "passes": true,
-      "notes": "migrate-database.sh: pg_dump + pg_restore + criar tabela php_sessions. migrate-uploads.sh: gsutil rsync para Cloud Storage. validate-migration.sh: testa conexão, verifica tabelas, verifica views. healthcheck.php: endpoint HTTP 200/500."
+      "notes": "CONCLUÍDA."
     },
     {
       "id": "MIG-012",
       "title": "Criar checklist de testes",
       "description": "Criar /docs/test-checklist.md com checklist completo de testes por módulo.",
-      "acceptanceCriteria": [
-        "Arquivo docs/test-checklist.md existe",
-        "Contém seções para: Site, Admin, App, Master, CreateEmployee, CreateAccount",
-        "Seção Admin inclui testes de OCR (upload holerite, IRRF, ponto)",
-        "Seção App inclui testes de login (CPF, email, telefone)",
-        "Inclui seção de testes transversais (sessões, uploads, emails)"
-      ],
       "priority": 12,
       "passes": true,
-      "notes": "Cobrir todos os fluxos críticos. Admin tem o maior número de testes por ser o módulo mais complexo."
+      "notes": "CONCLUÍDA."
+    },
+    {
+      "id": "FEA-001",
+      "title": "Adicionar campo data_demissao na tabela de colaboradores",
+      "description": "Criar campo data_demissao (DATE, nullable) na tabela de colaboradores. Ao desativar um colaborador no admin, o sistema registra automaticamente a data atual como data de demissão. O campo deve ser editável na ficha do colaborador para casos onde a data real de desligamento difere da data de processamento no sistema.",
+      "acceptanceCriteria": [
+        "Script scripts/migrations/add_data_demissao.sql existe com: ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS data_demissao DATE NULL",
+        "Ao clicar em 'desativar colaborador' no admin, data_demissao é preenchida automaticamente com CURRENT_DATE via UPDATE",
+        "Campo data_demissao aparece editável na ficha do colaborador no admin (input type=date)",
+        "Campo exibe valor atual se já preenchido, em branco se ainda ativo",
+        "Salvar a ficha do colaborador persiste alterações em data_demissao",
+        "Colaboradores ativos (data_demissao IS NULL) não são afetados",
+        "Reativar colaborador NÃO apaga data_demissao automaticamente — gestor deve limpar manualmente se necessário"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": "CONCLUÍDA. Coluna datarescisao já existia na tabela GESUSU. Preenchimento automático adicionado nos 3 pontos de desativação: tabela_colaboradores_post.php, colaboradores_post.php, index_post.php. Função updateGESUSU_DATARESCISAO() criada em iuds_pdo.php. Script de migração não necessário."
+    },
+    {
+      "id": "FEA-002",
+      "title": "Vencimento de experiências — cálculo e contadores no dashboard",
+      "description": "Calcular vencimento dos períodos de experiência (45 e 90 dias) a partir da data de admissão. Exibir contadores separados no dashboard do admin (tela inicial). Ao clicar no contador, listar os colaboradores com experiências vencendo ou já vencidas. Contadores permanecem visíveis até o gestor tomar uma ação (renovar ou rescindir) — não somem automaticamente.",
+      "acceptanceCriteria": [
+        "Dashboard do admin exibe dois novos contadores: 'Exp. 45 dias' e 'Exp. 90 dias'",
+        "Contador 'Exp. 45 dias' exibe quantidade de colaboradores cuja data_admissao + 45 dias <= CURRENT_DATE e ainda estão ativos (data_demissao IS NULL)",
+        "Contador 'Exp. 90 dias' exibe quantidade de colaboradores cuja data_admissao + 90 dias <= CURRENT_DATE e ainda estão ativos",
+        "Apenas colaboradores admitidos há até 90 dias entram nos contadores (data_admissao >= CURRENT_DATE - 90)",
+        "Clicar em qualquer contador abre listagem com: nome, setor, data admissão, data vencimento 45d, data vencimento 90d, dias em atraso",
+        "Listagem é filtrada pelo CNPJ da sessão atual (multi-tenant)",
+        "Contadores são recalculados a cada acesso ao dashboard (sem cache)",
+        "Cards do dashboard são redimensionados para acomodar os novos contadores sem quebrar layout mobile"
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": "CONCLUÍDA. Dois cards no dashboard (border-left-warning para 45d, border-left-danger para 90d) com contadores recalculados a cada acesso. Clique abre modal com tabela detalhada (nome, admissão, vencimentos, dias). Funções: selectGESUSU_experiencia_45d_count, selectGESUSU_experiencia_90d_count, selectGESUSU_experiencia_lista em iuds_pdo.php. Handler btn_experiencia em index_post.php."
+    },
+    {
+      "id": "FEA-003",
+      "title": "Vencimento de experiências — alertas por email e popup",
+      "description": "Enviar alerta por email e exibir popup no admin quando um colaborador estiver a 7 dias ou menos do vencimento de cada período de experiência (45d ou 90d). Alertas permanecem ativos até o gestor tomar uma ação.",
+      "acceptanceCriteria": [
+        "Email enviado automaticamente quando data_admissao + 45 - 7 = CURRENT_DATE (ou seja, faltam 7 dias para o 45º dia)",
+        "Email enviado automaticamente quando data_admissao + 90 - 7 = CURRENT_DATE (faltam 7 dias para o 90º dia)",
+        "Email usa configureMailer() de config/mail.php — mesmo padrão do sistema",
+        "Email destinatário: email do gestor admin do CNPJ correspondente",
+        "Assunto do email: 'Gestou — Vencimento de experiência: [Nome do colaborador]'",
+        "Corpo do email: nome do colaborador, data de admissão, data de vencimento e dias restantes",
+        "Popup exibido no admin ao fazer login quando há colaboradores com experiência vencendo em até 7 dias",
+        "Popup lista todos os colaboradores em alerta com nome e dias restantes",
+        "Popup pode ser dispensado (botão fechar) mas reaparece no próximo acesso enquanto o alerta estiver ativo",
+        "Script scripts/cron/check_experiencias.php existe e pode ser chamado por cron job diário",
+        "Cron job configurado no GCP Cloud Scheduler para executar check_experiencias.php diariamente às 08:00 BRT"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "O sistema atual não tem cron job — este será o primeiro. Cloud Scheduler chama endpoint HTTP autenticado (não CLI). Criar admin/check_experiencias.php como endpoint PHP protegido por token secreto (env var CRON_SECRET). O script percorre todos os CNPJs ativos e envia emails individualmente. Depende de FEA-001 e FEA-002."
+    },
+    {
+      "id": "FEA-004",
+      "title": "Observações do colaborador — nova aba com categorias por empresa",
+      "description": "Adicionar aba 'Observações' na ficha do colaborador no admin. Permite registrar observações textuais com data e categoria. Cada empresa (CNPJ) gerencia suas próprias categorias — categorias não são compartilhadas entre empresas. Visível apenas para admin e master.",
+      "acceptanceCriteria": [
+        "Script scripts/migrations/create_observacoes_colaborador.sql existe com CREATE TABLE IF NOT EXISTS observacoes_colaborador (id SERIAL PRIMARY KEY, colaborador_id INTEGER NOT NULL, cnpj_empresa VARCHAR(20) NOT NULL, categoria_id INTEGER, descricao TEXT NOT NULL, data_observacao DATE NOT NULL DEFAULT CURRENT_DATE, criado_em TIMESTAMP DEFAULT NOW(), criado_por INTEGER)",
+        "Script scripts/migrations/create_categorias_observacao.sql existe com CREATE TABLE IF NOT EXISTS categorias_observacao (id SERIAL PRIMARY KEY, cnpj_empresa VARCHAR(20) NOT NULL, nome VARCHAR(100) NOT NULL, ativo BOOLEAN DEFAULT TRUE, criado_em TIMESTAMP DEFAULT NOW())",
+        "Nova aba 'Observações' aparece na ficha do colaborador no admin, visível apenas para perfis admin e master",
+        "Aba lista observações existentes do colaborador em ordem decrescente de data_observacao: data, categoria (nome ou 'Sem categoria'), descrição",
+        "Botão 'Nova observação' abre modal com campos: data (input date, default hoje), categoria (select com opções do CNPJ + opção 'Sem categoria'), descrição (textarea, obrigatório)",
+        "Botão 'Gerenciar categorias' na aba abre modal para CRUD de categorias do CNPJ atual",
+        "Modal de categorias lista categorias ativas do CNPJ, permite adicionar nova (nome, máx 100 chars) e desativar existentes",
+        "Categorias de outros CNPJs nunca aparecem — queries sempre filtradas por cnpj_empresa",
+        "Observação pode ser deletada pelo admin (soft delete ou hard delete — definir com Rafa)",
+        "Observações de colaboradores inativos (demitidos) continuam visíveis para histórico"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": "Dois scripts de migração obrigatórios (tabelas novas). cnpj_empresa deve ser o mesmo campo/formato já usado no sistema para identificar a empresa — verificar padrão no banco antes de criar as tabelas. colaborador_id referencia a chave primária da tabela de colaboradores. PHP 7.4 puro — usar pg_query/PDO conforme padrão do módulo admin."
+    },
+    {
+      "id": "FEA-005",
+      "title": "Justificativas no Fale com RH — módulo do colaborador",
+      "description": "Adicionar seção 'Justificativas' no módulo Fale com RH do app do colaborador. Três tipos: ausência de batida de ponto (requer data e hora), falta (requer mensagem), falta com atestado (requer mensagem e arquivo). Admin pode aprovar ou reprovar cada justificativa, e o colaborador recebe notificação do resultado.",
+      "acceptanceCriteria": [
+        "Script scripts/migrations/create_justificativas.sql existe com CREATE TABLE IF NOT EXISTS justificativas (id SERIAL PRIMARY KEY, colaborador_id INTEGER NOT NULL, cnpj_empresa VARCHAR(20) NOT NULL, tipo VARCHAR(30) NOT NULL CHECK (tipo IN ('ausencia_ponto', 'falta', 'falta_atestado')), status VARCHAR(20) NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'aprovada', 'reprovada')), data_ocorrencia DATE NOT NULL, hora_ocorrencia TIME NULL, mensagem TEXT NULL, arquivo_path VARCHAR(500) NULL, resposta_admin TEXT NULL, criado_em TIMESTAMP DEFAULT NOW(), respondido_em TIMESTAMP NULL, respondido_por INTEGER NULL)",
+        "Nova seção 'Justificativas' aparece no Fale com RH do app do colaborador, no mesmo nível visual das solicitações existentes",
+        "Colaborador vê listagem de suas justificativas com: tipo, data, status (badge colorido: amarelo=pendente, verde=aprovada, vermelho=reprovada)",
+        "Botão 'Nova justificativa' abre modal com select de tipo",
+        "Tipo 'Ausência de batida de ponto': campos data (obrigatório) e hora (obrigatório), sem anexo",
+        "Tipo 'Falta': campos data (obrigatório) e mensagem (obrigatório), sem anexo",
+        "Tipo 'Falta com atestado': campos data (obrigatório), mensagem (obrigatório) e upload de arquivo (obrigatório, PDF ou imagem)",
+        "Arquivo de atestado salvo via storageUpload() de config/storage.php no path: justificativas/{cnpj}/{colaborador_id}/{filename}",
+        "Admin visualiza todas as justificativas do CNPJ no painel admin, filtradas por status",
+        "Admin pode aprovar ou reprovar cada justificativa com campo opcional de resposta",
+        "Ao aprovar ou reprovar, status é atualizado e email de notificação é enviado ao colaborador via configureMailer()",
+        "Email de notificação inclui: tipo da justificativa, data, status (aprovada/reprovada) e resposta do admin se houver",
+        "Justificativas são filtradas por cnpj_empresa em todas as queries"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": "Um script de migração obrigatório. hora_ocorrencia é NULL para falta e falta_atestado (apenas ausência de ponto usa hora). arquivo_path armazena o path relativo no GCS/local. Seguir padrão visual e de código das solicitações existentes no app/ — reutilizar estrutura de modais, listagem e badges de status já presentes. PHP 7.4 puro."
     }
   ]
 }

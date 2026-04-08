@@ -47,6 +47,52 @@ if (isset($_POST['btn_sol'])) {
     $_SESSION["solicitacao_filtro_situac"] = 'E';
 }
 
+// FEA-002: Listagem de experiências vencendo
+if (isset($_POST['btn_experiencia'])) {
+
+    $tipo_experiencia = intval($_POST['tipo_experiencia']);
+    $registros = selectGESUSU_experiencia_lista($id_emp_default, $tipo_experiencia);
+    $count_registros = count($registros);
+
+    $retorno = '';
+
+    if ($count_registros > 0 && isset($registros[0]) && is_array($registros[0])) {
+
+        // Cabeçalho da tabela
+        $retorno .= '<table class="table table-sm table-bordered">';
+        $retorno .= '<thead class="thead-light"><tr>';
+        $retorno .= '<th>Nome</th>';
+        $retorno .= '<th>Data Admissão</th>';
+        $retorno .= '<th>Venc. 45 dias</th>';
+        $retorno .= '<th>Venc. 90 dias</th>';
+        $retorno .= '<th>Dias desde admissão</th>';
+        $retorno .= '</tr></thead><tbody>';
+
+        foreach ($registros as $linha) {
+
+            $dataadmissao = new DateTime($linha['dataadmissao']);
+            $venc45 = new DateTime($linha['vencimento_45d']);
+            $venc90 = new DateTime($linha['vencimento_90d']);
+            $dias = $linha['dias_desde_admissao'];
+
+            $retorno .= '<tr>';
+            $retorno .= '<td>' . $linha['nome'] . '</td>';
+            $retorno .= '<td>' . $dataadmissao->format("d/m/Y") . '</td>';
+            $retorno .= '<td>' . $venc45->format("d/m/Y") . '</td>';
+            $retorno .= '<td>' . $venc90->format("d/m/Y") . '</td>';
+            $retorno .= '<td class="text-center">' . $dias . '</td>';
+            $retorno .= '</tr>';
+        }
+
+        $retorno .= '</tbody></table>';
+    } else {
+
+        $retorno .= '<p class="text-center text-muted py-3">Nenhum colaborador encontrado.</p>';
+    }
+
+    echo $retorno;
+}
+
 // Se o botão 'btn_aniver' estiver definido nos dados POST, execute o código a seguir
 if (isset($_POST['btn_aniver'])) {
 
@@ -453,6 +499,11 @@ if (isset($_POST['btn_colab_pendente'])) {
 
             // Chama a função updateGESUSU_aprovacao para atualizar a aprovação do colaborador
             updateGESUSU_aprovacao($id_usu, $bloqueado, $situac, $datatu);
+
+            // FEA-001: preenche datarescisao automaticamente na reprovação
+            if ($situac == 0) {
+                updateGESUSU_DATARESCISAO($id_usu, date('Y-m-d'));
+            }
 
             // Verifica se o valor de 'tipo' é 'aprovado'
             if ($tipo == 'aprovado') {
