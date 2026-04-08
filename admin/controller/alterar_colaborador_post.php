@@ -144,3 +144,65 @@ if (isset($_POST['submit_salvar_doc'])) {
 
     echo json_encode($retorno);
 };
+
+// FEA-004: Nova observação do colaborador
+if (isset($_POST['submit_nova_observacao'])) {
+    try {
+        $id_usu = $_SESSION['colaborador_editar'];
+        $cnpj = $_SESSION['cnpj_completo'];
+        $descricao = trim($_POST['descricao']);
+        $data_obs = $_POST['data_observacao'];
+        $categoria_id = !empty($_POST['categoria_id']) ? intval($_POST['categoria_id']) : null;
+        $criado_por = $_SESSION['id_usa'];
+        $criado_em = date('Y-m-d H:i:s');
+
+        if (!empty($descricao) && !empty($data_obs)) {
+            insertObservacao($id_usu, $cnpj, $categoria_id, $descricao, $data_obs, $criado_em, $criado_por);
+            echo '1';
+        } else {
+            echo '0';
+        }
+    } catch (PDOException $erro) {
+        echo $erro->getMessage();
+    }
+}
+
+// FEA-004: Deletar observação
+if (isset($_POST['delete_observacao'])) {
+    try {
+        $id = intval($_POST['id_observacao']);
+        deleteObservacao($id);
+        echo '1';
+    } catch (PDOException $erro) {
+        echo $erro->getMessage();
+    }
+}
+
+// FEA-004: Nova categoria de observação
+if (isset($_POST['submit_nova_categoria'])) {
+    try {
+        $cnpj = $_SESSION['cnpj_completo'];
+        $nome = trim($_POST['nome_categoria']);
+        $criado_em = date('Y-m-d H:i:s');
+
+        if (!empty($nome) && strlen($nome) <= 100) {
+            insertCategoria_observacao($cnpj, $nome, $criado_em);
+            echo '1';
+        } else {
+            echo '0';
+        }
+    } catch (PDOException $erro) {
+        echo $erro->getMessage();
+    }
+}
+
+// FEA-004: Desativar categoria
+if (isset($_POST['inactivate_categoria'])) {
+    try {
+        $id = intval($_POST['id_categoria']);
+        inactivateCategoria_observacao($id);
+        echo '1';
+    } catch (PDOException $erro) {
+        echo $erro->getMessage();
+    }
+}

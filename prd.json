@@ -176,8 +176,8 @@
         "Observações de colaboradores inativos (demitidos) continuam visíveis para histórico"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": "Dois scripts de migração obrigatórios (tabelas novas). cnpj_empresa deve ser o mesmo campo/formato já usado no sistema para identificar a empresa — verificar padrão no banco antes de criar as tabelas. colaborador_id referencia a chave primária da tabela de colaboradores. PHP 7.4 puro — usar pg_query/PDO conforme padrão do módulo admin."
+      "passes": true,
+      "notes": "CONCLUÍDA. Aba Observações na ficha do colaborador (alterar_colaborador.php). Modal nova observação (data + categoria + descrição). Modal gerenciar categorias (CRUD por CNPJ). 6 funções DAL em iuds_pdo.php. 4 handlers POST em alterar_colaborador_post.php. Scripts de migração: create_categorias_observacao.sql e create_observacoes_colaborador.sql."
     },
     {
       "id": "FEA-005",

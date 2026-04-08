@@ -200,6 +200,7 @@ unset($_SESSION['alterar_colaborador']['token']);
                                     <a class="nav-item nav-link" id="menu-parametros-tab" data-toggle="tab" href="#menu-parametros" role="tab" aria-controls="menu-parametros" aria-selected="false">Parâmetros</a>
                                     <a class="nav-item nav-link" id="menu-cursos-tab" data-toggle="tab" href="#menu-cursos" role="tab" aria-controls="menu-cursos" aria-selected="false">Cursos/Exames</a>
                                     <a class="nav-item nav-link" id="menu-documentos-tab" data-toggle="tab" href="#menu-documentos" role="tab" aria-controls="menu-documentos" aria-selected="false">Documentos</a>
+                                    <a class="nav-item nav-link" id="menu-observacoes-tab" data-toggle="tab" href="#menu-observacoes" role="tab" aria-controls="menu-observacoes" aria-selected="false">Observações</a>
                                 </div>
                             </nav>
                             <!-- FIM NAV MENUS -->
@@ -1009,6 +1010,59 @@ unset($_SESSION['alterar_colaborador']['token']);
                                         </div>
                                         <!-- FIM MENU DOCUMENTOS -->
 
+                                        <!-- INICIO MENU OBSERVAÇÕES - FEA-004 -->
+                                        <div class="tab-pane fade" id="menu-observacoes" role="tabpanel" aria-labelledby="menu-observacoes-tab">
+
+                                            <div class="col-md-12 mb-2 w-100 d-flex">
+                                                <button type="button" id="btn-gerenciar-categorias" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="fas fa-tags mr-sm-1"></i> Gerenciar Categorias
+                                                </button>
+                                                <button type="button" id="btn-nova-observacao" class="btn btn-organograma btn-icon-split-organograma ml-auto">
+                                                    <i class="fas fa-plus-circle mr-sm-2"></i> Nova Observação
+                                                </button>
+                                            </div>
+
+                                            <div>
+                                                <table class="table table-bordered" width="100%" cellspacing="0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th style="vertical-align: middle; width: 15%;">Data</th>
+                                                            <th style="vertical-align: middle; width: 20%;">Categoria</th>
+                                                            <th style="vertical-align: middle; width: 50%;">Descrição</th>
+                                                            <th style="vertical-align: middle; width: 15%; text-align: center;">Ações</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="texto-table-body">
+                                                        <?php
+                                                        $observacoes = selectObservacoes_colaborador($id_fun, $cnpj_completo);
+                                                        if (!empty($observacoes)) {
+                                                            foreach ($observacoes as $obs) {
+                                                                if (!empty($obs) && is_array($obs)) {
+                                                                    $data_obs_fmt = (new DateTime($obs['data_observacao']))->format('d/m/Y');
+                                                        ?>
+                                                        <tr>
+                                                            <td><?php echo $data_obs_fmt; ?></td>
+                                                            <td><?php echo htmlspecialchars($obs['categoria_nome']); ?></td>
+                                                            <td><?php echo htmlspecialchars($obs['descricao']); ?></td>
+                                                            <td style="text-align: center;">
+                                                                <button type="button" class="btn btn-sm btn-outline-danger btn-deletar-observacao" data-id="<?php echo $obs['id']; ?>" title="Deletar">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                        <?php }
+                                                            }
+                                                        } else { ?>
+                                                        <tr>
+                                                            <td colspan="4" class="text-center text-muted">Nenhuma observação registrada.</td>
+                                                        </tr>
+                                                        <?php } ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <!-- FIM MENU OBSERVAÇÕES -->
+
                                 <?php }
                                             } ?>
 
@@ -1105,6 +1159,99 @@ unset($_SESSION['alterar_colaborador']['token']);
                         </div>
                         <div class="modal-footer">
                             <button type="button" id="btn-senha" class="btn btn-organograma btn-icon-split-organograma"><i class="fas fa-unlock"></i> Alterar</button>
+                            <button class="btn btn-secondary" type="button" data-dismiss="modal">Voltar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL NOVA OBSERVAÇÃO - FEA-004 -->
+            <div class="modal fade" id="modal-nova-observacao" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document" style="width: 50vw;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Nova Observação</h5>
+                            <button class="close" type="button" data-dismiss="modal"><span aria-hidden="true">×</span></button>
+                        </div>
+                        <form id="form-nova-observacao">
+                            <div class="modal-body">
+                                <div class="form-row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="data-obs">Data</label>
+                                        <input type="date" class="form-control" id="data-obs" name="data_observacao" value="<?php echo date('Y-m-d'); ?>" required>
+                                    </div>
+                                    <div class="col-md-8 mb-3">
+                                        <label for="categoria-select">Categoria</label>
+                                        <select class="form-control" id="categoria-select" name="categoria_id">
+                                            <option value="">Sem categoria</option>
+                                            <?php
+                                            $categorias = selectCategorias_observacao($cnpj_completo);
+                                            foreach ($categorias as $cat) {
+                                                if (!empty($cat) && is_array($cat)) {
+                                                    echo '<option value="' . $cat['id'] . '">' . htmlspecialchars($cat['nome']) . '</option>';
+                                                }
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="col-md-12 mb-3">
+                                        <label for="descricao-obs">Descrição <span class="text-danger">*</span></label>
+                                        <textarea class="form-control" id="descricao-obs" name="descricao" rows="4" required></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-organograma btn-icon-split-organograma"><i class="fas fa-plus-circle"></i> Salvar</button>
+                                <button class="btn btn-secondary" type="button" data-dismiss="modal">Voltar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL GERENCIAR CATEGORIAS - FEA-004 -->
+            <div class="modal fade" id="modal-gerenciar-categorias" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document" style="width: 40vw;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Gerenciar Categorias</h5>
+                            <button class="close" type="button" data-dismiss="modal"><span aria-hidden="true">×</span></button>
+                        </div>
+                        <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-sm table-bordered" id="tabela-categorias">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th style="width: 80px; text-align: center;">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    if (!empty($categorias)) {
+                                        foreach ($categorias as $cat) {
+                                            if (!empty($cat) && is_array($cat)) { ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($cat['nome']); ?></td>
+                                        <td style="text-align: center;">
+                                            <button type="button" class="btn btn-sm btn-outline-danger btn-desativar-categoria" data-id="<?php echo $cat['id']; ?>" title="Desativar">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <?php }
+                                        }
+                                    } ?>
+                                </tbody>
+                            </table>
+                            <hr>
+                            <form id="form-nova-categoria" class="form-inline">
+                                <input type="text" class="form-control form-control-sm mr-2" id="nome-categoria" name="nome_categoria" placeholder="Nome da categoria" maxlength="100" required style="flex: 1;">
+                                <button type="submit" class="btn btn-sm btn-organograma"><i class="fas fa-plus"></i> Adicionar</button>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
                             <button class="btn btn-secondary" type="button" data-dismiss="modal">Voltar</button>
                         </div>
                     </div>
@@ -1308,6 +1455,99 @@ unset($_SESSION['alterar_colaborador']['token']);
 
     <!-- JS DA PAGINA -->
     <script src="scripts/alterar_colaborador.js?version=<?php echo time(); ?>"></script>
+
+    <!-- FEA-004: Observações do colaborador -->
+    <script>
+    $(function() {
+        // Abrir modal nova observação
+        $(document).on('click', '#btn-nova-observacao', function() {
+            $('#modal-nova-observacao').modal('show');
+        });
+
+        // Abrir modal gerenciar categorias
+        $(document).on('click', '#btn-gerenciar-categorias', function() {
+            $('#modal-gerenciar-categorias').modal('show');
+        });
+
+        // Submit nova observação
+        $('#form-nova-observacao').submit(function(event) {
+            event.preventDefault();
+            var descricao = $('#descricao-obs').val().trim();
+            if (descricao === '') {
+                Swal.fire({ icon: 'warning', title: 'Atenção!', text: 'Preencha a descrição.' });
+                return;
+            }
+            var dados = {
+                submit_nova_observacao: 1,
+                descricao: descricao,
+                data_observacao: $('#data-obs').val(),
+                categoria_id: $('#categoria-select').val()
+            };
+            $.post('controller/alterar_colaborador_post.php', dados, function(retorno) {
+                if (retorno == '1') {
+                    Swal.fire({ icon: 'success', title: 'Sucesso!', text: 'Observação adicionada!', allowOutsideClick: false })
+                    .then(function(result) { if (result.isConfirmed) location.reload(); });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Erro', html: retorno });
+                }
+            });
+        });
+
+        // Deletar observação
+        $(document).on('click', '.btn-deletar-observacao', function() {
+            var id = $(this).data('id');
+            Swal.fire({
+                title: 'Confirmar?', text: 'Deseja deletar esta observação?', icon: 'warning',
+                showCancelButton: true, confirmButtonText: 'Sim, deletar', cancelButtonText: 'Cancelar'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    $.post('controller/alterar_colaborador_post.php', { delete_observacao: 1, id_observacao: id }, function(retorno) {
+                        if (retorno == '1') {
+                            Swal.fire({ icon: 'success', title: 'Deletado!', allowOutsideClick: false })
+                            .then(function(result) { if (result.isConfirmed) location.reload(); });
+                        }
+                    });
+                }
+            });
+        });
+
+        // Submit nova categoria
+        $('#form-nova-categoria').submit(function(event) {
+            event.preventDefault();
+            var nome = $('#nome-categoria').val().trim();
+            if (nome === '') {
+                Swal.fire({ icon: 'warning', title: 'Atenção!', text: 'Preencha o nome da categoria.' });
+                return;
+            }
+            $.post('controller/alterar_colaborador_post.php', { submit_nova_categoria: 1, nome_categoria: nome }, function(retorno) {
+                if (retorno == '1') {
+                    Swal.fire({ icon: 'success', title: 'Sucesso!', text: 'Categoria adicionada!', allowOutsideClick: false })
+                    .then(function(result) { if (result.isConfirmed) location.reload(); });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Erro', html: retorno });
+                }
+            });
+        });
+
+        // Desativar categoria
+        $(document).on('click', '.btn-desativar-categoria', function() {
+            var id = $(this).data('id');
+            Swal.fire({
+                title: 'Confirmar?', text: 'Deseja desativar esta categoria?', icon: 'warning',
+                showCancelButton: true, confirmButtonText: 'Sim', cancelButtonText: 'Cancelar'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    $.post('controller/alterar_colaborador_post.php', { inactivate_categoria: 1, id_categoria: id }, function(retorno) {
+                        if (retorno == '1') {
+                            Swal.fire({ icon: 'success', title: 'Desativada!', allowOutsideClick: false })
+                            .then(function(result) { if (result.isConfirmed) location.reload(); });
+                        }
+                    });
+                }
+            });
+        });
+    });
+    </script>
 
 </body>
 

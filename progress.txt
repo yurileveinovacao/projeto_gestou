@@ -37,7 +37,7 @@ Scripts de migração são a fonte da verdade — nunca assumir que o banco de d
 | Fase 4B — OCR Templates | ✅ Completa | 16/16 tarefas, 23 templates corrigidos |
 | **Fase 5 — App Android TWA** | **🔧 Em andamento** | **15/21** |
 | Fase 6 — Cutover | ⬜ Pendente | 0/13 |
-| **Fase 7 — Novas Features** | **🔧 Em andamento** | **3/5 (FEA-001~005)** |
+| **Fase 7 — Novas Features** | **🔧 Em andamento** | **4/5 (FEA-001~005)** |
 
 Plano detalhado: docs/plano-migracao-gestou-consolidado.md
 Histórico PRD original: docs/progress-prd-original.txt
@@ -177,6 +177,18 @@ PRD atualizado: prd.json (MIG-001~012 concluídas + FEA-001~005 novas)
 - Cron job para alertas de experiência: primeiro cron do sistema — Cloud Scheduler + endpoint PHP autenticado
 - Dashboard admin: cards redimensionados para comportar novos contadores sem quebrar mobile
 - Domínio gestou.com.br: transferência via registro.br em andamento (Sandro → Leve)
+
+### 2026-04-08 — FEA-004: Observações do colaborador ✅
+- **Aba:** Nova aba "Observações" na ficha do colaborador (admin/alterar_colaborador.php), após "Documentos"
+- **Tabela observações:** Data, categoria, descrição, botão deletar (hard delete)
+- **Modal nova observação:** Data (default hoje), select de categoria (por CNPJ), textarea descrição
+- **Modal gerenciar categorias:** Lista categorias ativas com botão desativar, form para adicionar nova
+- **Multi-tenant:** Categorias filtradas por cnpj_empresa (CNPJ completo da sessão)
+- **Scripts de migração:**
+  - `scripts/migrations/create_categorias_observacao.sql`
+  - `scripts/migrations/create_observacoes_colaborador.sql`
+- **Funções DAL (iuds_pdo.php):** selectObservacoes_colaborador, selectCategorias_observacao, insertObservacao, deleteObservacao, insertCategoria_observacao, inactivateCategoria_observacao
+- **Handlers POST (alterar_colaborador_post.php):** submit_nova_observacao, delete_observacao, submit_nova_categoria, inactivate_categoria
 
 ### 2026-04-08 — FEA-003: Alertas de experiência — email + popup ✅
 - **Popup:** SweetAlert no dashboard admin ao carregar quando há experiências vencendo em até 7 dias

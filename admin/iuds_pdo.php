@@ -9406,6 +9406,101 @@ function selectGESUSU_experiencia_alerta($id_emp)
     return $resultset;
 }
 
+//SELECT observacoes do colaborador - FEA-004
+function selectObservacoes_colaborador($id_usu, $cnpj)
+{
+    global $pdo;
+    $query =
+        'SELECT o.id, o.descricao, o.data_observacao, o.criado_em,
+            COALESCE(c.nome, \'Sem categoria\') AS categoria_nome
+        FROM observacoes_colaborador o
+        LEFT JOIN categorias_observacao c ON o.categoria_id = c.id
+        WHERE o.colaborador_id = :id_usu AND o.cnpj_empresa = :cnpj
+        ORDER BY o.data_observacao DESC, o.criado_em DESC';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_usu', $id_usu, PDO::PARAM_INT);
+    $statement->bindParam(':cnpj', $cnpj, PDO::PARAM_STR);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [];
+    }
+    return $resultset;
+}
+
+//SELECT categorias de observacao ativas por empresa - FEA-004
+function selectCategorias_observacao($cnpj)
+{
+    global $pdo;
+    $query =
+        'SELECT id, nome FROM categorias_observacao
+        WHERE cnpj_empresa = :cnpj AND ativo = TRUE
+        ORDER BY nome ASC';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':cnpj', $cnpj, PDO::PARAM_STR);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [];
+    }
+    return $resultset;
+}
+
+//INSERT observacao do colaborador - FEA-004
+function insertObservacao($colaborador_id, $cnpj, $categoria_id, $descricao, $data_obs, $criado_em, $criado_por)
+{
+    global $pdo;
+    $query =
+        'INSERT INTO observacoes_colaborador (colaborador_id, cnpj_empresa, categoria_id, descricao, data_observacao, criado_em, criado_por)
+        VALUES (:colaborador_id, :cnpj, :categoria_id, :descricao, :data_obs, :criado_em, :criado_por)';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':colaborador_id', $colaborador_id, PDO::PARAM_INT);
+    $statement->bindParam(':cnpj', $cnpj, PDO::PARAM_STR);
+    $cat_id = !empty($categoria_id) ? $categoria_id : null;
+    $statement->bindParam(':categoria_id', $cat_id, PDO::PARAM_INT);
+    $statement->bindParam(':descricao', $descricao, PDO::PARAM_STR);
+    $statement->bindParam(':data_obs', $data_obs, PDO::PARAM_STR);
+    $statement->bindParam(':criado_em', $criado_em, PDO::PARAM_STR);
+    $statement->bindParam(':criado_por', $criado_por, PDO::PARAM_INT);
+    $statement->execute();
+}
+
+//DELETE observacao do colaborador - FEA-004
+function deleteObservacao($id)
+{
+    global $pdo;
+    $query = 'DELETE FROM observacoes_colaborador WHERE id = :id';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id', $id, PDO::PARAM_INT);
+    $statement->execute();
+}
+
+//INSERT categoria de observacao - FEA-004
+function insertCategoria_observacao($cnpj, $nome, $criado_em)
+{
+    global $pdo;
+    $query =
+        'INSERT INTO categorias_observacao (cnpj_empresa, nome, criado_em)
+        VALUES (:cnpj, :nome, :criado_em)';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':cnpj', $cnpj, PDO::PARAM_STR);
+    $statement->bindParam(':nome', $nome, PDO::PARAM_STR);
+    $statement->bindParam(':criado_em', $criado_em, PDO::PARAM_STR);
+    $statement->execute();
+}
+
+//UPDATE desativar categoria de observacao - FEA-004
+function inactivateCategoria_observacao($id)
+{
+    global $pdo;
+    $query = 'UPDATE categorias_observacao SET ativo = FALSE WHERE id = :id';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id', $id, PDO::PARAM_INT);
+    $statement->execute();
+}
+
 //SELECT GESEMP todas ativas com email do admin - FEA-003
 function selectGESEMP_ativas_com_admin()
 {
