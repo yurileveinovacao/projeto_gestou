@@ -9289,8 +9289,8 @@ function selectGESUSU_experiencia_45d_count($id_emp)
         WHERE id_emp = :id_emp
           AND situac = 1
           AND dataadmissao IS NOT NULL
-          AND (CURRENT_DATE - dataadmissao) >= 45
-          AND (CURRENT_DATE - dataadmissao) <= 90';
+          AND (CURRENT_DATE - dataadmissao::date) >= 45
+          AND (CURRENT_DATE - dataadmissao::date) <= 90';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
     $statement->execute();
@@ -9313,7 +9313,7 @@ function selectGESUSU_experiencia_90d_count($id_emp)
         WHERE id_emp = :id_emp
           AND situac = 1
           AND dataadmissao IS NOT NULL
-          AND (CURRENT_DATE - dataadmissao) >= 90';
+          AND (CURRENT_DATE - dataadmissao::date) >= 90';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
     $statement->execute();
@@ -9333,27 +9333,27 @@ function selectGESUSU_experiencia_lista($id_emp, $tipo)
     if ($tipo == 45) {
         $query =
             'SELECT id_usu, nome, dataadmissao,
-                (dataadmissao + 45) AS vencimento_45d,
-                (dataadmissao + 90) AS vencimento_90d,
-                (CURRENT_DATE - dataadmissao) AS dias_desde_admissao
+                (dataadmissao::date + 45) AS vencimento_45d,
+                (dataadmissao::date + 90) AS vencimento_90d,
+                (CURRENT_DATE - dataadmissao::date) AS dias_desde_admissao
             FROM public."GESUSU"
             WHERE id_emp = :id_emp
               AND situac = 1
               AND dataadmissao IS NOT NULL
-              AND (CURRENT_DATE - dataadmissao) >= 45
-              AND (CURRENT_DATE - dataadmissao) <= 90
+              AND (CURRENT_DATE - dataadmissao::date) >= 45
+              AND (CURRENT_DATE - dataadmissao::date) <= 90
             ORDER BY dataadmissao ASC';
     } else {
         $query =
             'SELECT id_usu, nome, dataadmissao,
-                (dataadmissao + 45) AS vencimento_45d,
-                (dataadmissao + 90) AS vencimento_90d,
-                (CURRENT_DATE - dataadmissao) AS dias_desde_admissao
+                (dataadmissao::date + 45) AS vencimento_45d,
+                (dataadmissao::date + 90) AS vencimento_90d,
+                (CURRENT_DATE - dataadmissao::date) AS dias_desde_admissao
             FROM public."GESUSU"
             WHERE id_emp = :id_emp
               AND situac = 1
               AND dataadmissao IS NOT NULL
-              AND (CURRENT_DATE - dataadmissao) >= 90
+              AND (CURRENT_DATE - dataadmissao::date) >= 90
             ORDER BY dataadmissao ASC';
     }
     $statement = $pdo->prepare($query);
@@ -9363,6 +9363,65 @@ function selectGESUSU_experiencia_lista($id_emp, $tipo)
         $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
     } else {
         $resultset = [0];
+    }
+
+    return $resultset;
+}
+
+//SELECT GESUSU experiencias vencendo em ate 7 dias - FEA-003
+function selectGESUSU_experiencia_alerta($id_emp)
+{
+    global $pdo;
+    $query =
+        'SELECT id_usu, nome, dataadmissao,
+            (dataadmissao::date + 45) AS vencimento_45d,
+            (dataadmissao::date + 90) AS vencimento_90d,
+            (CURRENT_DATE - dataadmissao::date) AS dias_desde_admissao,
+            CASE
+                WHEN (dataadmissao::date + 45) - CURRENT_DATE BETWEEN 0 AND 7 THEN 45
+                WHEN (dataadmissao::date + 90) - CURRENT_DATE BETWEEN 0 AND 7 THEN 90
+            END AS tipo_alerta,
+            CASE
+                WHEN (dataadmissao::date + 45) - CURRENT_DATE BETWEEN 0 AND 7 THEN (dataadmissao::date + 45) - CURRENT_DATE
+                WHEN (dataadmissao::date + 90) - CURRENT_DATE BETWEEN 0 AND 7 THEN (dataadmissao::date + 90) - CURRENT_DATE
+            END AS dias_restantes
+        FROM public."GESUSU"
+        WHERE id_emp = :id_emp
+          AND situac = 1
+          AND dataadmissao IS NOT NULL
+          AND (
+              (dataadmissao::date + 45) - CURRENT_DATE BETWEEN 0 AND 7
+              OR (dataadmissao::date + 90) - CURRENT_DATE BETWEEN 0 AND 7
+          )
+        ORDER BY dias_restantes ASC';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [];
+    }
+
+    return $resultset;
+}
+
+//SELECT GESEMP todas ativas com email do admin - FEA-003
+function selectGESEMP_ativas_com_admin()
+{
+    global $pdo;
+    $query =
+        'SELECT e.id_emp, e.nome, e.cnpj, a.email AS email_admin, a.nome AS nome_admin
+        FROM public."GESEMP" e
+        LEFT JOIN public."GESUSA" a ON a.id_emp_acess = e.id_emp AND a.situac = 1
+        WHERE e.situac = 1
+        ORDER BY e.id_emp';
+    $statement = $pdo->prepare($query);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [];
     }
 
     return $resultset;

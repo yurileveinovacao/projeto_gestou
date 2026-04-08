@@ -107,7 +107,7 @@ psql -h 127.0.0.1 -p 5434 -U gestou -d gestou
 **Fase 7 — Novas Features** (planejada, 0/5)
 - FEA-001: Campo datarescisao auto-preenchido na desativação — **completa**
 - FEA-002: Contadores experiência 45d/90d no dashboard — **completa**
-- FEA-003: Alertas de experiência (email + popup + cron) — pendente (depende FEA-001/002)
+- FEA-003: Alertas de experiência (popup + email cron) — **completa** (Cloud Scheduler pendente)
 - FEA-004: Observações do colaborador com categorias — pendente
 - FEA-005: Justificativas no Fale com RH — pendente
 

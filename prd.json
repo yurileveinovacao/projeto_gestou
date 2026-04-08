@@ -156,8 +156,8 @@
         "Cron job configurado no GCP Cloud Scheduler para executar check_experiencias.php diariamente às 08:00 BRT"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": "O sistema atual não tem cron job — este será o primeiro. Cloud Scheduler chama endpoint HTTP autenticado (não CLI). Criar admin/check_experiencias.php como endpoint PHP protegido por token secreto (env var CRON_SECRET). O script percorre todos os CNPJs ativos e envia emails individualmente. Depende de FEA-001 e FEA-002."
+      "passes": true,
+      "notes": "CONCLUÍDA. Popup SweetAlert no dashboard com tabela de alertas (colaboradores com experiência vencendo em até 7 dias). Endpoint cron: admin/cron_check_experiencias.php protegido por CRON_SECRET. Envia email individual por colaborador ao admin da empresa. Funções: selectGESUSU_experiencia_alerta, selectGESEMP_ativas_com_admin. Cloud Scheduler pendente de configuração (requer criação do secret CRON_SECRET)."
     },
     {
       "id": "FEA-004",

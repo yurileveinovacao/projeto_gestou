@@ -111,6 +111,11 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                 <!-- INICIO CONTEINER FLUID -->
                 <div class="container-fluid">
 
+                    <?php
+                    // FEA-003: Buscar colaboradores com experiência vencendo em até 7 dias
+                    $alertas_experiencia = selectGESUSU_experiencia_alerta($id_emp_default);
+                    ?>
+
                     <!-- Content Row -->
                     <div class="row responsive mb-4 mx-4">
 
@@ -2272,3 +2277,39 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
         });
     });
 </script>
+
+<?php if (!empty($alertas_experiencia)) { ?>
+<!-- FEA-003: Popup de alertas de experiência vencendo -->
+<script>
+    $(document).ready(function() {
+        var html = '<table class="table table-sm table-bordered text-left">';
+        html += '<thead class="thead-light"><tr><th>Nome</th><th>Tipo</th><th>Vencimento</th><th>Dias restantes</th></tr></thead><tbody>';
+        <?php foreach ($alertas_experiencia as $alerta) {
+            $venc = $alerta['tipo_alerta'] == 45
+                ? (new DateTime($alerta['vencimento_45d']))->format('d/m/Y')
+                : (new DateTime($alerta['vencimento_90d']))->format('d/m/Y');
+            $dias = intval($alerta['dias_restantes']);
+            $tipo = $alerta['tipo_alerta'] . ' dias';
+            $badge = $dias <= 2 ? 'danger' : 'warning';
+        ?>
+        html += '<tr>';
+        html += '<td><?php echo addslashes($alerta["nome"]); ?></td>';
+        html += '<td><span class="badge badge-<?php echo $badge; ?>"><?php echo $tipo; ?></span></td>';
+        html += '<td><?php echo $venc; ?></td>';
+        html += '<td class="text-center"><strong><?php echo $dias; ?></strong></td>';
+        html += '</tr>';
+        <?php } ?>
+        html += '</tbody></table>';
+
+        Swal.fire({
+            icon: 'warning',
+            title: 'Experiências vencendo!',
+            html: html,
+            width: '600px',
+            confirmButtonText: 'OK',
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        });
+    });
+</script>
+<?php } ?>

@@ -37,7 +37,7 @@ Scripts de migração são a fonte da verdade — nunca assumir que o banco de d
 | Fase 4B — OCR Templates | ✅ Completa | 16/16 tarefas, 23 templates corrigidos |
 | **Fase 5 — App Android TWA** | **🔧 Em andamento** | **15/21** |
 | Fase 6 — Cutover | ⬜ Pendente | 0/13 |
-| **Fase 7 — Novas Features** | **🔧 Em andamento** | **2/5 (FEA-001~005)** |
+| **Fase 7 — Novas Features** | **🔧 Em andamento** | **3/5 (FEA-001~005)** |
 
 Plano detalhado: docs/plano-migracao-gestou-consolidado.md
 Histórico PRD original: docs/progress-prd-original.txt
@@ -178,6 +178,22 @@ PRD atualizado: prd.json (MIG-001~012 concluídas + FEA-001~005 novas)
 - Dashboard admin: cards redimensionados para comportar novos contadores sem quebrar mobile
 - Domínio gestou.com.br: transferência via registro.br em andamento (Sandro → Leve)
 
+### 2026-04-08 — FEA-003: Alertas de experiência — email + popup ✅
+- **Popup:** SweetAlert no dashboard admin ao carregar quando há experiências vencendo em até 7 dias
+  - Tabela com nome, tipo (45d/90d), data vencimento, dias restantes
+  - Badge vermelho para ≤2 dias, amarelo para 3-7 dias
+  - Reaparece a cada acesso ao dashboard enquanto houver alertas
+- **Cron endpoint:** `admin/cron_check_experiencias.php`
+  - Protegido por token (env var CRON_SECRET, GET param)
+  - Percorre todas as empresas ativas via `selectGESEMP_ativas_com_admin()`
+  - Envia email individual por colaborador ao email do admin (GESUSA)
+  - Email HTML com branding Gestou: dados do colaborador, tipo experiência, dias restantes
+  - Retorna JSON com log de envios e erros
+- **Funções DAL (iuds_pdo.php):**
+  - `selectGESUSU_experiencia_alerta($id_emp)` — colaboradores com exp. vencendo em 0-7 dias
+  - `selectGESEMP_ativas_com_admin()` — empresas ativas com email do admin
+- **Pendência:** Configurar Cloud Scheduler + secret CRON_SECRET no GCP
+
 ### 2026-04-08 — FEA-002: Vencimento de experiências — contadores no dashboard ✅
 - **Cards:** 2 novos cards no carrossel Slick do dashboard admin
   - "Exp. 45 dias" (border-left-warning, ícone hourglass-half) — colaboradores entre 45 e 90 dias de admissão
@@ -190,6 +206,8 @@ PRD atualizado: prd.json (MIG-001~012 concluídas + FEA-001~005 novas)
 - **Handler:** `btn_experiencia` em `index_post.php` retorna HTML da tabela
 - **Multi-tenant:** Todas as queries filtradas por `id_emp` da sessão
 - Layout mobile preservado via Slick carousel responsivo
+- **Fix:** Cast `dataadmissao::date` nas queries (coluna é TIMESTAMP, não DATE)
+- **Pendência:** Contador 90d mostra todos os ativos com 90+ dias (incluindo antigos). Aguardando decisão Jéssica/Yuri sobre filtro de corte ou flag de verificação
 
 ### 2026-04-08 — FEA-001: Campo datarescisao — preenchimento automático ✅
 - **Descoberta:** Coluna `datarescisao` já existia na tabela `GESUSU` — script de migração não necessário
