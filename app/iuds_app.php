@@ -2403,3 +2403,40 @@ function selectGESPOL_item($id_pol)
 
     return $resultset;
 }
+
+//INSERT justificativa - FEA-005
+function insertJustificativa($colaborador_id, $cnpj, $tipo, $data_ocorrencia, $hora_ocorrencia, $mensagem, $arquivo_path, $criado_em)
+{
+    global $pdo;
+    $query = 'INSERT INTO justificativas (colaborador_id, cnpj_empresa, tipo, data_ocorrencia, hora_ocorrencia, mensagem, arquivo_path, criado_em) VALUES (:colaborador_id, :cnpj, :tipo, :data_ocorrencia, :hora_ocorrencia, :mensagem, :arquivo_path, :criado_em)';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':colaborador_id', $colaborador_id, PDO::PARAM_INT);
+    $statement->bindParam(':cnpj', $cnpj, PDO::PARAM_STR);
+    $statement->bindParam(':tipo', $tipo, PDO::PARAM_STR);
+    $statement->bindParam(':data_ocorrencia', $data_ocorrencia, PDO::PARAM_STR);
+    $hora = !empty($hora_ocorrencia) ? $hora_ocorrencia : null;
+    $statement->bindParam(':hora_ocorrencia', $hora, PDO::PARAM_STR);
+    $msg = !empty($mensagem) ? $mensagem : null;
+    $statement->bindParam(':mensagem', $msg, PDO::PARAM_STR);
+    $arq = !empty($arquivo_path) ? $arquivo_path : null;
+    $statement->bindParam(':arquivo_path', $arq, PDO::PARAM_STR);
+    $statement->bindParam(':criado_em', $criado_em, PDO::PARAM_STR);
+    $statement->execute();
+}
+
+//SELECT justificativas do colaborador - FEA-005
+function selectJustificativas_colaborador($id_usu, $cnpj)
+{
+    global $pdo;
+    $query = 'SELECT * FROM justificativas WHERE colaborador_id = :id_usu AND cnpj_empresa = :cnpj ORDER BY criado_em DESC';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_usu', $id_usu, PDO::PARAM_INT);
+    $statement->bindParam(':cnpj', $cnpj, PDO::PARAM_STR);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [];
+    }
+    return $resultset;
+}

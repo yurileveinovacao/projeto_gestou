@@ -199,8 +199,8 @@
         "Justificativas são filtradas por cnpj_empresa em todas as queries"
       ],
       "priority": 17,
-      "passes": false,
-      "notes": "Um script de migração obrigatório. hora_ocorrencia é NULL para falta e falta_atestado (apenas ausência de ponto usa hora). arquivo_path armazena o path relativo no GCS/local. Seguir padrão visual e de código das solicitações existentes no app/ — reutilizar estrutura de modais, listagem e badges de status já presentes. PHP 7.4 puro."
+      "passes": true,
+      "notes": "CONCLUÍDA. Seção Justificativas no Fale com RH do app. 3 tipos: ausencia_ponto (data+hora), falta (data+mensagem), falta_atestado (data+mensagem+arquivo). App: listagem com cards/badges + form com campos condicionais + upload de atestado. Admin: tabela com filtro + modais visualizar/aprovar/reprovar + email ao colaborador via PHPMailer. Tabela: justificativas (criada via migration)."
     }
   ]
 }

@@ -149,6 +149,22 @@ require 'util.php';
               </div>
             </div>
 
+            <!-- CARD JUSTIFICATIVAS - FEA-005 -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card h-100" page="justificativas" style="cursor: pointer;">
+                <div class="card-body user-select-none">
+                  <div class="row no-gutters align-items-center padding-2em">
+                    <div class="col mr-2">
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">Justificativas</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-file-signature fa-2x text-danger"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
           <!-- FIM DIV ROW -->
 

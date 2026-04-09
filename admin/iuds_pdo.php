@@ -9501,6 +9501,69 @@ function inactivateCategoria_observacao($id)
     $statement->execute();
 }
 
+//SELECT justificativas por empresa - FEA-005
+function selectJustificativas_empresa($id_emp)
+{
+    global $pdo;
+    $query = 'SELECT j.*, u.nome AS colaborador_nome FROM justificativas j LEFT JOIN public."GESUSU" u ON j.colaborador_id = u.id_usu WHERE u.id_emp = :id_emp ORDER BY j.criado_em DESC';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [];
+    }
+    return $resultset;
+}
+
+//SELECT justificativa por id - FEA-005
+function selectJustificativa_id($id)
+{
+    global $pdo;
+    $query = 'SELECT j.*, u.nome AS colaborador_nome, u.email AS colaborador_email FROM justificativas j LEFT JOIN public."GESUSU" u ON j.colaborador_id = u.id_usu WHERE j.id = :id';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id', $id, PDO::PARAM_INT);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [];
+    }
+    return $resultset;
+}
+
+//UPDATE justificativa status - FEA-005
+function updateJustificativa_status($id, $status, $resposta, $respondido_em, $respondido_por)
+{
+    global $pdo;
+    $query = 'UPDATE justificativas SET status = :status, resposta_admin = :resposta, respondido_em = :respondido_em, respondido_por = :respondido_por WHERE id = :id';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id', $id, PDO::PARAM_INT);
+    $statement->bindParam(':status', $status, PDO::PARAM_STR);
+    $resp = !empty($resposta) ? $resposta : null;
+    $statement->bindParam(':resposta', $resp, PDO::PARAM_STR);
+    $statement->bindParam(':respondido_em', $respondido_em, PDO::PARAM_STR);
+    $statement->bindParam(':respondido_por', $respondido_por, PDO::PARAM_INT);
+    $statement->execute();
+}
+
+//SELECT justificativas pendentes count - FEA-005
+function selectJustificativas_pendentes_count($id_emp)
+{
+    global $pdo;
+    $query = 'SELECT count(j.id) AS conta FROM justificativas j LEFT JOIN public."GESUSU" u ON j.colaborador_id = u.id_usu WHERE u.id_emp = :id_emp AND j.status = \'pendente\'';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [0];
+    }
+    return $resultset;
+}
+
 //SELECT GESEMP todas ativas com email do admin - FEA-003
 function selectGESEMP_ativas_com_admin()
 {

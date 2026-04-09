@@ -109,7 +109,7 @@ psql -h 127.0.0.1 -p 5434 -U gestou -d gestou
 - FEA-002: Contadores experiência 45d/90d no dashboard — **completa**
 - FEA-003: Alertas de experiência (popup + email cron) — **completa** (Cloud Scheduler pendente)
 - FEA-004: Observações do colaborador com categorias por empresa — **completa**
-- FEA-005: Justificativas no Fale com RH — pendente
+- FEA-005: Justificativas no Fale com RH — **completa**
 
 ## Referência
 
