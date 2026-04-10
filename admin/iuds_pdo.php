@@ -9279,7 +9279,7 @@ function selectGESUSU_ativos($id_emp)
     return $resultset;
 }
 
-//SELECT GESUSU experiencia 45 dias count - FEA-002
+//SELECT GESUSU experiencia 45 dias count - FEA-002 (janela de 7 dias antes do vencimento)
 function selectGESUSU_experiencia_45d_count($id_emp)
 {
     global $pdo;
@@ -9289,8 +9289,7 @@ function selectGESUSU_experiencia_45d_count($id_emp)
         WHERE id_emp = :id_emp
           AND situac = 1
           AND dataadmissao IS NOT NULL
-          AND (CURRENT_DATE - dataadmissao::date) >= 45
-          AND (CURRENT_DATE - dataadmissao::date) <= 90';
+          AND (CURRENT_DATE - dataadmissao::date) BETWEEN 38 AND 45';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
     $statement->execute();
@@ -9303,7 +9302,7 @@ function selectGESUSU_experiencia_45d_count($id_emp)
     return $resultset;
 }
 
-//SELECT GESUSU experiencia 90 dias count - FEA-002
+//SELECT GESUSU experiencia 90 dias count - FEA-002 (janela de 7 dias antes do vencimento)
 function selectGESUSU_experiencia_90d_count($id_emp)
 {
     global $pdo;
@@ -9313,7 +9312,7 @@ function selectGESUSU_experiencia_90d_count($id_emp)
         WHERE id_emp = :id_emp
           AND situac = 1
           AND dataadmissao IS NOT NULL
-          AND (CURRENT_DATE - dataadmissao::date) >= 90';
+          AND (CURRENT_DATE - dataadmissao::date) BETWEEN 83 AND 90';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
     $statement->execute();
@@ -9340,8 +9339,7 @@ function selectGESUSU_experiencia_lista($id_emp, $tipo)
             WHERE id_emp = :id_emp
               AND situac = 1
               AND dataadmissao IS NOT NULL
-              AND (CURRENT_DATE - dataadmissao::date) >= 45
-              AND (CURRENT_DATE - dataadmissao::date) <= 90
+              AND (CURRENT_DATE - dataadmissao::date) BETWEEN 38 AND 45
             ORDER BY dataadmissao ASC';
     } else {
         $query =
@@ -9353,7 +9351,7 @@ function selectGESUSU_experiencia_lista($id_emp, $tipo)
             WHERE id_emp = :id_emp
               AND situac = 1
               AND dataadmissao IS NOT NULL
-              AND (CURRENT_DATE - dataadmissao::date) >= 90
+              AND (CURRENT_DATE - dataadmissao::date) BETWEEN 83 AND 90
             ORDER BY dataadmissao ASC';
     }
     $statement = $pdo->prepare($query);
