@@ -62,7 +62,7 @@ if (isset($_POST['submit_justificativa'])) {
             }
         }
 
-        insertJustificativa($id_usu_default, $cnpj_completo, $tipo, $data_ocorrencia, $hora_ocorrencia, $mensagem, $arquivo_path, $criado_em);
+        insertJustificativa($id_usu_default, $raiz_cnpj, $tipo, $data_ocorrencia, $hora_ocorrencia, $mensagem, $arquivo_path, $criado_em);
         echo '1'; // sucesso
 
     } catch (PDOException $erro) {

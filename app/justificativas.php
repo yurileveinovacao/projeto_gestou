@@ -103,7 +103,7 @@ require 'util.php';
 
                         <?php
 
-                        $justificativas = selectJustificativas_colaborador($id_usu_default, $cnpj_completo);
+                        $justificativas = selectJustificativas_colaborador($id_usu_default, $raiz_cnpj);
 
                         if (count($justificativas) > 0) {
 
