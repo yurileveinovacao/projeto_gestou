@@ -67,6 +67,11 @@ if (isset($_POST['btn_visualizar_anexo'])) {
 
             $retorno .= '<iframe style="width: 100%; height: 600px;" src="../upload/colaboradores/' . $raiz_cnpj . '/' . $cpf . '/' . $arquivo . '"></iframe>';
             break;
+
+        case 'Atestado':
+            // FEA-005: arquivo_path já vem com o caminho completo (justificativas/{cnpj}/{id}/file)
+            $retorno .= '<iframe style="width: 100%; height: 600px;" src="../upload/' . $arquivo . '"></iframe>';
+            break;
     }
 
     //retorno da função

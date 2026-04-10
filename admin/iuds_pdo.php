@@ -11035,6 +11035,18 @@ function select_DOCUMENTOS($raiz_cnpj, $id_usu, $id_emp)
             FROM public."GESDCOL"
         WHERE id_usu = :id_usu AND id_emp = :id_emp AND arquivo IS NOT NULL
 
+        UNION
+
+        SELECT j.id AS codigo,
+               (\'Atestado - \' || TO_CHAR(j.data_ocorrencia, \'DD/MM/YYYY\')) AS descricao,
+               j.arquivo_path AS arquivo,
+               TO_CHAR(j.data_ocorrencia, \'DD/MM/YYYY\') AS competencia,
+               \'Atestado\' AS tipo,
+               j.criado_em AS inclusao
+            FROM justificativas j
+            INNER JOIN public."GESUSU" u ON u.id_usu = j.colaborador_id
+        WHERE j.colaborador_id = :id_usu AND u.id_emp = :id_emp AND j.arquivo_path IS NOT NULL
+
         ORDER BY inclusao DESC';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_usu', $id_usu, PDO::PARAM_INT);
