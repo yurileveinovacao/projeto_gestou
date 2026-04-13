@@ -1569,18 +1569,23 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
         });
     });
 
-    // FEA-006: Clique no card Turnover
+    // FEA-006: Função para abrir modal Turnover
+    function abrirModalTurnover() {
+        var dados = { btn_turnover: 1, mes: $('#turnover-mes').val(), ano: $('#turnover-ano').val() };
+        $.post('controller/index_post.php', dados, function(retorno) {
+            if (retorno == '0') {
+                Swal.fire({ icon: 'info', title: 'Atenção!', text: 'Você não tem permissão para acessar esta página.' });
+            } else {
+                $('#modal-body-turnover').html(retorno);
+                $('#modal-turnover').modal('show');
+            }
+        });
+    }
+
     $(function() {
+        // Clique no card Turnover
         $(document).on('click', '.card-turnover', function() {
-            var dados = { btn_turnover: 1, mes: $('#turnover-mes').val(), ano: $('#turnover-ano').val() };
-            $.post('controller/index_post.php', dados, function(retorno) {
-                if (retorno == '0') {
-                    Swal.fire({ icon: 'info', title: 'Atenção!', text: 'Você não tem permissão para acessar esta página.' });
-                } else {
-                    $('#modal-body-turnover').html(retorno);
-                    $('#modal-turnover').modal('show');
-                }
-            });
+            abrirModalTurnover();
         });
 
         // Filtrar por mês/ano dentro do modal
@@ -1590,6 +1595,12 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                 $('#modal-body-turnover').html(retorno);
             });
         });
+
+        // Abrir modal automaticamente se URL tem #turnover (vindo do menu lateral)
+        if (window.location.hash === '#turnover') {
+            abrirModalTurnover();
+            history.replaceState(null, null, ' ');
+        }
     });
 
     $(function() {
