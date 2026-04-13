@@ -333,10 +333,22 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                             TURNOVER MENSAL - FEA-006
                         -->
                         <?php
-                        $turnover_data = selectTurnover_geral($id_emp_default, intval(date('m')), intval(date('Y')));
-                        $turnover_pct = $turnover_data['turnover'];
-                        $meses_pt = array(1=>'Jan',2=>'Fev',3=>'Mar',4=>'Abr',5=>'Mai',6=>'Jun',7=>'Jul',8=>'Ago',9=>'Set',10=>'Out',11=>'Nov',12=>'Dez');
-                        $turnover_mes_label = $meses_pt[intval(date('m'))] . '/' . date('Y');
+                        // Verificar permissão do menu Turnover antes de renderizar o card
+                        $turnover_permitido = false;
+                        $q_mnu = $pdo->prepare('SELECT id_mnu FROM public."GESMNU" WHERE link = \'indicadores_turnover\' AND tipo = \'admin\' LIMIT 1');
+                        $q_mnu->execute();
+                        $r_mnu = $q_mnu->fetch(PDO::FETCH_ASSOC);
+                        if ($r_mnu) {
+                            foreach (selectGESMPR_permissao($id_emp_default, $id_usa_default, $r_mnu['id_mnu']) as $perm) {
+                                if (is_array($perm) && $perm['situac'] == 1) { $turnover_permitido = true; }
+                            }
+                        }
+
+                        if ($turnover_permitido) {
+                            $turnover_data = selectTurnover_geral($id_emp_default, intval(date('m')), intval(date('Y')));
+                            $turnover_pct = $turnover_data['turnover'];
+                            $meses_pt = array(1=>'Jan',2=>'Fev',3=>'Mar',4=>'Abr',5=>'Mai',6=>'Jun',7=>'Jul',8=>'Ago',9=>'Set',10=>'Out',11=>'Nov',12=>'Dez');
+                            $turnover_mes_label = $meses_pt[intval(date('m'))] . '/' . date('Y');
                         ?>
 
                         <div class="col-md-12 cursor-pointer card-turnover card-slick">
@@ -355,6 +367,8 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                                 </div>
                             </div>
                         </div>
+
+                        <?php } ?>
 
                     </div>
 
