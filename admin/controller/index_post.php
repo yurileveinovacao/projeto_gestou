@@ -93,6 +93,112 @@ if (isset($_POST['btn_experiencia'])) {
     echo $retorno;
 }
 
+// FEA-006: Card Turnover — verificar permissão e retornar dados
+if (isset($_POST['btn_turnover'])) {
+    // Buscar id_mnu do Turnover
+    $id_mnu_turnover = 0;
+    $q = $pdo->prepare('SELECT id_mnu FROM public."GESMNU" WHERE link = \'indicadores_turnover\' AND tipo = \'admin\' LIMIT 1');
+    $q->execute();
+    $r = $q->fetch(PDO::FETCH_ASSOC);
+    if ($r) { $id_mnu_turnover = $r['id_mnu']; }
+
+    $situac_menu = 0;
+    if ($id_mnu_turnover > 0) {
+        foreach (selectGESMPR_permissao($id_emp_default, $id_usa_default, $id_mnu_turnover) as $linha) {
+            if (is_array($linha)) { $situac_menu = $linha['situac']; }
+        }
+    }
+
+    if ($situac_menu != 1) {
+        echo '0';
+    } else {
+        $mes = intval($_POST['mes']);
+        $ano = intval($_POST['ano']);
+        $geral = selectTurnover_geral($id_emp_default, $mes, $ano);
+        $departamentos = selectTurnover_por_departamento($id_emp_default, $mes, $ano);
+
+        $meses_pt = array(1=>'Janeiro',2=>'Fevereiro',3=>'Março',4=>'Abril',5=>'Maio',6=>'Junho',7=>'Julho',8=>'Agosto',9=>'Setembro',10=>'Outubro',11=>'Novembro',12=>'Dezembro');
+
+        $retorno = '';
+        $retorno .= '<div class="text-center mb-3">';
+        $retorno .= '<h4>' . $meses_pt[$mes] . '/' . $ano . '</h4>';
+        $retorno .= '<h2 class="text-info">' . number_format($geral['turnover'], 1, ',', '.') . '%</h2>';
+        $retorno .= '<small class="text-muted">Admissões: ' . $geral['admissoes'] . ' | Demissões: ' . $geral['demissoes'] . ' | Ativos: ' . $geral['ativos'] . '</small>';
+        $retorno .= '</div>';
+
+        $retorno .= '<table class="table table-sm table-bordered">';
+        $retorno .= '<thead class="thead-light"><tr><th>Departamento</th><th class="text-center">Admissões</th><th class="text-center">Demissões</th><th class="text-center">Ativos</th><th class="text-center">Turnover %</th></tr></thead><tbody>';
+
+        $total_adm = 0; $total_dem = 0; $total_at = 0;
+        foreach ($departamentos as $dep) {
+            if (!is_array($dep)) continue;
+            $adm = intval($dep['admissoes']);
+            $dem = intval($dep['demissoes']);
+            $at = intval($dep['ativos']);
+            $total_adm += $adm; $total_dem += $dem; $total_at += $at;
+            $turn = ($at > 0) ? number_format(($adm + $dem) / 2.0 / $at * 100, 1, ',', '.') . '%' : 'N/A';
+
+            $retorno .= '<tr>';
+            $retorno .= '<td>' . htmlspecialchars($dep['departamento']) . '</td>';
+            $retorno .= '<td class="text-center">' . $adm . '</td>';
+            $retorno .= '<td class="text-center">' . $dem . '</td>';
+            $retorno .= '<td class="text-center">' . $at . '</td>';
+            $retorno .= '<td class="text-center">' . $turn . '</td>';
+            $retorno .= '</tr>';
+        }
+
+        $total_turn = ($total_at > 0) ? number_format(($total_adm + $total_dem) / 2.0 / $total_at * 100, 1, ',', '.') . '%' : 'N/A';
+        $retorno .= '</tbody><tfoot><tr class="font-weight-bold"><td>Total</td><td class="text-center">' . $total_adm . '</td><td class="text-center">' . $total_dem . '</td><td class="text-center">' . $total_at . '</td><td class="text-center">' . $total_turn . '</td></tr></tfoot>';
+        $retorno .= '</table>';
+
+        echo $retorno;
+    }
+}
+
+// FEA-006: Filtro Turnover (sem verificação de permissão — já verificou no clique)
+if (isset($_POST['btn_turnover_filtrar'])) {
+    $mes = intval($_POST['mes']);
+    $ano = intval($_POST['ano']);
+    $geral = selectTurnover_geral($id_emp_default, $mes, $ano);
+    $departamentos = selectTurnover_por_departamento($id_emp_default, $mes, $ano);
+
+    $meses_pt = array(1=>'Janeiro',2=>'Fevereiro',3=>'Março',4=>'Abril',5=>'Maio',6=>'Junho',7=>'Julho',8=>'Agosto',9=>'Setembro',10=>'Outubro',11=>'Novembro',12=>'Dezembro');
+
+    $retorno = '';
+    $retorno .= '<div class="text-center mb-3">';
+    $retorno .= '<h4>' . $meses_pt[$mes] . '/' . $ano . '</h4>';
+    $retorno .= '<h2 class="text-info">' . number_format($geral['turnover'], 1, ',', '.') . '%</h2>';
+    $retorno .= '<small class="text-muted">Admissões: ' . $geral['admissoes'] . ' | Demissões: ' . $geral['demissoes'] . ' | Ativos: ' . $geral['ativos'] . '</small>';
+    $retorno .= '</div>';
+
+    $retorno .= '<table class="table table-sm table-bordered">';
+    $retorno .= '<thead class="thead-light"><tr><th>Departamento</th><th class="text-center">Admissões</th><th class="text-center">Demissões</th><th class="text-center">Ativos</th><th class="text-center">Turnover %</th></tr></thead><tbody>';
+
+    $total_adm = 0; $total_dem = 0; $total_at = 0;
+    foreach ($departamentos as $dep) {
+        if (!is_array($dep)) continue;
+        $adm = intval($dep['admissoes']);
+        $dem = intval($dep['demissoes']);
+        $at = intval($dep['ativos']);
+        $total_adm += $adm; $total_dem += $dem; $total_at += $at;
+        $turn = ($at > 0) ? number_format(($adm + $dem) / 2.0 / $at * 100, 1, ',', '.') . '%' : 'N/A';
+
+        $retorno .= '<tr>';
+        $retorno .= '<td>' . htmlspecialchars($dep['departamento']) . '</td>';
+        $retorno .= '<td class="text-center">' . $adm . '</td>';
+        $retorno .= '<td class="text-center">' . $dem . '</td>';
+        $retorno .= '<td class="text-center">' . $at . '</td>';
+        $retorno .= '<td class="text-center">' . $turn . '</td>';
+        $retorno .= '</tr>';
+    }
+
+    $total_turn = ($total_at > 0) ? number_format(($total_adm + $total_dem) / 2.0 / $total_at * 100, 1, ',', '.') . '%' : 'N/A';
+    $retorno .= '</tbody><tfoot><tr class="font-weight-bold"><td>Total</td><td class="text-center">' . $total_adm . '</td><td class="text-center">' . $total_dem . '</td><td class="text-center">' . $total_at . '</td><td class="text-center">' . $total_turn . '</td></tr></tfoot>';
+    $retorno .= '</table>';
+
+    echo $retorno;
+}
+
 // Se o botão 'btn_aniver' estiver definido nos dados POST, execute o código a seguir
 if (isset($_POST['btn_aniver'])) {
 

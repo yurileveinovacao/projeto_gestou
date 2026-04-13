@@ -252,3 +252,23 @@ PRD atualizado: prd.json (MIG-001~012 concluídas + FEA-001~005 novas)
 - Backlog documentado: Turnover, RPA, IAs (aguardam informações ou sessão dedicada)
 - Regra de migração de schema documentada explicitamente no progress.txt e no prd.json
 - Fase 7 (Novas Features) adicionada à tabela de status
+
+### 2026-04-13 — Planejamento FEA-006: Turnover (sessão com Yuri)
+- Documentos reais da cliente Jéssica (TRYP Hotel Ribeirão Preto) analisados
+- Fórmula confirmada: (Admissões + Demissões) ÷ 2 ÷ Ativos × 100 (resultado em %)
+- Departamentos reais identificados nas planilhas: Cozinha, Governança, Recepção, Restaurante, Eventos, Administração, Reservas
+- Visualização: card no dashboard (mesmo padrão Exp. 45d/90d) exibindo taxa geral do mês atual
+- Modal ao clicar: taxa geral + breakdown por departamento (Admissões | Demissões | Ativos | Turnover %) + filtro por mês
+- Controle de acesso: nova categoria 'Indicadores' + item 'Turnover' na tabela de menus, desabilitado por padrão — habilitado pelo master por empresa
+- Campo departamento na GESUSU: verificar antes de implementar (pode já existir com nome diferente)
+- Referência de schema já descoberto: tabela GESUSU, campo datarescisao (DATE, nullable), campo dataadmissao (TIMESTAMP — usar ::date no cast)
+- PRD atualizado: FEA-006 adicionada com passes: false
+
+## Backlog — Aguardando planejamento/informações
+
+| Item | Situação |
+|------|----------|
+| RPA — Recibo de Pagamento Autônomo | Documentos recebidos da Jéssica — aguarda sessão de detalhamento |
+| IA 1 — Compliance (Ponto vs. Convenção + Relatórios vs. Holerite) | Documentos recebidos — aguarda sessão dedicada |
+| IA 2 — Suporte Bia (landing + plataforma) | Aguarda sessão dedicada |
+| Turnover por setor | FEA-006 — pronta para execução |

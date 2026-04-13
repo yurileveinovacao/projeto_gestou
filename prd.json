@@ -201,6 +201,32 @@
       "priority": 17,
       "passes": true,
       "notes": "CONCLUÍDA. Seção Justificativas no Fale com RH do app. 3 tipos: ausencia_ponto (data+hora), falta (data+mensagem), falta_atestado (data+mensagem+arquivo). App: listagem com cards/badges + form com campos condicionais + upload de atestado. Admin: tabela com filtro + modais visualizar/aprovar/reprovar + email ao colaborador via PHPMailer. Tabela: justificativas (criada via migration)."
+    },
+    {
+      "id": "FEA-006",
+      "title": "Turnover mensal — card no dashboard com controle de acesso via master",
+      "description": "Calcular e exibir a taxa de turnover mensal no dashboard do admin. Fórmula: (Admissões + Demissões) ÷ 2 ÷ Ativos × 100. O card exibe a taxa geral do CNPJ para o mês atual. Ao clicar, abre modal com taxa % e os números brutos do cálculo (admissões, demissões, ativos totais) com breakdown por departamento, mais filtro por mês. A feature é controlada por permissão de menu no módulo master — desabilitada por padrão, habilitada manualmente para cada empresa.",
+      "acceptanceCriteria": [
+        "PASSO 0 — Verificar campo departamento: executar SELECT column_name FROM information_schema.columns WHERE table_name = 'GESUSU' AND (column_name ILIKE '%setor%' OR column_name ILIKE '%departamento%' OR column_name ILIKE '%cargo%'); — SE não existir campo compatível: criar script scripts/migrations/add_departamento_colaborador.sql com ALTER TABLE \"GESUSU\" ADD COLUMN IF NOT EXISTS departamento VARCHAR(100) NULL e adicionar o campo ao formulário de cadastro/edição do colaborador no admin",
+        "PASSO 0b — Verificar estrutura da tabela de menus: executar SELECT column_name, data_type FROM information_schema.columns WHERE table_name ILIKE '%menu%' ORDER BY table_name, ordinal_position; para identificar nome exato da tabela e colunas antes de escrever qualquer INSERT",
+        "Criar script scripts/migrations/insert_menu_turnover.sql com INSERT na tabela de menus: nova categoria 'Indicadores' (verificar campo de ordem/pai para posicionamento correto) e item filho 'Turnover' com liberado = FALSE por padrão para todos os perfis existentes — usar o formato exato dos INSERTs já existentes na tabela",
+        "No módulo master, a tela de Permissão de Telas exibe o novo item 'Indicadores -> Turnover' na listagem, permitindo habilitar ou desabilitar por empresa/usuário",
+        "Card 'Turnover' no dashboard do admin só renderiza se o menu 'Turnover' estiver liberado para o usuário da sessão — usar a mesma verificação de permissão já usada pelos demais cards/menus do sistema",
+        "Card exibe: rótulo 'Turnover', mês/ano de referência (ex: 'Abr/2026'), taxa geral do CNPJ em % com 1 casa decimal (ex: '8,5%') — mesmo padrão visual dos cards de Exp. 45d e Exp. 90d já implementados",
+        "Fórmula: turnover = (admissoes_mes + demissoes_mes) / 2.0 / ativos_fim_mes * 100 — retornar 0 se ativos_fim_mes = 0",
+        "Admissões do mês = COUNT de colaboradores com dataadmissao::date dentro do mês/ano de referência, filtrado por id_emp da sessão",
+        "Demissões do mês = COUNT de colaboradores com datarescisao::date dentro do mês/ano de referência, filtrado por id_emp da sessão",
+        "Ativos fim do mês = COUNT de colaboradores onde dataadmissao::date <= último dia do mês AND (datarescisao IS NULL OR datarescisao::date > último dia do mês), filtrado por id_emp da sessão",
+        "Funções DAL novas em admin/iuds_pdo.php: selectTurnover_geral($id_emp, $mes, $ano), selectTurnover_por_departamento($id_emp, $mes, $ano)",
+        "Clicar no card abre modal com: título 'Turnover — [Mês Ano]', taxa geral em destaque, tabela com colunas Departamento | Admissões | Demissões | Ativos | Turnover % — linha de totais no rodapé",
+        "Modal tem seletor de mês/ano — ao alterar, recalcula via POST/AJAX e re-renderiza sem fechar o modal",
+        "Breakdown por departamento agrupa colaboradores com campo departamento NULL ou vazio como 'Sem departamento'",
+        "Se ativos_fim_mes = 0 para um departamento específico, exibir 'N/A' na coluna Turnover % daquele departamento",
+        "Card não renderiza se permissão 'Turnover' não estiver habilitada — sem mensagem de erro, simplesmente omitido"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": "Depende de FEA-001 (datarescisao — já implementada, campo confirmado como 'datarescisao' na tabela GESUSU). Campo departamento na tabela GESUSU precisa ser verificado antes de implementar — pode já existir com nome diferente. Fórmula validada com planilha real da cliente Jéssica (TRYP Hotel Ribeirão Preto): (Admissões + Demissões) ÷ 2 ÷ Ativos. Departamentos reais identificados nas planilhas: Cozinha, Governança, Recepção, Restaurante, Eventos, Administração, Reservas. PHP 7.4 puro, multi-tenant por id_emp. Padrão visual: seguir exatamente os cards Exp. 45d/90d já implementados em FEA-002."
     }
   ]
 }

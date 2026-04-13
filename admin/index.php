@@ -328,6 +328,34 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                             </div>
                         </div>
 
+
+                        <!--
+                            TURNOVER MENSAL - FEA-006
+                        -->
+                        <?php
+                        $turnover_data = selectTurnover_geral($id_emp_default, intval(date('m')), intval(date('Y')));
+                        $turnover_pct = $turnover_data['turnover'];
+                        $meses_pt = array(1=>'Jan',2=>'Fev',3=>'Mar',4=>'Abr',5=>'Mai',6=>'Jun',7=>'Jul',8=>'Ago',9=>'Set',10=>'Out',11=>'Nov',12=>'Dez');
+                        $turnover_mes_label = $meses_pt[intval(date('m'))] . '/' . date('Y');
+                        ?>
+
+                        <div class="col-md-12 cursor-pointer card-turnover card-slick">
+                            <div class="card border-left-info h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Turnover <?php echo $turnover_mes_label; ?></div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo number_format($turnover_pct, 1, ',', '.'); ?>%</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- INICIO CONTENT ROW COLUMN -->
@@ -825,6 +853,45 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                                 <button class="btn btn-secondary close-modal" type="button">Voltar</button>
                             </div>
 
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL TURNOVER - FEA-006 -->
+                <div class="modal fade" id="modal-turnover" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document" style="width: 70vw;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modal-turnover-titulo">Turnover</h5>
+                                <button class="close close-modal" type="button"><span aria-hidden="true">&times;</span></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-row mb-3">
+                                    <div class="col-md-3">
+                                        <select class="form-control" id="turnover-mes">
+                                            <?php for($m=1; $m<=12; $m++) { ?>
+                                            <option value="<?php echo $m; ?>" <?php echo ($m == intval(date('m'))) ? 'selected' : ''; ?>><?php echo $meses_pt[$m]; ?></option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-control" id="turnover-ano">
+                                            <?php for($a=intval(date('Y'))-2; $a<=intval(date('Y')); $a++) { ?>
+                                            <option value="<?php echo $a; ?>" <?php echo ($a == intval(date('Y'))) ? 'selected' : ''; ?>><?php echo $a; ?></option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-primary" id="btn-filtrar-turnover">Filtrar</button>
+                                    </div>
+                                </div>
+                                <div id="modal-body-turnover">
+                                    <!-- AJAX preencherá aqui -->
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary close-modal" type="button">Voltar</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1485,6 +1552,29 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                     }
                 });
             }
+        });
+    });
+
+    // FEA-006: Clique no card Turnover
+    $(function() {
+        $(document).on('click', '.card-turnover', function() {
+            var dados = { btn_turnover: 1, mes: $('#turnover-mes').val(), ano: $('#turnover-ano').val() };
+            $.post('controller/index_post.php', dados, function(retorno) {
+                if (retorno == '0') {
+                    Swal.fire({ icon: 'info', title: 'Atenção!', text: 'Você não tem permissão para acessar esta página.' });
+                } else {
+                    $('#modal-body-turnover').html(retorno);
+                    $('#modal-turnover').modal('show');
+                }
+            });
+        });
+
+        // Filtrar por mês/ano dentro do modal
+        $(document).on('click', '#btn-filtrar-turnover', function() {
+            var dados = { btn_turnover_filtrar: 1, mes: $('#turnover-mes').val(), ano: $('#turnover-ano').val() };
+            $.post('controller/index_post.php', dados, function(retorno) {
+                $('#modal-body-turnover').html(retorno);
+            });
         });
     });
 

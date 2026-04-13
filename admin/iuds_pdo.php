@@ -9562,6 +9562,85 @@ function selectJustificativas_pendentes_count($id_emp)
     return $resultset;
 }
 
+//SELECT Turnover geral por empresa/mês - FEA-006
+function selectTurnover_geral($id_emp, $mes, $ano)
+{
+    global $pdo;
+    $ultimo_dia = date('Y-m-t', mktime(0, 0, 0, $mes, 1, $ano));
+    $primeiro_dia = $ano . '-' . str_pad($mes, 2, '0', STR_PAD_LEFT) . '-01';
+
+    // Admissões no mês
+    $query_adm = 'SELECT count(id_usu) AS admissoes FROM public."GESUSU" WHERE id_emp = :id_emp AND dataadmissao IS NOT NULL AND dataadmissao::date >= :primeiro_dia AND dataadmissao::date <= :ultimo_dia';
+    $stmt = $pdo->prepare($query_adm);
+    $stmt->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
+    $stmt->bindParam(':primeiro_dia', $primeiro_dia, PDO::PARAM_STR);
+    $stmt->bindParam(':ultimo_dia', $ultimo_dia, PDO::PARAM_STR);
+    $stmt->execute();
+    $admissoes = $stmt->fetch(PDO::FETCH_ASSOC)['admissoes'];
+
+    // Demissões no mês
+    $query_dem = 'SELECT count(id_usu) AS demissoes FROM public."GESUSU" WHERE id_emp = :id_emp AND datarescisao IS NOT NULL AND datarescisao >= :primeiro_dia AND datarescisao <= :ultimo_dia';
+    $stmt2 = $pdo->prepare($query_dem);
+    $stmt2->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
+    $stmt2->bindParam(':primeiro_dia', $primeiro_dia, PDO::PARAM_STR);
+    $stmt2->bindParam(':ultimo_dia', $ultimo_dia, PDO::PARAM_STR);
+    $stmt2->execute();
+    $demissoes = $stmt2->fetch(PDO::FETCH_ASSOC)['demissoes'];
+
+    // Ativos no fim do mês
+    $query_ativos = 'SELECT count(id_usu) AS ativos FROM public."GESUSU" WHERE id_emp = :id_emp AND dataadmissao IS NOT NULL AND dataadmissao::date <= :ultimo_dia AND (datarescisao IS NULL OR datarescisao > :ultimo_dia2)';
+    $stmt3 = $pdo->prepare($query_ativos);
+    $stmt3->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
+    $stmt3->bindParam(':ultimo_dia', $ultimo_dia, PDO::PARAM_STR);
+    $stmt3->bindParam(':ultimo_dia2', $ultimo_dia, PDO::PARAM_STR);
+    $stmt3->execute();
+    $ativos = $stmt3->fetch(PDO::FETCH_ASSOC)['ativos'];
+
+    $turnover = ($ativos > 0) ? round(($admissoes + $demissoes) / 2.0 / $ativos * 100, 1) : 0;
+
+    return array(
+        'admissoes' => intval($admissoes),
+        'demissoes' => intval($demissoes),
+        'ativos' => intval($ativos),
+        'turnover' => $turnover
+    );
+}
+
+//SELECT Turnover por departamento - FEA-006
+function selectTurnover_por_departamento($id_emp, $mes, $ano)
+{
+    global $pdo;
+    $ultimo_dia = date('Y-m-t', mktime(0, 0, 0, $mes, 1, $ano));
+    $primeiro_dia = $ano . '-' . str_pad($mes, 2, '0', STR_PAD_LEFT) . '-01';
+
+    $query = 'SELECT
+        COALESCE(d.nome, \'Sem departamento\') AS departamento,
+        COUNT(CASE WHEN u.dataadmissao IS NOT NULL AND u.dataadmissao::date >= :pd1 AND u.dataadmissao::date <= :ud1 THEN 1 END) AS admissoes,
+        COUNT(CASE WHEN u.datarescisao IS NOT NULL AND u.datarescisao >= :pd2 AND u.datarescisao <= :ud2 THEN 1 END) AS demissoes,
+        COUNT(CASE WHEN u.dataadmissao IS NOT NULL AND u.dataadmissao::date <= :ud3 AND (u.datarescisao IS NULL OR u.datarescisao > :ud4) THEN 1 END) AS ativos
+    FROM public."GESUSU" u
+    LEFT JOIN public."GESDEP" d ON u.id_dep = d.id_dep
+    WHERE u.id_emp = :id_emp
+      AND u.dataadmissao IS NOT NULL
+    GROUP BY COALESCE(d.nome, \'Sem departamento\')
+    ORDER BY departamento';
+    $stmt = $pdo->prepare($query);
+    $stmt->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
+    $stmt->bindParam(':pd1', $primeiro_dia, PDO::PARAM_STR);
+    $stmt->bindParam(':ud1', $ultimo_dia, PDO::PARAM_STR);
+    $stmt->bindParam(':pd2', $primeiro_dia, PDO::PARAM_STR);
+    $stmt->bindParam(':ud2', $ultimo_dia, PDO::PARAM_STR);
+    $stmt->bindParam(':ud3', $ultimo_dia, PDO::PARAM_STR);
+    $stmt->bindParam(':ud4', $ultimo_dia, PDO::PARAM_STR);
+    $stmt->execute();
+    if ($stmt->rowCount() > 0) {
+        $resultset = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [];
+    }
+    return $resultset;
+}
+
 //SELECT GESEMP todas ativas com email do admin - FEA-003
 function selectGESEMP_ativas_com_admin()
 {
