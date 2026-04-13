@@ -335,7 +335,7 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                         <?php
                         // Verificar permissão do menu Turnover antes de renderizar o card
                         $turnover_permitido = false;
-                        $q_mnu = $pdo->prepare('SELECT id_mnu FROM public."GESMNU" WHERE link = \'indicadores_turnover\' AND tipo = \'admin\' LIMIT 1');
+                        $q_mnu = $pdo->prepare('SELECT id_mnu FROM public."GESMNU" WHERE descri = \'Turnover\' AND nivel = \'11.1\' AND tipo = \'admin\' LIMIT 1');
                         $q_mnu->execute();
                         $r_mnu = $q_mnu->fetch(PDO::FETCH_ASSOC);
                         if ($r_mnu) {

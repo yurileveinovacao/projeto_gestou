@@ -97,7 +97,7 @@ if (isset($_POST['btn_experiencia'])) {
 if (isset($_POST['btn_turnover'])) {
     // Buscar id_mnu do Turnover
     $id_mnu_turnover = 0;
-    $q = $pdo->prepare('SELECT id_mnu FROM public."GESMNU" WHERE link = \'indicadores_turnover\' AND tipo = \'admin\' LIMIT 1');
+    $q = $pdo->prepare('SELECT id_mnu FROM public."GESMNU" WHERE descri = \'Turnover\' AND nivel = \'11.1\' AND tipo = \'admin\' LIMIT 1');
     $q->execute();
     $r = $q->fetch(PDO::FETCH_ASSOC);
     if ($r) { $id_mnu_turnover = $r['id_mnu']; }
