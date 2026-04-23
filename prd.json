@@ -225,8 +225,8 @@
         "Card não renderiza se permissão 'Turnover' não estiver habilitada — sem mensagem de erro, simplesmente omitido"
       ],
       "priority": 18,
-      "passes": false,
-      "notes": "Depende de FEA-001 (datarescisao — já implementada, campo confirmado como 'datarescisao' na tabela GESUSU). Campo departamento na tabela GESUSU precisa ser verificado antes de implementar — pode já existir com nome diferente. Fórmula validada com planilha real da cliente Jéssica (TRYP Hotel Ribeirão Preto): (Admissões + Demissões) ÷ 2 ÷ Ativos. Departamentos reais identificados nas planilhas: Cozinha, Governança, Recepção, Restaurante, Eventos, Administração, Reservas. PHP 7.4 puro, multi-tenant por id_emp. Padrão visual: seguir exatamente os cards Exp. 45d/90d já implementados em FEA-002."
+      "passes": true,
+      "notes": "CONCLUÍDA. Card Turnover no carrossel do dashboard admin exibindo taxa % do mês atual (fórmula (Admissões + Demissões) ÷ 2 ÷ Ativos × 100). Modal com resumo geral + breakdown por departamento (via tabela GESDEP) + filtro mês/ano via POST/AJAX. Permissão via GESMNU/GESMPR: menu 'Indicadores > Turnover' criado via scripts/migrations/insert_menu_turnover.sql, desabilitado por padrão, habilitado pelo master na tela de Permissão de Telas. Menu redireciona ao dashboard com hash #turnover que abre modal direto. Funções DAL: selectTurnover_geral, selectTurnover_por_departamento em admin/iuds_pdo.php. Handler btn_turnover em admin/controller/index_post.php."
     }
   ]
 }

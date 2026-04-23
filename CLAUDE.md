@@ -104,12 +104,13 @@ psql -h 127.0.0.1 -p 5434 -U gestou -d gestou
 - Track B: PWA — **completo** (7/7) — Lighthouse score 100, deploy feito
 - Track C: Build TWA — **completo** (8/8) — APK assinado, assetlinks validado, teste OK no emulador
 
-**Fase 7 — Novas Features** (planejada, 0/5)
+**Fase 7 — Novas Features** (6/6 completa)
 - FEA-001: Campo datarescisao auto-preenchido na desativação — **completa**
 - FEA-002: Contadores experiência 45d/90d no dashboard — **completa**
 - FEA-003: Alertas de experiência (popup + email cron) — **completa** (Cloud Scheduler pendente)
 - FEA-004: Observações do colaborador com categorias por empresa — **completa**
 - FEA-005: Justificativas no Fale com RH — **completa**
+- FEA-006: Turnover mensal no dashboard com controle de permissão — **completa**
 
 ## Referência
 
