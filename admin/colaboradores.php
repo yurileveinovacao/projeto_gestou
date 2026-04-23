@@ -759,6 +759,8 @@ unset($_SESSION['alterar_colaborador']['token']);
 <script>
     $('#dataTable').DataTable({
         autoWidth: true,
+        "stateSave": true,
+        "stateDuration": 0,
         "aaSorting": [
             [0, "desc"]
         ],

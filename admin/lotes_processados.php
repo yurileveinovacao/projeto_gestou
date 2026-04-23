@@ -575,6 +575,8 @@ if (isset($_SESSION["lotes_filtro_situac"])) {
 <script>
     $('#dataTable').DataTable({
         autoWidth: true,
+        "stateSave": true,
+        "stateDuration": 0,
         "aaSorting": [
             [0, "desc"]
         ],

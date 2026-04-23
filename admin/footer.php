@@ -8,6 +8,8 @@
             </footer>
             <!-- End of Footer -->
 
+            <script src="js/usabilidade.js?v=<?php echo @filemtime(__DIR__ . '/js/usabilidade.js') ?: '1'; ?>"></script>
+
         </div>
         <!-- End of Content Wrapper -->
 

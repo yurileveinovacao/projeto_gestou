@@ -331,6 +331,8 @@ require_once "util.php";
 <script>
     $('#dataTable').DataTable({
         autoWidth: true,
+        "stateSave": true,
+        "stateDuration": 0,
         "aaSorting": [
             [0, "desc"]
         ],

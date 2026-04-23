@@ -666,6 +666,8 @@ require_once "util.php";
 
     $('#dataTable').DataTable({
         autoWidth: true,
+        "stateSave": true,
+        "stateDuration": 0,
         "lengthMenu": [
             [16, 32, 64, -1],
             [16, 32, 64, "All"]
