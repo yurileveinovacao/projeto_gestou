@@ -90,3 +90,4 @@ app/twa/local.properties
 app/twa/*.jks
 app/twa/*.keystore
 app/twa/*.aab
+app/twa/*.idsig
