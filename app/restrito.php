@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__ . '/../config/maintenance.php';
+checkMaintenanceMode();
+
 require_once __DIR__ . '/../config/session.php';
 session_start();
 

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Gestou — Em manutenção</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        body {
+            background: linear-gradient(135deg, #4A0E8F 0%, #6B1FB5 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .container {
+            max-width: 560px;
+            width: 100%;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 48px 32px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 24px;
+            opacity: 0.9;
+        }
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+        p.intro {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            opacity: 0.95;
+            margin-bottom: 8px;
+        }
+        .previsao {
+            margin-top: 28px;
+            padding: 18px 24px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+        .previsao strong {
+            font-weight: 700;
+            font-size: 1.15em;
+        }
+        .contato {
+            margin-top: 32px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+        .contato a {
+            color: #fff;
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 3px;
+        }
+        .contato a:hover {
+            opacity: 0.85;
+        }
+        @media (max-width: 480px) {
+            .container { padding: 36px 24px; }
+            h1 { font-size: 1.55rem; }
+            .icon { width: 56px; height: 56px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="container" role="main">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <h1>Estamos em manutenção</h1>
+        <p class="intro">A plataforma Gestou está passando por uma manutenção programada.<br>Em breve estaremos de volta.</p>
+        <div class="previsao">
+            Previsão de retorno: hoje, até <strong>00h</strong>
+        </div>
+        <div class="contato">
+            Em caso de urgência, entre em contato:<br>
+            <a href="mailto:contato@leveinovacao.com.br">contato@leveinovacao.com.br</a>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../config/maintenance.php';
+checkMaintenanceMode();
+
 // //Faz a requisição da Sessão
 // require 'restrito.php';
 
