@@ -87,14 +87,6 @@ require_once __DIR__.'/../config/database.php';
 
     ?>
 
-    <!-- JUSTIFICATIVAS - FEA-005 -->
-    <li class="nav-item">
-        <a class="nav-link" href="justificativas">
-            <i class="fas fa-file-signature"></i>
-            <span>Justificativas</span>
-        </a>
-    </li>
-
     <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">
 

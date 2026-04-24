@@ -36,6 +36,7 @@ img/images_email/
 # ========================================
 *.sql
 !config/schema/*.sql
+!scripts/migrations/*.sql
 *.dump
 *.backup
 *.tar.xz
