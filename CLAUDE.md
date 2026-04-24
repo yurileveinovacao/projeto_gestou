@@ -29,7 +29,7 @@ Hospedado no GCP (Cloud Run + Cloud SQL).
 | GCS Bucket | gs://gestou-uploads-489010 |
 | Artifact Registry | us-central1-docker.pkg.dev/gestou-489010/gestou-repo |
 | VPC Connector | gestou-connector |
-| Domain | gestou.leveinovacao.com.br → ghs.googlehosted.com (CNAME, Cloudflare proxy OFF) |
+| Domain | gestou.com.br + www.gestou.com.br → ghs.googlehosted.com (A/CNAME, Cloudflare proxy OFF). `gestou.leveinovacao.com.br` mantido como staging. |
 | Service Account | 469696711631-compute@developer.gserviceaccount.com |
 | Secrets (Secret Manager) | db-password, smtp-password, azure-vision-endpoint, azure-vision-key |
 | SMTP | smtp.gmail.com:587 (contato@leveinovacao.com.br) |
@@ -78,10 +78,15 @@ gcloud run deploy gestou \
   --max-instances=3 \
   --vpc-connector=gestou-connector \
   --add-cloudsql-instances=gestou-489010:us-central1:gestou-db \
-  --set-env-vars="DB_HOST=/cloudsql/gestou-489010:us-central1:gestou-db,DB_PORT=5432,DB_NAME=gestou,DB_USER=gestou,APP_URL=https://gestou.leveinovacao.com.br,SMTP_HOST=smtp.gmail.com,SMTP_PORT=587,SMTP_USER=contato@leveinovacao.com.br,SMTP_FROM=contato@leveinovacao.com.br,SMTP_FROM_NAME=GESTOU,STORAGE_DRIVER=local,CONTACT_EMAIL=contato@leveinovacao.com.br" \
-  --set-secrets="DB_PASS=db-password:latest,SMTP_PASS=smtp-password:latest,AZURE_VISION_ENDPOINT=azure-vision-endpoint:latest,AZURE_VISION_KEY=azure-vision-key:latest" \
+  --set-env-vars="DB_HOST=/cloudsql/gestou-489010:us-central1:gestou-db,DB_PORT=5432,DB_NAME=gestou,DB_USER=gestou,APP_URL=https://gestou.com.br,SMTP_HOST=smtp.gmail.com,SMTP_PORT=587,SMTP_USER=contato@leveinovacao.com.br,SMTP_FROM=contato@leveinovacao.com.br,SMTP_FROM_NAME=GESTOU,STORAGE_DRIVER=local,CONTACT_EMAIL=contato@leveinovacao.com.br,MAINTENANCE_MODE=0" \
+  --set-secrets="DB_PASS=db-password:latest,SMTP_PASS=smtp-password:latest,AZURE_VISION_ENDPOINT=azure-vision-endpoint:latest,AZURE_VISION_KEY=azure-vision-key:latest,MAINTENANCE_BYPASS_TOKEN=maintenance-bypass-token:latest" \
   --allow-unauthenticated
 ```
+
+**Notas**:
+- Uploads (bucket `gestou-uploads-489010`) montados em `/var/www/html/upload` via gcsfuse CSI (ver volume mount no service). Apache serve e PHP grava transparente, sem usar `storage.php`.
+- `MAINTENANCE_MODE=1` + `MAINTENANCE_BYPASS_TOKEN` ativam a página de manutenção (com bypass via `?bypass=<token>` → cookie 24h).
+- Email SMTP: Kinghost (`smtp.kinghost.net`) dá timeout vindo do Cloud Run. Usando Gmail como fallback até migrar email `@gestou.com.br` pra Google Workspace.
 
 ## Acesso ao Banco (Cloud SQL)
 
@@ -99,6 +104,12 @@ psql -h 127.0.0.1 -p 5434 -U gestou -d gestou
 
 ## Status Atual
 
+**Fase 6 — Cutover gestou.com.br → Cloud Run** (concluído em 2026-04-24)
+- DNS apontando pro Cloud Run (4 A records + 4 AAAA + CNAME www), SSL emitido.
+- Dump + restore Kinghost → Cloud SQL (106 MB, PG13 → PG17). Scripts FEA aplicados.
+- Uploads 9.7 GB / 52.710 arquivos sincronizados pro bucket GCS (via gcsfuse mount).
+- Email voltou pro Gmail temporariamente (SMTP Kinghost dá timeout do Cloud Run).
+
 **Fase 5 — App Android TWA** (em andamento, 15/21 tarefas)
 - Track A: Conta Play Console (D-U-N-S, cadastro) — **pendente do cliente** (0/6)
 - Track B: PWA — **completo** (7/7) — Lighthouse score 100, deploy feito
@@ -109,8 +120,14 @@ psql -h 127.0.0.1 -p 5434 -U gestou -d gestou
 - FEA-002: Contadores experiência 45d/90d no dashboard — **completa**
 - FEA-003: Alertas de experiência (popup + email cron) — **completa** (Cloud Scheduler pendente)
 - FEA-004: Observações do colaborador com categorias por empresa — **completa**
-- FEA-005: Justificativas no Fale com RH — **completa**
+- FEA-005: Justificativas no Fale com RH — **completa** (menu migrado p/ hierarquia Painel RH em 2026-04-24)
 - FEA-006: Turnover mensal no dashboard com controle de permissão — **completa**
+
+## Pós-cutover (pendências)
+
+- Cloud Scheduler para FEA-003 (cron de experiências) — D+3
+- Investigar/resolver SMTP Kinghost (Cloud Run → smtp.kinghost.net:587 timeout) ou migrar email pra Google Workspace
+- Descomissionar servidor antigo Kinghost — D+30
 
 ## Referência
 

@@ -34,7 +34,7 @@ Usuário → gestou.leveinovacao.com.br (Cloudflare DNS, proxy OFF)
 | Fase 4A — Deploy | ✅ Completa | 10/10 |
 | Fase 4B — Compatibilidade OCR Templates | ✅ Completa | 16/16 |
 | **Fase 5 — App Android TWA** | **🔧 Em andamento** | **15/21** |
-| **Fase 6 — Cutover** | **⬜ Pendente** | **0/13** |
+| **Fase 6 — Cutover** | **✅ Completa** | **13/13** (concluído em 2026-04-24) |
 
 ---
 
