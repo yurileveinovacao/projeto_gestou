@@ -376,7 +376,7 @@
     }
     .nav-mobile-ctas {
       padding: 20px 24px;
-      border-top: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -1415,6 +1415,16 @@
     </button>
   </div>
 
+  <div class="nav-mobile-ctas">
+    <p class="nav-mobile-note">Acesso rápido</p>
+    <a href="/app/login" class="nav-mobile-cta-collaborator">
+      <i class="bi bi-person-circle"></i> Acessar como Colaborador
+    </a>
+    <a href="/admin/login" class="nav-mobile-cta-admin">
+      <i class="bi bi-buildings"></i> Acesso Administrador
+    </a>
+  </div>
+
   <div class="nav-mobile-links">
     <a href="#hero"><i class="bi bi-house"></i> Início</a>
     <a href="#services"><i class="bi bi-grid-3x3-gap"></i> Serviços</a>
@@ -1425,16 +1435,6 @@
     <div class="divider"></div>
     <a href="/validar"><i class="bi bi-shield-check"></i> Validar Holerite</a>
     <a href="/download"><i class="bi bi-download"></i> Download do App</a>
-  </div>
-
-  <div class="nav-mobile-ctas">
-    <p class="nav-mobile-note">Acesso rápido</p>
-    <a href="/app/login" class="nav-mobile-cta-collaborator">
-      <i class="bi bi-person-circle"></i> Acessar como Colaborador
-    </a>
-    <a href="/admin/login" class="nav-mobile-cta-admin">
-      <i class="bi bi-buildings"></i> Acesso Administrador
-    </a>
   </div>
 </nav>
 
