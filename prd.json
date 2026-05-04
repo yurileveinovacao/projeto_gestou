@@ -227,6 +227,30 @@
       "priority": 18,
       "passes": true,
       "notes": "CONCLUÍDA. Card Turnover no carrossel do dashboard admin exibindo taxa % do mês atual (fórmula (Admissões + Demissões) ÷ 2 ÷ Ativos × 100). Modal com resumo geral + breakdown por departamento (via tabela GESDEP) + filtro mês/ano via POST/AJAX. Permissão via GESMNU/GESMPR: menu 'Indicadores > Turnover' criado via scripts/migrations/insert_menu_turnover.sql, desabilitado por padrão, habilitado pelo master na tela de Permissão de Telas. Menu redireciona ao dashboard com hash #turnover que abre modal direto. Funções DAL: selectTurnover_geral, selectTurnover_por_departamento em admin/iuds_pdo.php. Handler btn_turnover em admin/controller/index_post.php."
+    },
+    {
+      "id": "FEA-007",
+      "title": "Dias de experiência personalizáveis por empresa",
+      "description": "Antes os contadores e alertas de experiência usavam 45 e 90 dias fixos. Agora cada empresa configura o final da 1ª fase e o final da prorrogação na tela de dados cadastrais (admin/dados_cadastrais.php). Defaults 45/90 mantidos, suporta fase única (90 direto, 60 direto, etc.) quando os dois valores são iguais. Cards do dashboard, modal de listagem, popup e email do cron passam a refletir os dias configurados da empresa.",
+      "acceptanceCriteria": [
+        "Migration scripts/migrations/add_dias_experiencia_gesemp.sql idempotente: ALTER TABLE GESEMP ADD COLUMN dias_exp_1 INT NOT NULL DEFAULT 45, dias_exp_2 INT NOT NULL DEFAULT 90 com IF NOT EXISTS",
+        "Nova função DAL selectGESEMP_dias_experiencia($id_emp) retornando array com dias_exp_1 e dias_exp_2 (fallback 45/90 se empresa não encontrada)",
+        "Refatorar selectGESUSU_experiencia_45d_count, _90d_count, _lista, _alerta em admin/iuds_pdo.php para fazer JOIN com GESEMP e usar e.dias_exp_1 / e.dias_exp_2 nas comparações de BETWEEN",
+        "selectGESUSU_experiencia_lista passa a receber $fase (1 ou 2) ao invés de 45/90 fixos; retorna campos vencimento_fase1 e vencimento_fase2 + dias_exp_1, dias_exp_2 da empresa",
+        "selectGESUSU_experiencia_90d_count e _lista para fase 2 retornam vazio quando dias_exp_2 == dias_exp_1 (empresa em fase única)",
+        "selectGESUSU_experiencia_alerta retorna tipo_alerta dinâmico (valor de dias_exp_1 ou dias_exp_2 da empresa, não mais 45 ou 90 fixos)",
+        "admin/dados_cadastrais.php: nova seção \"Período de Experiência (CLT)\" na aba Identificação com 2 inputs numéricos (dias_exp_1_update e dias_exp_2_update, min=1, max=90, required) + texto explicativo cobrindo o caso fase única (90 direto)",
+        "admin/controller/dados_cadastrais_post.php: ler $_POST['dias_exp_1_update'] e dias_exp_2_update com sanitização 1 <= dias_exp_1 <= dias_exp_2 <= 90, passar como 2 últimos argumentos de updateGESEMP_CAMPOS",
+        "updateGESEMP_CAMPOS recebe 2 novos parâmetros opcionais (defaults 45/90 pra compatibilidade) e atualiza as colunas dias_exp_1 e dias_exp_2 no UPDATE",
+        "admin/index.php: labels dos cards exp-45/exp-90 dinâmicos (\"Exp. <dias_exp_1> dias\", \"Exp. <dias_exp_2> dias\"); 2º card escondido quando dias_exp_2 == dias_exp_1 (fase única); JS handlers passam tipo_experiencia: 1 ou 2; títulos do modal e mensagens count=0 dinâmicos",
+        "admin/controller/index_post.php handler btn_experiencia: cabeçalhos da tabela usam dias_exp_1/dias_exp_2 do primeiro registro; coluna \"Venc. <dias_exp_2> dias\" escondida em fase única",
+        "admin/cron_check_experiencias.php: seleção da data de vencimento usa $alerta['dias_exp_1'] como referência (não 45 hardcoded); campos vencimento_fase1/vencimento_fase2",
+        "Popup FEA-003 no dashboard (admin/index.php linhas ~2400+) usa vencimento_fase1/vencimento_fase2 e compara tipo_alerta com $alerta['dias_exp_1']",
+        "Empresas existentes ficam automaticamente com 45/90 graças ao DEFAULT da migration"
+      ],
+      "priority": 19,
+      "passes": true,
+      "notes": "CONCLUÍDA. Migration aplicada em 2026-04-29 no Cloud SQL — todas as 45 empresas existentes ficam com 45/90 (defaults). DAL refatorado, form de dados cadastrais com seção nova, dashboard/cron/popup/modal todos dinâmicos. Suporta fase única quando dias_exp_1 == dias_exp_2 (caso 90 direto sem prorrogação). Validação no controller: 1 <= dias_exp_1 <= dias_exp_2 <= 90. Commit: 7bae98b feat(FEA-002/003): dias de experiência personalizáveis por empresa."
     }
   ]
 }
