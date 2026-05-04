@@ -31,7 +31,7 @@ Hospedado no GCP (Cloud Run + Cloud SQL).
 | VPC Connector | gestou-connector |
 | Domain | gestou.com.br + www.gestou.com.br → ghs.googlehosted.com (A/CNAME, Cloudflare proxy OFF). `gestou.leveinovacao.com.br` mantido como staging. |
 | Service Account | 469696711631-compute@developer.gserviceaccount.com |
-| Secrets (Secret Manager) | db-password, smtp-password, azure-vision-endpoint, azure-vision-key |
+| Secrets (Secret Manager) | db-password, smtp-password, azure-vision-endpoint, azure-vision-key, maintenance-bypass-token, cron-secret |
 | SMTP | smtp.gmail.com:587 (contato@leveinovacao.com.br) |
 
 ## Regras ABSOLUTAS
@@ -115,23 +115,25 @@ psql -h 127.0.0.1 -p 5434 -U gestou -d gestou
 - Track B: PWA — **completo** (7/7) — Lighthouse score 100, deploy feito
 - Track C: Build TWA — **completo** (8/8) — APK assinado, assetlinks validado, teste OK no emulador
 
-**Fase 7 — Novas Features** (6/6 completa)
+**Fase 7 — Novas Features** (7/7 completa)
 - FEA-001: Campo datarescisao auto-preenchido na desativação — **completa**
-- FEA-002: Contadores experiência 45d/90d no dashboard — **completa**
-- FEA-003: Alertas de experiência (popup + email cron) — **completa** (Cloud Scheduler pendente)
+- FEA-002: Contadores de experiência no dashboard — **completa** (cards no topo do carrossel, contam TODOS no período)
+- FEA-003: Alertas de experiência (popup + email cron) — **completa** (endpoint pronto, secret/env configurados; falta criar o job no Cloud Scheduler)
 - FEA-004: Observações do colaborador com categorias por empresa — **completa**
 - FEA-005: Justificativas no Fale com RH — **completa** (menu migrado p/ hierarquia Painel RH em 2026-04-24)
 - FEA-006: Turnover mensal no dashboard com controle de permissão — **completa**
+- FEA-007: Dias de experiência personalizáveis por empresa — **completa** (`GESEMP.dias_exp_1`/`dias_exp_2`, edição em `admin/dados_cadastrais.php`, suporta fase única quando os dois valores são iguais)
 
 ## Pós-cutover (pendências)
 
-- Cloud Scheduler para FEA-003 (cron de experiências) — D+3
+- Cloud Scheduler para FEA-003 — criar o job (secret `cron-secret` + env `CRON_SECRET` já configurados; API `cloudscheduler.googleapis.com` habilitada). Comando: `gcloud scheduler jobs create http cron-check-experiencias --schedule="0 8 * * *" --time-zone=America/Sao_Paulo --uri="https://gestou.com.br/admin/cron_check_experiencias.php?token=<CRON_SECRET>"`
 - Investigar/resolver SMTP Kinghost (Cloud Run → smtp.kinghost.net:587 timeout) ou migrar email pra Google Workspace
-- Descomissionar servidor antigo Kinghost — D+30
+- Fase 5 Track A — Play Console / D-U-N-S liberado em 2026-05-04, sessão dedicada pra finalizar
+- Descomissionar servidor antigo Kinghost (após período estável)
 
 ## Referência
 
 - `progress.txt` — log ativo de progresso (Fase 4B+) e Codebase Patterns
 - `docs/plano-migracao-gestou-consolidado.md` — plano completo das Fases 4B-6
-- `prd.json` — PRD cumulativo: MIG-001~012 (concluídas) + FEA-001~005 (novas features)
+- `prd.json` — PRD cumulativo: MIG-001~012 (concluídas) + FEA-001~007 (novas features)
 - `docs/progress-prd-original.txt` — log histórico detalhado das 12 stories do PRD
