@@ -33,7 +33,7 @@ Usuário → gestou.leveinovacao.com.br (Cloudflare DNS, proxy OFF)
 | Fase 3 — Migração de Dados | ✅ Completa | 8/8 |
 | Fase 4A — Deploy | ✅ Completa | 10/10 |
 | Fase 4B — Compatibilidade OCR Templates | ✅ Completa | 16/16 |
-| **Fase 5 — App Android TWA** | **🔧 Em andamento** | **15/21** |
+| **Fase 5 — App Android TWA** | **🔧 Em andamento** | **16/21** (D-U-N-S liberado 2026-05-04 — sessão dedicada pendente p/ Play Console) |
 | **Fase 6 — Cutover** | **✅ Completa** | **13/13** (concluído em 2026-04-24) |
 
 ---
@@ -81,22 +81,22 @@ O app antigo era um WebView wrapper (5.1MB, package `br.com.gestou`) apontando p
 | Requisito | Status |
 |-----------|--------|
 | HTTPS | ✅ Cloud Run SSL |
-| Web App Manifest | ⬜ Precisa criar |
-| Service Worker | ⬜ Precisa criar |
-| Digital Asset Links | ⬜ Precisa criar |
-| Lighthouse Score ≥ 80 | ⬜ Precisa verificar |
-| Conta Google Play Console | ⬜ Precisa criar |
+| Web App Manifest | ✅ Criado |
+| Service Worker | ✅ Criado |
+| Digital Asset Links | ✅ Criado e validado |
+| Lighthouse Score ≥ 80 | ✅ Score 100 |
+| Conta Google Play Console | ⬜ Pendente |
 
 ### Tarefas
 
-**Track A — Conta Play Console (iniciar imediatamente, 3-5 dias úteis):**
+**Track A — Conta Play Console (sessão dedicada pendente):**
 
-| # | Tarefa | Estimativa |
-|---|--------|------------|
-| 1 | Solicitar número D-U-N-S (Dun & Bradstreet) | 5 dias úteis |
-| 2 | Criar conta organizacional no Play Console (US$ 25) | 1h |
-| 3 | Verificar identidade e organização | 1-2 dias |
-| 4 | Configurar perfil do desenvolvedor | 30min |
+| # | Tarefa | Status |
+|---|--------|--------|
+| 1 | Solicitar número D-U-N-S (Dun & Bradstreet) | ✅ Liberado em 2026-05-04 |
+| 2 | Criar conta organizacional no Play Console (US$ 25) | ⬜ Pendente |
+| 3 | Verificar identidade e organização | ⬜ Pendente |
+| 4 | Configurar perfil do desenvolvedor | ⬜ Pendente |
 
 **Track B — PWA (desenvolvimento, ~2 dias):**
 
