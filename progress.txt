@@ -297,12 +297,41 @@ PRD atualizado: prd.json (MIG-001~012 concluídas + FEA-001~006 concluídas)
 - **Landing:** CTAs de acesso reordenados pro TOPO no menu mobile drawer (antes ficavam ao final).
 - **Fase 5 Track B (PWA/TWA):** permanece como antes — ainda aguardando Play Console.
 
+### 2026-04-27 — FEA-002 contadores ampliados + reorder cards ✅
+- **Contadores agora contam TODOS no período**, não só janela 0-7d antes do vencimento (commit anterior `72f0b4c` voltou atrás). Card "Exp. 45 dias" passa a contar 0-45d desde admissão; "Exp. 90 dias" passa a contar 46-90d (prorrogação). Notificações FEA-003 (popup + email) seguem na janela 0-7d.
+- **Cards Exp 45/90 movidos pra posições 1 e 2 do carrossel Slick** (eram posições 6-7) — sem precisar rolar pra ver. Aniversariantes/Cursos/Pendentes/Dados ficam atrás.
+- Mensagens "count=0" reescritas: "Nenhum colaborador na 1ª fase de experiência (até 45 dias)" / "Nenhum colaborador na prorrogação de experiência (46 a 90 dias)".
+
+### 2026-04-29 — Cloud Scheduler FEA-003 (parcial) + FEA-007 dias personalizados ✅
+- **Cloud Scheduler:** API `cloudscheduler.googleapis.com` habilitada; secret `cron-secret` (32 bytes hex sem newline) criado e IAM `roles/secretmanager.secretAccessor` concedido pra SA do Cloud Run; env var `CRON_SECRET` adicionada (revisão 113). **Falta apenas criar o job** (comando documentado em `CLAUDE.md` seção Pós-cutover).
+- **FEA-007 — dias personalizados por empresa:**
+  - Migration `scripts/migrations/add_dias_experiencia_gesemp.sql`: ALTER TABLE GESEMP ADD `dias_exp_1` (default 45) + `dias_exp_2` (default 90). Idempotente. Aplicada no Cloud SQL — todas as 45 empresas existentes ficam em 45/90.
+  - DAL refatorado: nova `selectGESEMP_dias_experiencia($id_emp)`; as 4 funções de experiência (45d_count, 90d_count, lista, alerta) agora fazem JOIN com GESEMP e usam `e.dias_exp_1`/`e.dias_exp_2`. `selectGESUSU_experiencia_lista` recebe `$fase` (1 ou 2) ao invés de 45/90 fixos.
+  - Form `admin/dados_cadastrais.php`: nova seção "Período de Experiência (CLT)" na aba Identificação com texto explicativo sobre fase única (90 direto); validação no controller `1 ≤ dias_exp_1 ≤ dias_exp_2 ≤ 90`.
+  - Dashboard `admin/index.php`: labels dinâmicos ("Exp. <N> dias"); 2º card escondido quando `dias_exp_2 == dias_exp_1`; popup FEA-003 e modal de listagem totalmente dinâmicos.
+  - Cron `admin/cron_check_experiencias.php` + email: usam `tipo_alerta` dinâmico (não mais 45/90 hardcoded) e novos campos `vencimento_fase1`/`vencimento_fase2`.
+- Commit: `7bae98b feat(FEA-002/003): dias de experiência personalizáveis por empresa`
+
+### 2026-05-01 — Logo Gestou atualizada
+- `img/gestou-logo.png` (500x200 RGBA) substituída — usada em landing pública, /contato, /validar, /download, /0index. Demais variantes (`logo_gestou_escrita_branco.png`, `icone_gestou.png`, etc.) não foram tocadas — aguardando versões correspondentes do cliente.
+- Commit: `ada4bbc chore: atualizar logo Gestou`
+
+### 2026-05-04 — D-U-N-S Number aprovado pra Play Console (Fase 5 Track A)
+- D-U-N-S liberado. Sessão dedicada pra finalizar publicação do TWA na Play Store fica pendente — passos restantes: criar conta Play Console, listing, upload do APK assinado existente, screenshots, política de privacidade.
+
+## Verificação de uploads pós-cutover (até 2026-04-29)
+- Total de objetos no bucket criados depois do cutover real: **12 arquivos** (excluindo os 6066 do dia 24/abr que vieram do `rsync` do FTP-mirror).
+- Distribuição: 5 notificações RH (CNPJ 08708780, 27/abr), 6 mensagens de mural broadcast (5 CNPJs, 29/abr), 2 fotos de aprovação de cadastro (27 e 28/abr).
+- **Nenhum upload de holerite, IRRF ou ponto** ainda — fluxo crítico não exercitado, vale acompanhar quando alguém fechar folha.
+
 ## Pós-cutover (a fazer)
-- D+1 a D+7: monitorar `gcloud logging tail` e custos GCP
-- D+3: Cloud Scheduler para FEA-003 (cron de experiências)
+- ~~Cloud Scheduler para FEA-003: criar o job~~ secret/env prontos; falta `gcloud scheduler jobs create http ...` (comando em `CLAUDE.md`)
 - Resolver/investigar SMTP `suporte@gestou.com.br` (Google Workspace?) e voltar o FROM pro domínio do Gestou
 - Rotacionar senhas Kinghost expostas no chat (DB, FTP, SMTP) e regenerar Chave 2 Azure (já feito)
-- D+30: descomissionar servidor antigo Kinghost após monitoramento estável
+- Fase 5 Track A: sessão dedicada pra finalizar Play Console (D-U-N-S liberado em 2026-05-04)
+- Descomissionar servidor antigo Kinghost após período estável de monitoramento
+- Atualizar variantes restantes da logo (`logo_gestou_escrita_branco.png` e companhia) quando o cliente entregar
+- Monitorar primeiro upload real de holerite/IRRF/ponto (fluxo crítico ainda não exercitado pós-cutover)
 
 ## Backlog — Aguardando planejamento/informações
 
