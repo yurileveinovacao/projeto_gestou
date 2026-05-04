@@ -63,14 +63,14 @@ foreach ($empresas as $empresa) {
     // Montar e enviar email
     foreach ($alertas as $alerta) {
         $nome_colab = $alerta['nome'];
-        $tipo = $alerta['tipo_alerta'];
+        $tipo = $alerta['tipo_alerta']; // valor de dias dinâmico (dias_exp_1 ou dias_exp_2 da empresa)
         $dias_restantes = intval($alerta['dias_restantes']);
         $data_admissao = (new DateTime($alerta['dataadmissao']))->format('d/m/Y');
 
-        if ($tipo == 45) {
-            $data_vencimento = (new DateTime($alerta['vencimento_45d']))->format('d/m/Y');
+        if ($tipo == $alerta['dias_exp_1']) {
+            $data_vencimento = (new DateTime($alerta['vencimento_fase1']))->format('d/m/Y');
         } else {
-            $data_vencimento = (new DateTime($alerta['vencimento_90d']))->format('d/m/Y');
+            $data_vencimento = (new DateTime($alerta['vencimento_fase2']))->format('d/m/Y');
         }
 
         try {

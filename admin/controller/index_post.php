@@ -47,10 +47,10 @@ if (isset($_POST['btn_sol'])) {
     $_SESSION["solicitacao_filtro_situac"] = 'E';
 }
 
-// FEA-002: Listagem de experiências vencendo
+// FEA-002: Listagem de experiências (fase 1 ou prorrogação) — colunas dinâmicas conforme empresa
 if (isset($_POST['btn_experiencia'])) {
 
-    $tipo_experiencia = intval($_POST['tipo_experiencia']);
+    $tipo_experiencia = intval($_POST['tipo_experiencia']); // 1 = primeira fase, 2 = prorrogação
     $registros = selectGESUSU_experiencia_lista($id_emp_default, $tipo_experiencia);
     $count_registros = count($registros);
 
@@ -58,28 +58,37 @@ if (isset($_POST['btn_experiencia'])) {
 
     if ($count_registros > 0 && isset($registros[0]) && is_array($registros[0])) {
 
-        // Cabeçalho da tabela
+        // Pega os dias configurados da empresa (do primeiro registro, já vem no JOIN)
+        $d1 = intval($registros[0]['dias_exp_1']);
+        $d2 = intval($registros[0]['dias_exp_2']);
+        $tem_prorrogacao = $d2 > $d1;
+
+        // Cabeçalho da tabela (dinâmico)
         $retorno .= '<table class="table table-sm table-bordered">';
         $retorno .= '<thead class="thead-light"><tr>';
         $retorno .= '<th>Nome</th>';
         $retorno .= '<th>Data Admissão</th>';
-        $retorno .= '<th>Venc. 45 dias</th>';
-        $retorno .= '<th>Venc. 90 dias</th>';
+        $retorno .= '<th>Venc. ' . $d1 . ' dias</th>';
+        if ($tem_prorrogacao) {
+            $retorno .= '<th>Venc. ' . $d2 . ' dias</th>';
+        }
         $retorno .= '<th>Dias desde admissão</th>';
         $retorno .= '</tr></thead><tbody>';
 
         foreach ($registros as $linha) {
 
             $dataadmissao = new DateTime($linha['dataadmissao']);
-            $venc45 = new DateTime($linha['vencimento_45d']);
-            $venc90 = new DateTime($linha['vencimento_90d']);
+            $venc1 = new DateTime($linha['vencimento_fase1']);
             $dias = $linha['dias_desde_admissao'];
 
             $retorno .= '<tr>';
             $retorno .= '<td>' . $linha['nome'] . '</td>';
             $retorno .= '<td>' . $dataadmissao->format("d/m/Y") . '</td>';
-            $retorno .= '<td>' . $venc45->format("d/m/Y") . '</td>';
-            $retorno .= '<td>' . $venc90->format("d/m/Y") . '</td>';
+            $retorno .= '<td>' . $venc1->format("d/m/Y") . '</td>';
+            if ($tem_prorrogacao) {
+                $venc2 = new DateTime($linha['vencimento_fase2']);
+                $retorno .= '<td>' . $venc2->format("d/m/Y") . '</td>';
+            }
             $retorno .= '<td class="text-center">' . $dias . '</td>';
             $retorno .= '</tr>';
         }

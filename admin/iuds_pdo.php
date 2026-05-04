@@ -127,12 +127,14 @@ function updateGESEMP_CAMPOS(
     $id_usa_ouv,
     $datatu,
     $id_usa_atu,
-    $id_emp
+    $id_emp,
+    $dias_exp_1 = 45,
+    $dias_exp_2 = 90
 ) {
     global $pdo;
     $query =
-        'UPDATE public."GESEMP" 
-            SET nome = :nome, endereco = :endereco, email = :email, numero = :numero, bairro = :bairro, cep = :cep, complemento = :complemento, id_mun = :id_mun, telefone = :telefone, contato = :contato, valges = :valges, nomefantasia = :nomefantasia, resp_financeiro = :resp_financeiro, email_financeiro = :email_financeiro, id_usa_rh = :id_usa_rh, id_usa_ouv = :id_usa_ouv, datatu = :datatu, id_usa_atu = :id_usa_atu 
+        'UPDATE public."GESEMP"
+            SET nome = :nome, endereco = :endereco, email = :email, numero = :numero, bairro = :bairro, cep = :cep, complemento = :complemento, id_mun = :id_mun, telefone = :telefone, contato = :contato, valges = :valges, nomefantasia = :nomefantasia, resp_financeiro = :resp_financeiro, email_financeiro = :email_financeiro, id_usa_rh = :id_usa_rh, id_usa_ouv = :id_usa_ouv, datatu = :datatu, id_usa_atu = :id_usa_atu, dias_exp_1 = :dias_exp_1, dias_exp_2 = :dias_exp_2
             WHERE id_emp = :id_emp';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':nome', $nome, PDO::PARAM_STR);
@@ -154,6 +156,8 @@ function updateGESEMP_CAMPOS(
     $statement->bindParam(':datatu', $datatu, PDO::PARAM_STR);
     $statement->bindParam(':id_usa_atu', $id_usa_atu, PDO::PARAM_INT);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->bindParam(':dias_exp_1', $dias_exp_1, PDO::PARAM_INT);
+    $statement->bindParam(':dias_exp_2', $dias_exp_2, PDO::PARAM_INT);
     $statement->execute();
 }
 
@@ -9283,13 +9287,16 @@ function selectGESUSU_ativos($id_emp)
 function selectGESUSU_experiencia_45d_count($id_emp)
 {
     global $pdo;
+    // Conta TODOS os colaboradores na 1ª fase de experiência (0 a dias_exp_1 da empresa).
+    // Notificação de vencimento (popup + email cron) usa selectGESUSU_experiencia_alerta (janela 0-7 dias).
     $query =
-        'SELECT count(id_usu) AS conta
-        FROM public."GESUSU"
-        WHERE id_emp = :id_emp
-          AND situac = 1
-          AND dataadmissao IS NOT NULL
-          AND (CURRENT_DATE - dataadmissao::date) BETWEEN 38 AND 45';
+        'SELECT count(u.id_usu) AS conta
+        FROM public."GESUSU" u
+        JOIN public."GESEMP" e ON e.id_emp = u.id_emp
+        WHERE u.id_emp = :id_emp
+          AND u.situac = 1
+          AND u.dataadmissao IS NOT NULL
+          AND (CURRENT_DATE - u.dataadmissao::date) BETWEEN 0 AND e.dias_exp_1';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
     $statement->execute();
@@ -9302,17 +9309,21 @@ function selectGESUSU_experiencia_45d_count($id_emp)
     return $resultset;
 }
 
-//SELECT GESUSU experiencia 90 dias count - FEA-002 (janela de 7 dias antes do vencimento)
+//SELECT GESUSU experiencia 2ª fase (prorrogação) count - FEA-002
+//Período: dias_exp_1+1 até dias_exp_2 da empresa. Se a empresa não usa prorrogação
+//(dias_exp_1 == dias_exp_2), retorna 0.
 function selectGESUSU_experiencia_90d_count($id_emp)
 {
     global $pdo;
     $query =
-        'SELECT count(id_usu) AS conta
-        FROM public."GESUSU"
-        WHERE id_emp = :id_emp
-          AND situac = 1
-          AND dataadmissao IS NOT NULL
-          AND (CURRENT_DATE - dataadmissao::date) BETWEEN 83 AND 90';
+        'SELECT count(u.id_usu) AS conta
+        FROM public."GESUSU" u
+        JOIN public."GESEMP" e ON e.id_emp = u.id_emp
+        WHERE u.id_emp = :id_emp
+          AND u.situac = 1
+          AND u.dataadmissao IS NOT NULL
+          AND e.dias_exp_2 > e.dias_exp_1
+          AND (CURRENT_DATE - u.dataadmissao::date) BETWEEN (e.dias_exp_1 + 1) AND e.dias_exp_2';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
     $statement->execute();
@@ -9326,33 +9337,39 @@ function selectGESUSU_experiencia_90d_count($id_emp)
 }
 
 //SELECT GESUSU experiencia listagem - FEA-002
-function selectGESUSU_experiencia_lista($id_emp, $tipo)
+//$fase: 1 = primeira fase (0 a dias_exp_1), 2 = prorrogação (dias_exp_1+1 a dias_exp_2)
+function selectGESUSU_experiencia_lista($id_emp, $fase)
 {
     global $pdo;
-    if ($tipo == 45) {
+    if ($fase == 1) {
         $query =
-            'SELECT id_usu, nome, dataadmissao,
-                (dataadmissao::date + 45) AS vencimento_45d,
-                (dataadmissao::date + 90) AS vencimento_90d,
-                (CURRENT_DATE - dataadmissao::date) AS dias_desde_admissao
-            FROM public."GESUSU"
-            WHERE id_emp = :id_emp
-              AND situac = 1
-              AND dataadmissao IS NOT NULL
-              AND (CURRENT_DATE - dataadmissao::date) BETWEEN 38 AND 45
-            ORDER BY dataadmissao ASC';
+            'SELECT u.id_usu, u.nome, u.dataadmissao,
+                (u.dataadmissao::date + e.dias_exp_1) AS vencimento_fase1,
+                (u.dataadmissao::date + e.dias_exp_2) AS vencimento_fase2,
+                (CURRENT_DATE - u.dataadmissao::date) AS dias_desde_admissao,
+                e.dias_exp_1, e.dias_exp_2
+            FROM public."GESUSU" u
+            JOIN public."GESEMP" e ON e.id_emp = u.id_emp
+            WHERE u.id_emp = :id_emp
+              AND u.situac = 1
+              AND u.dataadmissao IS NOT NULL
+              AND (CURRENT_DATE - u.dataadmissao::date) BETWEEN 0 AND e.dias_exp_1
+            ORDER BY u.dataadmissao ASC';
     } else {
         $query =
-            'SELECT id_usu, nome, dataadmissao,
-                (dataadmissao::date + 45) AS vencimento_45d,
-                (dataadmissao::date + 90) AS vencimento_90d,
-                (CURRENT_DATE - dataadmissao::date) AS dias_desde_admissao
-            FROM public."GESUSU"
-            WHERE id_emp = :id_emp
-              AND situac = 1
-              AND dataadmissao IS NOT NULL
-              AND (CURRENT_DATE - dataadmissao::date) BETWEEN 83 AND 90
-            ORDER BY dataadmissao ASC';
+            'SELECT u.id_usu, u.nome, u.dataadmissao,
+                (u.dataadmissao::date + e.dias_exp_1) AS vencimento_fase1,
+                (u.dataadmissao::date + e.dias_exp_2) AS vencimento_fase2,
+                (CURRENT_DATE - u.dataadmissao::date) AS dias_desde_admissao,
+                e.dias_exp_1, e.dias_exp_2
+            FROM public."GESUSU" u
+            JOIN public."GESEMP" e ON e.id_emp = u.id_emp
+            WHERE u.id_emp = :id_emp
+              AND u.situac = 1
+              AND u.dataadmissao IS NOT NULL
+              AND e.dias_exp_2 > e.dias_exp_1
+              AND (CURRENT_DATE - u.dataadmissao::date) BETWEEN (e.dias_exp_1 + 1) AND e.dias_exp_2
+            ORDER BY u.dataadmissao ASC';
     }
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_STR);
@@ -9366,30 +9383,55 @@ function selectGESUSU_experiencia_lista($id_emp, $tipo)
     return $resultset;
 }
 
+//SELECT dias de experiência personalizados da empresa - FEA-002/003
+function selectGESEMP_dias_experiencia($id_emp)
+{
+    global $pdo;
+    $query = 'SELECT dias_exp_1, dias_exp_2 FROM public."GESEMP" WHERE id_emp = :id_emp';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    if (!$row) {
+        return ['dias_exp_1' => 45, 'dias_exp_2' => 90];
+    }
+    return ['dias_exp_1' => intval($row['dias_exp_1']), 'dias_exp_2' => intval($row['dias_exp_2'])];
+}
+
 //SELECT GESUSU experiencias vencendo em ate 7 dias - FEA-003
+//Considera os dias_exp_1 / dias_exp_2 personalizados da empresa.
+//Quando a empresa tem fase única (dias_exp_1 == dias_exp_2), apenas o vencimento da fase 1 é alertado.
+//tipo_alerta = valor em dias da fase que está vencendo (ex: 45, 60, 90, conforme a config da empresa).
 function selectGESUSU_experiencia_alerta($id_emp)
 {
     global $pdo;
     $query =
-        'SELECT id_usu, nome, dataadmissao,
-            (dataadmissao::date + 45) AS vencimento_45d,
-            (dataadmissao::date + 90) AS vencimento_90d,
-            (CURRENT_DATE - dataadmissao::date) AS dias_desde_admissao,
+        'SELECT u.id_usu, u.nome, u.dataadmissao,
+            (u.dataadmissao::date + e.dias_exp_1) AS vencimento_fase1,
+            (u.dataadmissao::date + e.dias_exp_2) AS vencimento_fase2,
+            (CURRENT_DATE - u.dataadmissao::date) AS dias_desde_admissao,
+            e.dias_exp_1, e.dias_exp_2,
             CASE
-                WHEN (dataadmissao::date + 45) - CURRENT_DATE BETWEEN 0 AND 7 THEN 45
-                WHEN (dataadmissao::date + 90) - CURRENT_DATE BETWEEN 0 AND 7 THEN 90
+                WHEN (u.dataadmissao::date + e.dias_exp_1) - CURRENT_DATE BETWEEN 0 AND 7 THEN e.dias_exp_1
+                WHEN e.dias_exp_2 > e.dias_exp_1
+                     AND (u.dataadmissao::date + e.dias_exp_2) - CURRENT_DATE BETWEEN 0 AND 7 THEN e.dias_exp_2
             END AS tipo_alerta,
             CASE
-                WHEN (dataadmissao::date + 45) - CURRENT_DATE BETWEEN 0 AND 7 THEN (dataadmissao::date + 45) - CURRENT_DATE
-                WHEN (dataadmissao::date + 90) - CURRENT_DATE BETWEEN 0 AND 7 THEN (dataadmissao::date + 90) - CURRENT_DATE
+                WHEN (u.dataadmissao::date + e.dias_exp_1) - CURRENT_DATE BETWEEN 0 AND 7
+                     THEN (u.dataadmissao::date + e.dias_exp_1) - CURRENT_DATE
+                WHEN e.dias_exp_2 > e.dias_exp_1
+                     AND (u.dataadmissao::date + e.dias_exp_2) - CURRENT_DATE BETWEEN 0 AND 7
+                     THEN (u.dataadmissao::date + e.dias_exp_2) - CURRENT_DATE
             END AS dias_restantes
-        FROM public."GESUSU"
-        WHERE id_emp = :id_emp
-          AND situac = 1
-          AND dataadmissao IS NOT NULL
+        FROM public."GESUSU" u
+        JOIN public."GESEMP" e ON e.id_emp = u.id_emp
+        WHERE u.id_emp = :id_emp
+          AND u.situac = 1
+          AND u.dataadmissao IS NOT NULL
           AND (
-              (dataadmissao::date + 45) - CURRENT_DATE BETWEEN 0 AND 7
-              OR (dataadmissao::date + 90) - CURRENT_DATE BETWEEN 0 AND 7
+              (u.dataadmissao::date + e.dias_exp_1) - CURRENT_DATE BETWEEN 0 AND 7
+              OR (e.dias_exp_2 > e.dias_exp_1
+                  AND (u.dataadmissao::date + e.dias_exp_2) - CURRENT_DATE BETWEEN 0 AND 7)
           )
         ORDER BY dias_restantes ASC';
     $statement = $pdo->prepare($query);

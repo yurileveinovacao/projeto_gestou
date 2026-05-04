@@ -187,6 +187,11 @@ require_once "util.php";
                             $resp_ouvidoria = $info_banco['id_usa_ouv'];
                         }
 
+                        // FEA-002/003: dias de experiência personalizados por empresa
+                        $dias_exp = selectGESEMP_dias_experiencia($id_emp_default);
+                        $dias_exp_1 = $dias_exp['dias_exp_1'];
+                        $dias_exp_2 = $dias_exp['dias_exp_2'];
+
                         ?>
 
                         <!-- INICIO NAV -->
@@ -322,6 +327,27 @@ require_once "util.php";
                                                         <label class="custom-control-label" for="validacao_gestor" style="user-select: none;">Utiliza validação por gestor?</label>
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- FEA-002/003: período de experiência personalizado -->
+                                        <hr style="margin-top: 20px; margin-bottom: 16px;">
+                                        <h6 class="text-gray-700 mb-2"><i class="fas fa-hourglass-half mr-1"></i> Período de Experiência (CLT)</h6>
+                                        <p class="text-muted small mb-3" style="line-height: 1.5;">
+                                            Configure como sua empresa divide o contrato de experiência. O padrão é dividir em duas fases (ex: <strong>45 + 45 = 90 dias totais</strong>).
+                                            Empresas que <strong>não usam prorrogação</strong> podem aplicar tudo numa única fase — basta colocar o mesmo número nos dois campos (ex: <strong>90 + 90</strong> → fase única de 90 dias). O total não pode passar de <strong>90 dias</strong> (limite legal CLT).
+                                        </p>
+                                        <div class="form-row">
+                                            <div class="form-group col-md-3">
+                                                <label for="dias_exp_1">Final da 1ª fase (dias)</label>
+                                                <input type="number" class="form-control" id="dias_exp_1" name="dias_exp_1_update" value="<?php echo $dias_exp_1; ?>" min="1" max="90" required>
+                                            </div>
+                                            <div class="form-group col-md-3">
+                                                <label for="dias_exp_2">Final da prorrogação (total, dias)</label>
+                                                <input type="number" class="form-control" id="dias_exp_2" name="dias_exp_2_update" value="<?php echo $dias_exp_2; ?>" min="1" max="90" required>
+                                            </div>
+                                            <div class="form-group col-md-6 align-self-end">
+                                                <small class="text-muted">A 2ª fase deve ser maior ou igual à 1ª. Quando iguais, o sistema entende como fase única.</small>
                                             </div>
                                         </div>
 
@@ -758,6 +784,10 @@ require_once "util.php";
                         complemento_update: $('[name=complemento]').val(),
                         cidade_update: $('[name=cidade]').val(),
                         cep_update: $('[name=cep]').val(),
+
+                        // FEA-002/003: período de experiência personalizado
+                        dias_exp_1_update: $('[name=dias_exp_1_update]').val(),
+                        dias_exp_2_update: $('[name=dias_exp_2_update]').val(),
 
                         // Valor que valida o envio do formulário
                         btn_submit: btn_submit

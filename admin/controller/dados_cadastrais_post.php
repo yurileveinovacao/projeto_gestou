@@ -66,6 +66,14 @@ if (isset($_POST['btn_submit'])) {
             $cidade_update = $_POST['cidade_update']; //REQUIRED
             $cep_update = $_POST['cep_update']; //REQUIRED
 
+            // FEA-002/003: período de experiência personalizado por empresa
+            $dias_exp_1_update = isset($_POST['dias_exp_1_update']) ? intval($_POST['dias_exp_1_update']) : 45;
+            $dias_exp_2_update = isset($_POST['dias_exp_2_update']) ? intval($_POST['dias_exp_2_update']) : 90;
+            // Sanitização: 1 <= dias_exp_1 <= dias_exp_2 <= 90
+            if ($dias_exp_1_update < 1 || $dias_exp_1_update > 90) { $dias_exp_1_update = 45; }
+            if ($dias_exp_2_update < 1 || $dias_exp_2_update > 90) { $dias_exp_2_update = 90; }
+            if ($dias_exp_2_update < $dias_exp_1_update) { $dias_exp_2_update = $dias_exp_1_update; }
+
             // Formata as variáveis
             $nome = formatarValor('UPPER', $nome_update);
             $nomefantasia = formatarValor('UPPER', $nomefantasia_update);
@@ -126,7 +134,9 @@ if (isset($_POST['btn_submit'])) {
                 $resp_ouvidoria,
                 $datatu,
                 $id_usa_default,
-                $id_emp_default
+                $id_emp_default,
+                $dias_exp_1_update,
+                $dias_exp_2_update
             );
 
             echo 1;

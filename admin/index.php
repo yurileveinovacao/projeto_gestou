@@ -112,6 +112,12 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                 <div class="container-fluid">
 
                     <?php
+                    // FEA-002/003: dias de experiência personalizados da empresa
+                    $dias_exp = selectGESEMP_dias_experiencia($id_emp_default);
+                    $dias_exp_1 = $dias_exp['dias_exp_1'];
+                    $dias_exp_2 = $dias_exp['dias_exp_2'];
+                    $tem_prorrogacao = $dias_exp_2 > $dias_exp_1;
+
                     // FEA-003: Buscar colaboradores com experiência vencendo em até 7 dias
                     $alertas_experiencia = selectGESUSU_experiencia_alerta($id_emp_default);
                     ?>
@@ -119,7 +125,59 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                     <!-- Content Row -->
                     <div class="row responsive mb-4 mx-4">
 
-                        <!-- 
+                        <!--
+                            EXPERIÊNCIA 1ª FASE - FEA-002 (0 a dias_exp_1 desde admissão, dinâmico por empresa)
+                        -->
+                        <?php foreach (selectGESUSU_experiencia_45d_count($id_emp_default) as $select_exp_45) {
+                            $count_exp_45 = $select_exp_45['conta'];
+                        } ?>
+
+                        <div class="col-md-12 cursor-pointer card-exp-45 card-slick" num-exp-45="<?php echo $count_exp_45; ?>">
+                            <div class="card border-left-warning h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Exp. <?php echo $dias_exp_1; ?> dias</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $count_exp_45; ?></div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-hourglass-half fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <?php if ($tem_prorrogacao) { ?>
+                        <!--
+                            EXPERIÊNCIA PRORROGAÇÃO - FEA-002 (dias_exp_1+1 a dias_exp_2, escondido se fase única)
+                        -->
+                        <?php foreach (selectGESUSU_experiencia_90d_count($id_emp_default) as $select_exp_90) {
+                            $count_exp_90 = $select_exp_90['conta'];
+                        } ?>
+
+                        <div class="col-md-12 cursor-pointer card-exp-90 card-slick" num-exp-90="<?php echo $count_exp_90; ?>">
+                            <div class="card border-left-danger h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                                Exp. <?php echo $dias_exp_2; ?> dias</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $count_exp_90; ?></div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-hourglass-end fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <?php } ?>
+
+
+                        <!--
                             ANIVERSÁRIO DO MES
                         -->
                         <?php foreach (selectANIVERSARIOS_count($id_emp_default) as $select_aniversariantes) {
@@ -272,56 +330,6 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-user fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <!--
-                            EXPERIÊNCIA 45 DIAS - FEA-002
-                        -->
-                        <?php foreach (selectGESUSU_experiencia_45d_count($id_emp_default) as $select_exp_45) {
-                            $count_exp_45 = $select_exp_45['conta'];
-                        } ?>
-
-                        <div class="col-md-12 cursor-pointer card-exp-45 card-slick" num-exp-45="<?php echo $count_exp_45; ?>">
-                            <div class="card border-left-warning h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                Exp. 45 dias</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $count_exp_45; ?></div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-hourglass-half fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <!--
-                            EXPERIÊNCIA 90 DIAS - FEA-002
-                        -->
-                        <?php foreach (selectGESUSU_experiencia_90d_count($id_emp_default) as $select_exp_90) {
-                            $count_exp_90 = $select_exp_90['conta'];
-                        } ?>
-
-                        <div class="col-md-12 cursor-pointer card-exp-90 card-slick" num-exp-90="<?php echo $count_exp_90; ?>">
-                            <div class="card border-left-danger h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                                Exp. 90 dias</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $count_exp_90; ?></div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-hourglass-end fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -1497,7 +1505,7 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
         });
     });
 
-    // FEA-002: Clique no card Exp. 45 dias
+    // FEA-002: Clique no card Exp. <dias_exp_1> dias (1ª fase)
     $(function() {
         $(document).on('click', '.card-exp-45', function() {
 
@@ -1507,12 +1515,12 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
 
                 var dados = {
                     btn_experiencia: 1,
-                    tipo_experiencia: 45
+                    tipo_experiencia: 1
                 };
 
                 $.post('controller/index_post.php', dados, function(retorno) {
 
-                    $('#modal-experiencias-titulo').text('Experiência 45 dias');
+                    $('#modal-experiencias-titulo').text('Experiência <?php echo $dias_exp_1; ?> dias');
                     $('#modal-body-experiencias').html(retorno);
                     $('#modal-experiencias').modal('show');
                 });
@@ -1521,7 +1529,7 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                 Swal.fire({
                     icon: 'info',
                     title: 'Atenção!',
-                    text: 'Nenhum colaborador com experiência de 45 dias vencendo.',
+                    text: 'Nenhum colaborador na 1ª fase de experiência (até <?php echo $dias_exp_1; ?> dias).',
                     allowOutsideClick: false,
                     allowEscapeKey: false
                 }).then((result) => {
@@ -1533,7 +1541,7 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
         });
     });
 
-    // FEA-002: Clique no card Exp. 90 dias
+    // FEA-002: Clique no card Exp. <dias_exp_2> dias (prorrogação)
     $(function() {
         $(document).on('click', '.card-exp-90', function() {
 
@@ -1543,12 +1551,12 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
 
                 var dados = {
                     btn_experiencia: 1,
-                    tipo_experiencia: 90
+                    tipo_experiencia: 2
                 };
 
                 $.post('controller/index_post.php', dados, function(retorno) {
 
-                    $('#modal-experiencias-titulo').text('Experiência 90 dias');
+                    $('#modal-experiencias-titulo').text('Experiência <?php echo $dias_exp_2; ?> dias');
                     $('#modal-body-experiencias').html(retorno);
                     $('#modal-experiencias').modal('show');
                 });
@@ -1557,7 +1565,7 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                 Swal.fire({
                     icon: 'info',
                     title: 'Atenção!',
-                    text: 'Nenhum colaborador com experiência de 90 dias vencendo.',
+                    text: 'Nenhum colaborador na prorrogação de experiência (<?php echo ($dias_exp_1 + 1); ?> a <?php echo $dias_exp_2; ?> dias).',
                     allowOutsideClick: false,
                     allowEscapeKey: false
                 }).then((result) => {
@@ -2400,9 +2408,10 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
         var html = '<table class="table table-sm table-bordered text-left">';
         html += '<thead class="thead-light"><tr><th>Nome</th><th>Tipo</th><th>Vencimento</th><th>Dias restantes</th></tr></thead><tbody>';
         <?php foreach ($alertas_experiencia as $alerta) {
-            $venc = $alerta['tipo_alerta'] == 45
-                ? (new DateTime($alerta['vencimento_45d']))->format('d/m/Y')
-                : (new DateTime($alerta['vencimento_90d']))->format('d/m/Y');
+            // tipo_alerta agora vem dinâmico (valor de dias_exp_1 ou dias_exp_2 da empresa)
+            $venc = $alerta['tipo_alerta'] == $alerta['dias_exp_1']
+                ? (new DateTime($alerta['vencimento_fase1']))->format('d/m/Y')
+                : (new DateTime($alerta['vencimento_fase2']))->format('d/m/Y');
             $dias = intval($alerta['dias_restantes']);
             $tipo = $alerta['tipo_alerta'] . ' dias';
             $badge = $dias <= 2 ? 'danger' : 'warning';
