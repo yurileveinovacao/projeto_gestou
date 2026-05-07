@@ -113,21 +113,17 @@ foreach ($json_base->analyzeResult->readResults as $key) {
                     $pagina_fim = $page_number;
                     $concat_pagina_fim .= "||" . $pagina_fim;
                 }
-            } else if ($cpf_anterior == 2) { // PAGINAS COM CPFS IGUAIS
+            } else if ($cpf_anterior == 2) { // PAGINAS COM CPFS IGUAIS (continuação do mesmo holerite)
 
                 if (!empty($cpf)) {
-    
-                    // $concat_cpf = $concat_cpf . "||" . $cpf;
-                    // $array_pag_fim = explode("||", $concat_pagina_fim);
-                    // array_pop($array_pag_fim);
-                    // $concat_pagina_fim = implode("||", $array_pag_fim);
-                    // $pagina_fim = $page_number;
-                    // $concat_pagina_fim .= "||" . $pagina_fim;
 
-                    $concat_cpf = $concat_cpf . "||" . $cpf;
-                    $contagem_Cpf++;
-                    $pagina_ini = $pagina_ini;
-                    $concat_pagina_ini .= "||" . $pagina_ini;
+                    // Estende pagina_fim do registro vigente em vez de criar duplicata.
+                    // Why: holerites Domínio com muitas rubricas estouram para uma 2ª folha
+                    // que repete o cabeçalho (mesmo CPF). A versão antiga adicionava um novo
+                    // registro, gerando 2 holerites para o mesmo colaborador.
+                    $array_pag_fim = explode("||", $concat_pagina_fim);
+                    array_pop($array_pag_fim);
+                    $concat_pagina_fim = implode("||", $array_pag_fim);
                     $pagina_fim = $page_number;
                     $concat_pagina_fim .= "||" . $pagina_fim;
                 }
@@ -168,11 +164,15 @@ foreach ($json_base->analyzeResult->readResults as $key) {
 
     $cpf_anterior = $cpf;
 
-    // Tipo de Página Única" ou "Página Espelhada 
+    // Tipo de Página Única" ou "Página Espelhada
     $tipo_pagina = empty($pagina_espelhada) ? "Página Única" : "Página Espelhada";
 
     // Reset variveis
-    unset($cnpj_consulta, $contagCpfPag);
+    // Why: sem o reset de $encLiquidoP1, "LÍQUIDO........R$ *********" da pág A
+    // deixava o flag aceso e a 1ª linha decimal da pág B (uma rubrica como "223,61")
+    // era capturada como líquido — desalinhando $concat_valor_liquido para todos
+    // os colaboradores subsequentes.
+    unset($cnpj_consulta, $contagCpfPag, $encLiquidoP1);
 }
 
 if ($exibeRegistros != 0) {
