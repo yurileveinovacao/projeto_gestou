@@ -2592,7 +2592,7 @@ function insertGESVIN($tabvin1, $id_tab1, $tabvin2, $id_tab2)
 {
     global $pdo;
     $query =
-        'INSERT INTO public."GESVIN"(tabvin1, id_tab1, tabvin2, id_tab2) VALUES (:tabvin1, :id_tab1, :tabvin2, :id_tab2)';
+        'INSERT INTO public."GESVIN"(tabvin1, id_tab1, tabvin2, id_tab2) VALUES (:tabvin1, :id_tab1, :tabvin2, :id_tab2) ON CONFLICT (tabvin1, id_tab1, tabvin2, id_tab2) DO NOTHING';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':tabvin1', $tabvin1, PDO::PARAM_STR);
     $statement->bindParam(':id_tab1', $id_tab1, PDO::PARAM_INT);
@@ -3825,8 +3825,9 @@ function insertGESVIN_usuario($id_emp, $id_usa)
 {
     global $pdo;
     $query =
-        'INSERT INTO public."GESVIN" (tabvin1,id_tab1,tabvin2,id_tab2) 
-        VALUES (\'GESEMP\', :id_emp, \'GESUSA\', :id_usa)';
+        'INSERT INTO public."GESVIN" (tabvin1,id_tab1,tabvin2,id_tab2)
+        VALUES (\'GESEMP\', :id_emp, \'GESUSA\', :id_usa)
+        ON CONFLICT (tabvin1, id_tab1, tabvin2, id_tab2) DO NOTHING';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
     $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
@@ -4627,7 +4628,8 @@ function insertGESMNU_add($id_usa, $id_emp, $contagem, $datatu, $situac = 0)
     global $pdo;
     $query =
         'INSERT INTO public."GESMPR"(id_usa, id_emp, id_mnu, datatu, situac)
-    VALUES (:id_usa, :id_emp, :contagem, :datatu, :situac);';
+    VALUES (:id_usa, :id_emp, :contagem, :datatu, :situac)
+    ON CONFLICT (id_usa, id_emp, id_mnu) DO NOTHING;';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
@@ -5745,7 +5747,8 @@ function updateGESMPR_menus(
             (:id_usa, :id_emp, 31, :datatu, 1),
             (:id_usa, :id_emp, 32, :datatu, 1),
             (:id_usa, :id_emp, 33, :datatu, 1),
-            (:id_usa, :id_emp, 57, :datatu, 1)';
+            (:id_usa, :id_emp, 57, :datatu, 1)
+        ON CONFLICT (id_usa, id_emp, id_mnu) DO NOTHING';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
@@ -6396,7 +6399,8 @@ function insertGESMPR($id_usa, $id_emp, $id_mnu, $datatu, $situac)
     global $pdo;
     $query =
         'INSERT INTO public."GESMPR"(id_usa, id_emp, id_mnu, datatu, situac)
-    VALUES (:id_usa, :id_emp, :id_mnu, :datatu, :situac);';
+    VALUES (:id_usa, :id_emp, :id_mnu, :datatu, :situac)
+    ON CONFLICT (id_usa, id_emp, id_mnu) DO NOTHING;';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
