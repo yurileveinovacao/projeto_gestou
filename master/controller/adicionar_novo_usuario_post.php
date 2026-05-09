@@ -107,10 +107,13 @@ if (isset($_POST["btn_add"])) {
                     // // Insere na tabela de vínculos GESVIN2
                     // insertGESVI2($id_emp_update);
 
-                    // Popula GESMPR para a empresa vinculada na criação.
-                    // Ao incluir empresas adicionais (alterar_usuario), o mesmo bootstrap
-                    // roda em alterar_usuario_post (btn_inc / btn_inc_all).
-                    bootstrapGESMPR_empresa($id_usa, $id_emp_update, $datatu);
+                    // Menus padrão
+                    $menus = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 20, 21, 22, 23, 31, 32, 33, 37, 57];
+
+                    // Insere os menus para o usuário
+                    foreach ($menus as $id_mnu => $value) {
+                        insertGESMPR($id_usa, $id_emp_update, $value, $datatu, $situac);
+                    }
                 }
 
                 // Define mensagem de sucesso
