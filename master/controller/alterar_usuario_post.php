@@ -41,6 +41,8 @@ if (isset($_POST["btn_inc"])) {
             insertGESVIN_usuario($id_emp, $id_usa);
             // UPDATE Tabela GESUSA
             updateGESUSA_id_emp_acess($id_usa, $id_emp);
+            // Popula GESMPR com menus padrão liberados para a empresa recém-vinculada
+            bootstrapGESMPR_empresa($id_usa, $id_emp, $datatu);
 
             echo 1;
         } catch (PDOException $erro) {
@@ -72,6 +74,7 @@ if (isset($_POST["btn_inc_all"])) {
                 if (!empty($id_emp)) {
 
                     insertGESVIN_usuario($id_emp, $id_usa);
+                    bootstrapGESMPR_empresa($id_usa, $id_emp, $datatu);
                 }
             }
 
