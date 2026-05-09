@@ -4622,17 +4622,18 @@ function insertGESMNU($descri, $icone, $link, $target, $nivel, $ordem, $estagio,
 }
 
 //Tabela GESTRE insert
-function insertGESMNU_add($id_usa, $id_emp, $contagem, $datatu)
+function insertGESMNU_add($id_usa, $id_emp, $contagem, $datatu, $situac = 0)
 {
     global $pdo;
     $query =
-        'INSERT INTO public."GESMPR"(id_usa, id_emp, id_mnu, datatu)
-    VALUES (:id_usa, :id_emp, :contagem, :datatu);';
+        'INSERT INTO public."GESMPR"(id_usa, id_emp, id_mnu, datatu, situac)
+    VALUES (:id_usa, :id_emp, :contagem, :datatu, :situac);';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
     $statement->bindParam(':contagem', $contagem, PDO::PARAM_STR);
     $statement->bindParam(':datatu', $datatu, PDO::PARAM_STR);
+    $statement->bindParam(':situac', $situac, PDO::PARAM_INT);
     $statement->execute();
 }
 
@@ -5743,7 +5744,8 @@ function updateGESMPR_menus(
             (:id_usa, :id_emp, 17, :datatu, 1),
             (:id_usa, :id_emp, 31, :datatu, 1),
             (:id_usa, :id_emp, 32, :datatu, 1),
-            (:id_usa, :id_emp, 33, :datatu, 1)';
+            (:id_usa, :id_emp, 33, :datatu, 1),
+            (:id_usa, :id_emp, 57, :datatu, 1)';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);

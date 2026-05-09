@@ -205,6 +205,10 @@ unset($_SESSION["nome_emp_selecionado"]);
             <!-- Page level custom scripts -->
             <script src="js/demo/datatables-demo.js"></script>
 
+            <!-- SWEET ALERT -->
+            <link rel="stylesheet" href="vendor_sweeetalert/sweetalert2.min.css">
+            <script src="vendor_sweeetalert/sweetalert2.all.min.js"></script>
+
 </body>
 
 </html>
@@ -261,23 +265,68 @@ unset($_SESSION["nome_emp_selecionado"]);
     //Clique botão btn-permissao
     $(document).ready(function() {
     $(document).on('click', '#btn-permissao', function() {
-        var id_usa =  $(this).attr("id_usa");
-        var nome_usa =  $(this).attr("nome");
-        var id_emp_selecionado = 0;
-        var nome_emp_selecionado = "Padrão";
-        //verificar se há valor nas variaveis
-        if (id_usa !== '') {
-            var dados = {
-                id_usa: id_usa,
-                nome_usa: nome_usa,
-                id_emp_selecionado: id_emp_selecionado,
-                nome_emp_selecionado: nome_emp_selecionado
-            };
-            // alert("Cliquei btn-permissao: " +  id_usa + ' - ' + nome_usa);
-            $.post('adicionar_permissao', dados, function(retorna) {
-            location.href = "adicionar_permissao";
-            });
+        var id_usa = $(this).attr("id_usa");
+        var nome_usa = $(this).attr("nome");
+
+        if (id_usa === '' || id_usa === undefined) {
+            return;
         }
+
+        $.post('controller/empresas_usuario_get.php', { id_usa: id_usa }, function(resp) {
+            var empresas = (resp && resp.empresas) ? resp.empresas : [];
+
+            if (empresas.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sem empresas vinculadas',
+                    text: 'Este usuário ainda não tem empresas associadas. Vincule pela tela de alteração do usuário antes de definir permissões.',
+                });
+                return;
+            }
+
+            var options = { 0: 'Padrão (modelo)' };
+            empresas.forEach(function(e) {
+                options[e.id_emp] = e.id_emp + ' - ' + e.nome;
+            });
+
+            Swal.fire({
+                title: 'Selecione a empresa',
+                text: 'Permissões de ' + nome_usa,
+                input: 'select',
+                inputOptions: options,
+                inputPlaceholder: 'Selecione...',
+                showCancelButton: true,
+                confirmButtonText: 'Continuar',
+                cancelButtonText: 'Cancelar',
+                inputValidator: function(value) {
+                    if (value === '' || value === null) {
+                        return 'Selecione uma empresa';
+                    }
+                }
+            }).then(function(result) {
+                if (!result.isConfirmed) return;
+
+                var id_emp_selecionado = result.value;
+                var nome_emp_selecionado = options[id_emp_selecionado];
+
+                var dados = {
+                    id_usa: id_usa,
+                    nome_usa: nome_usa,
+                    id_emp_selecionado: id_emp_selecionado,
+                    nome_emp_selecionado: nome_emp_selecionado
+                };
+
+                $.post('adicionar_permissao', dados, function() {
+                    location.href = 'adicionar_permissao';
+                });
+            });
+        }, 'json').fail(function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Não foi possível carregar as empresas do usuário.'
+            });
         });
+    });
     });
 </script>
