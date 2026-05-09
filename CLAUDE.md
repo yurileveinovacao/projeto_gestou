@@ -60,6 +60,12 @@ Hospedado no GCP (Cloud Run + Cloud SQL).
 | `session.php` | Sessões em PostgreSQL (tabela `php_sessions`). Requer database.php | (nenhuma própria — usa DB_*) |
 | `ocr.php` | ⚠️ Legado (Google Vision) — NÃO USADO. OCR agora é Azure, direto nos controllers | — |
 
+## Timezones
+
+- **PHP** (Cloud Run): `America/Sao_Paulo` (UTC-3) — setado em todos `util.php`/`util2.php`. Campos `datinc`/`datatu` e similares ficam em BRT.
+- **PostgreSQL** (Cloud SQL): `America/Sao_Paulo` — flag `timezone` aplicada na instância. `NOW()`/`CURRENT_TIMESTAMP` retornam BRT, alinhado com o PHP.
+- **Logs Apache / Cloud Run / Cloud Logging**: **UTC** (não há como mudar facilmente). Ao correlacionar `datinc` (BRT) com timestamp de log Cloud Run (UTC), aplicar `+3h` ao BRT pra obter UTC.
+
 ## Deploy (processo manual)
 
 ```bash
