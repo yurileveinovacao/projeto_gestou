@@ -18,6 +18,7 @@ require_once "../util.php";
 
 // AÇÃO NO BOTÃO INCLUIR EMPRESA
 if (isset($_POST["btn_inc"])) {
+    error_log("[alterar_usuario_post] btn_inc recebido id_emp=".($_POST['id_emp'] ?? 'null'));
 
     $id_empValido = validarValor('REGEX', $_POST['id_emp'], '/\D/');
 
@@ -57,6 +58,7 @@ if (isset($_POST["btn_inc"])) {
 
 // AÇÃO NO BOTÃO INCLUIR TODAS AS EMPRESA
 if (isset($_POST["btn_inc_all"])) {
+    error_log("[alterar_usuario_post] btn_inc_all recebido");
 
     $id_empValido = validarValor('VALID', $_POST['id_emp_validador'], 1);
 
