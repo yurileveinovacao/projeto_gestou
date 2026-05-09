@@ -4643,8 +4643,6 @@ function insertGESMNU_add($id_usa, $id_emp, $contagem, $datatu, $situac = 0)
 function bootstrapGESMPR_empresa($id_usa, $id_emp, $datatu)
 {
     $menus_padrao = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 20, 21, 22, 23, 31, 32, 33, 37, 57];
-    error_log("[bootstrapGESMPR] entrada id_usa={$id_usa} id_emp={$id_emp}");
-    $inseridos = 0;
     foreach (select_TELAS_INSERT($id_usa, $id_emp) as $tela) {
         if (!is_array($tela) || empty($tela['id_mnu'])) {
             continue;
@@ -4652,9 +4650,7 @@ function bootstrapGESMPR_empresa($id_usa, $id_emp, $datatu)
         $id_mnu = (int) $tela['id_mnu'];
         $situac = in_array($id_mnu, $menus_padrao, true) ? 1 : 0;
         insertGESMNU_add($id_usa, $id_emp, $id_mnu, $datatu, $situac);
-        $inseridos++;
     }
-    error_log("[bootstrapGESMPR] saida id_usa={$id_usa} id_emp={$id_emp} inseridos={$inseridos}");
 }
 
 //View VW_RECIBO_PAGAMENTO_ITENS select - revisado em 27/12/2021 16:02
