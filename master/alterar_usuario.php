@@ -1078,6 +1078,9 @@ $id_usa_alterar = $_SESSION['editar_id_usa'];
 
 <?php
 
+// Menus liberados por padrão ao vincular uma empresa ao usuário
+$menus_padrao_acesso = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 20, 21, 22, 23, 31, 32, 33, 37, 57];
+
 // Atribui 1 empresa ao Usuario ADM
 if (isset($_POST["btn_inc"])) {
 
@@ -1088,6 +1091,13 @@ if (isset($_POST["btn_inc"])) {
         $_SESSION['tab'] = 3;
 
         insertGESVIN_usuario($id_emp, $id_usa);
+
+        foreach (select_TELAS_INSERT($id_usa, $id_emp) as $tela) {
+            if (!is_array($tela) || !isset($tela['id_mnu'])) continue;
+            $id_mnu = (int) $tela['id_mnu'];
+            $situac = in_array($id_mnu, $menus_padrao_acesso, true) ? 1 : 0;
+            insertGESMPR($id_usa, $id_emp, $id_mnu, $datatu, $situac);
+        }
     } catch (PDOException $erro) {
 
         echo $erro->getMessage();
@@ -1108,6 +1118,13 @@ if (isset($_POST["btn_inc_all"])) {
             if (!empty($id_emp)) {
 
                 insertGESVIN_usuario($id_emp, $id_usa);
+
+                foreach (select_TELAS_INSERT($id_usa, $id_emp) as $tela) {
+                    if (!is_array($tela) || !isset($tela['id_mnu'])) continue;
+                    $id_mnu = (int) $tela['id_mnu'];
+                    $situac = in_array($id_mnu, $menus_padrao_acesso, true) ? 1 : 0;
+                    insertGESMPR($id_usa, $id_emp, $id_mnu, $datatu, $situac);
+                }
             }
         }
     } catch (PDOException $erro) {
