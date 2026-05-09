@@ -197,10 +197,13 @@ try
     </html>' ;
     $mail->AltBody = '';
     // Enviar
+    error_log("[esqueci_email] enviando para: {$email}");
     $mail->send();
+    error_log("[esqueci_email] envio OK para: {$email}");
 }
 catch (Exception $e)
 {
+    error_log("[esqueci_email] FALHA envio para {$email} | ErrorInfo: {$mail->ErrorInfo} | Exception: " . $e->getMessage());
     echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
 }
 ?>
