@@ -588,7 +588,7 @@ function selectGESDOCid_doc($id_doc)
 {
     global $pdo;
     $query =
-        'SELECT id_doc, titulo, conteudo, publicado, grupo, pai, datinc, datatu, to_char(datatu, \'DD/MM/YYYY HH24:MM\') AS  datatuatualizacao FROM public."GESDOC" WHERE publicado = 1  and id_doc =:id_doc';
+        'SELECT id_doc, titulo, conteudo, publicado, grupo, pai, datinc, datatu, to_char(datatu, \'DD/MM/YYYY HH24:MI\') AS  datatuatualizacao FROM public."GESDOC" WHERE publicado = 1  and id_doc =:id_doc';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_doc', $id_doc, PDO::PARAM_INT);
     $statement->execute();
@@ -2928,8 +2928,8 @@ function select_GESEMP_email(
 function select_VW_GESACE($id_emp)
 {
     global $pdo;
-    $query = 'SELECT id,usuario,empresa,ip, to_char(datatu, \'DD/MM/YYYY HH24:MM\') AS  datatu
-    ,datatu as data , to_char(datatu, \'YYYY/MM/DD HH24:MM\') AS  datatu1,RANK () OVER ( 
+    $query = 'SELECT id,usuario,empresa,ip, to_char(datatu, \'DD/MM/YYYY HH24:MI\') AS  datatu
+    ,datatu as data , to_char(datatu, \'YYYY/MM/DD HH24:MI\') AS  datatu1,RANK () OVER ( 
 		ORDER BY datatu desc 
 	) rank
     FROM public."VW_GESACE" 
@@ -3392,7 +3392,7 @@ function updateGESUSA_SITUAC(
 function selectLOTES_processados($raizCNPJ, $id_emp)
 {
     global $pdo;
-    $query = 'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc ,a.datinc as data ,CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
+    $query = 'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc ,a.datinc as data ,CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
     ,(select CASE
     WHEN z.situac =\'0\' THEN \'0\'
     WHEN z.situac =\'1\' THEN \'1\'
@@ -3404,7 +3404,7 @@ function selectLOTES_processados($raizCNPJ, $id_emp)
     where a.situac<>9 and id_emp =:id_emp
     group by a.id_processamento,a.datinc,b.nome ,a.origem,a.competencia
     UNION
-    SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'PONTO - \',a.periodo,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
+    SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'PONTO - \',a.periodo,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
     ,(select CASE
     WHEN z.situac =\'0\' THEN \'0\'
     WHEN z.situac =\'1\' THEN \'1\'
@@ -3416,7 +3416,7 @@ function selectLOTES_processados($raizCNPJ, $id_emp)
     where a.situac<>9 and id_emp =:id_emp
     group by a.id_processamento,a.datinc,b.nome ,a.origem,a.periodo
     UNION
-    SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'INFORME - CALENDARIO \',a.anocal,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
+    SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'INFORME - CALENDARIO \',a.anocal,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
     ,(select CASE
     WHEN z.situac =\'0\' THEN \'0\'
     WHEN z.situac =\'1\' THEN \'1\'
@@ -3430,7 +3430,7 @@ function selectLOTES_processados($raizCNPJ, $id_emp)
     
     
     UNION
-    SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'RECIBO - \',a.descricao,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
+    SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'RECIBO - \',a.descricao,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
     ,(select CASE
     WHEN z.situac =\'0\' THEN \'0\'
     WHEN z.situac =\'1\' THEN \'1\'
@@ -3464,7 +3464,7 @@ function selectLOTES_processados($raizCNPJ, $id_emp)
 function selectLOTES_processados1($raizCNPJ, $id_emp)
 {
     global $pdo;
-    $query = 'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc ,a.datinc as data ,CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
+    $query = 'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc ,a.datinc as data ,CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
     ,(select CASE
     WHEN z.situac =\'0\' THEN \'0\'
     WHEN z.situac =\'1\' THEN \'1\'
@@ -3480,7 +3480,7 @@ function selectLOTES_processados1($raizCNPJ, $id_emp)
     where a.situac<>9 and id_emp =:id_emp
     group by a.id_processamento,a.datinc,b.nome ,a.origem,a.competencia
     UNION
-    SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'PONTO - \',a.periodo,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
+    SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'PONTO - \',a.periodo,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
     ,(select CASE
     WHEN z.situac =\'0\' THEN \'0\'
     WHEN z.situac =\'1\' THEN \'1\'
@@ -3496,7 +3496,7 @@ function selectLOTES_processados1($raizCNPJ, $id_emp)
     where a.situac<>9 and id_emp =:id_emp
     group by a.id_processamento,a.datinc,b.nome ,a.origem,a.periodo
     UNION
-    SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'INFORME - CALENDARIO \',a.anocal,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
+    SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'INFORME - CALENDARIO \',a.anocal,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
     ,(select CASE
     WHEN z.situac =\'0\' THEN \'0\'
     WHEN z.situac =\'1\' THEN \'1\'
@@ -3515,7 +3515,7 @@ function selectLOTES_processados1($raizCNPJ, $id_emp)
     
     
     UNION
-    SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'RECIBO - \',a.descricao,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
+    SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'RECIBO - \',a.descricao,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
     ,(select CASE
     WHEN z.situac =\'0\' THEN \'0\'
     WHEN z.situac =\'1\' THEN \'1\'
@@ -3557,7 +3557,7 @@ function selectLOTES_situac($raizCNPJ, $id_emp, $case)
 
         case 'H':
             $query =
-                'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc ,a.datinc as data ,CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
+                'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc ,a.datinc as data ,CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
                 ,(select CASE
                 WHEN z.situac =\'0\' THEN \'0\'
                 WHEN z.situac =\'1\' THEN \'1\'
@@ -3577,7 +3577,7 @@ function selectLOTES_situac($raizCNPJ, $id_emp, $case)
 
         case 'P':
             $query =
-                'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'PONTO - \',a.periodo,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
+                'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'PONTO - \',a.periodo,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
                 ,(select CASE
                 WHEN z.situac =\'0\' THEN \'0\'
                 WHEN z.situac =\'1\' THEN \'1\'
@@ -3597,7 +3597,7 @@ function selectLOTES_situac($raizCNPJ, $id_emp, $case)
 
         case 'I':
             $query =
-                'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'INFORME - CALENDARIO \',a.anocal,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
+                'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'INFORME - CALENDARIO \',a.anocal,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
                 ,(select CASE
                 WHEN z.situac =\'0\' THEN \'0\'
                 WHEN z.situac =\'1\' THEN \'1\'
@@ -3618,7 +3618,7 @@ function selectLOTES_situac($raizCNPJ, $id_emp, $case)
 
         case 'R':
             $query =
-                'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'RECIBO - \',a.descricao,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
+                'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'RECIBO - \',a.descricao,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
                 ,(select CASE
                 WHEN z.situac =\'0\' THEN \'0\'
                 WHEN z.situac =\'1\' THEN \'1\'
@@ -3638,7 +3638,7 @@ function selectLOTES_situac($raizCNPJ, $id_emp, $case)
 
         default:
             $query =
-                'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc ,a.datinc as data ,CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
+                'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc ,a.datinc as data ,CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
                 ,(select CASE
                 WHEN z.situac =\'0\' THEN \'0\'
                 WHEN z.situac =\'1\' THEN \'1\'
@@ -3654,7 +3654,7 @@ function selectLOTES_situac($raizCNPJ, $id_emp, $case)
                 where a.situac<>9 and id_emp =:id_emp
                 group by a.id_processamento,a.datinc,b.nome ,a.origem,a.competencia
                 UNION
-                SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'PONTO - \',a.periodo,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
+                SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'PONTO - \',a.periodo,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
                 ,(select CASE
                 WHEN z.situac =\'0\' THEN \'0\'
                 WHEN z.situac =\'1\' THEN \'1\'
@@ -3670,7 +3670,7 @@ function selectLOTES_situac($raizCNPJ, $id_emp, $case)
                 where a.situac<>9 and id_emp =:id_emp
                 group by a.id_processamento,a.datinc,b.nome ,a.origem,a.periodo
                 UNION
-                SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'INFORME - CALENDARIO \',a.anocal,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
+                SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'INFORME - CALENDARIO \',a.anocal,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
                 ,(select CASE
                 WHEN z.situac =\'0\' THEN \'0\'
                 WHEN z.situac =\'1\' THEN \'1\'
@@ -3689,7 +3689,7 @@ function selectLOTES_situac($raizCNPJ, $id_emp, $case)
                 
                 
                 UNION
-                SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'RECIBO - \',a.descricao,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
+                SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'RECIBO - \',a.descricao,\' - \',a.origem) AS tipo,a.origem ,split_part(b.nome, \' \', 1) as nome
                 ,(select CASE
                 WHEN z.situac =\'0\' THEN \'0\'
                 WHEN z.situac =\'1\' THEN \'1\'
@@ -7633,7 +7633,7 @@ function select_GESIM1_arquivo($raizCNPJ, $id_processamento)
 function selectTABELA_BENEFICIOS_FUNC($raizCNPJ, $id_usu, $id_emp)
 {
     global $pdo;
-    // $query = 'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+    // $query = 'SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
     // CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tip_per_arq,
     // substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome,
 
@@ -7649,7 +7649,7 @@ function selectTABELA_BENEFICIOS_FUNC($raizCNPJ, $id_usu, $id_emp)
     // left outer join public."GESUSU" as b on a.id_usu=b.id_usu 
     // WHERE a.id_usu =:id_usu and a.id_emp=:id_emp and a.situac IN (0,1,2,3,4) 
     // union
-    // SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+    // SELECT to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
     // CONCAT(\'PONTO - \',a.periodo,\' - \',a.origem) AS tip_per_arq,
     // substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome,
 
@@ -7665,7 +7665,7 @@ function selectTABELA_BENEFICIOS_FUNC($raizCNPJ, $id_usu, $id_emp)
     // left outer join public."GESUSU" as b on a.id_usu=b.id_usu 
     // where a.id_usu =:id_usu and a.id_emp=:id_emp
     // union
-    // select to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+    // select to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
     // CONCAT(\'INFORME - CALENDARIO \',a.anocal,\' - \',a.origem) AS tip_per_arq,
     // substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome,
 
@@ -7681,7 +7681,7 @@ function selectTABELA_BENEFICIOS_FUNC($raizCNPJ, $id_usu, $id_emp)
     // left outer join public."GESUSU" as b on a.id_usu=b.id_usu 
     // where a.id_usu =:id_usu and a.id_emp=:id_emp
     // union
-    // select to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+    // select to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
     // CONCAT(\'RECIBO - \',a.descricao,\' - \',a.origem) AS tip_per_arq,
     // substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome,
 
@@ -7698,7 +7698,7 @@ function selectTABELA_BENEFICIOS_FUNC($raizCNPJ, $id_usu, $id_emp)
     // where a.id_usu =:id_usu and a.id_emp=:id_emp';
     $query = 'SELECT RANK () OVER (ORDER BY data desc) as rank,datinc,data,tip_per_arq,nome_func,situac,tipo,arquivo,id from (
         SELECT replace(replace(replace(concat(a.datinc,a.id_emp, a.id_usu),\'-\',\'\'),\':\',\'\'),\' \',\'\') AS id_beneficio,
-        to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+        to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
         a.datinc as data,
         CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tip_per_arq,
         b.nome as nome_func,
@@ -7717,7 +7717,7 @@ function selectTABELA_BENEFICIOS_FUNC($raizCNPJ, $id_usu, $id_emp)
         union
         SELECT
         replace(replace(replace(concat(a.datinc,a.id_emp, a.id_usu),\'-\',\'\'),\':\',\'\'),\' \',\'\') AS id_beneficio,
-        to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+        to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
         a.datinc as data,
         CONCAT(\'PONTO - \',a.periodo,\' - \',a.origem) AS tip_per_arq,
         b.nome as nome_func,
@@ -7736,7 +7736,7 @@ function selectTABELA_BENEFICIOS_FUNC($raizCNPJ, $id_usu, $id_emp)
         union
         select
         replace(replace(replace(concat(a.datinc,a.id_emp, a.id_usu),\'-\',\'\'),\':\',\'\'),\' \',\'\') AS id_beneficio,
-        to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+        to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
         a.datinc as data,
         CONCAT(\'INFORME - CALENDARIO \',a.anocal,\' - \',a.origem) AS tip_per_arq,
         b.nome as nome_func,
@@ -7754,7 +7754,7 @@ function selectTABELA_BENEFICIOS_FUNC($raizCNPJ, $id_usu, $id_emp)
         union
         select
         replace(replace(replace(concat(a.datinc,a.id_emp, a.id_usu),\'-\',\'\'),\':\',\'\'),\' \',\'\') AS id_beneficio,
-        to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+        to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
         a.datinc as data,
         CONCAT(\'RECIBO - \',a.descricao,\' - \',a.origem) AS tip_per_arq,
         b.nome as nome_func,
@@ -7792,7 +7792,7 @@ function selectTABELA_BENEFICIOS_FUNC2($raizCNPJ, $id_usu, $id_emp, $situac)
         case 9:
             $query = 'SELECT RANK () OVER (ORDER BY data desc) as rank,datinc,data,tip_per_arq,nome_func,situac,tipo,arquivo,id from (
                 SELECT replace(replace(replace(concat(a.datinc,a.id_emp, a.id_usu),\'-\',\'\'),\':\',\'\'),\' \',\'\') AS id_beneficio,
-                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
                 a.datinc as data,
                 CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tip_per_arq,
                 b.nome as nome_func,
@@ -7811,7 +7811,7 @@ function selectTABELA_BENEFICIOS_FUNC2($raizCNPJ, $id_usu, $id_emp, $situac)
                 union
                 SELECT
                 replace(replace(replace(concat(a.datinc,a.id_emp, a.id_usu),\'-\',\'\'),\':\',\'\'),\' \',\'\') AS id_beneficio,
-                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
                 a.datinc as data,
                 CONCAT(\'PONTO - \',a.periodo,\' - \',a.origem) AS tip_per_arq,
                 b.nome as nome_func,
@@ -7830,7 +7830,7 @@ function selectTABELA_BENEFICIOS_FUNC2($raizCNPJ, $id_usu, $id_emp, $situac)
                 union
                 select
                 replace(replace(replace(concat(a.datinc,a.id_emp, a.id_usu),\'-\',\'\'),\':\',\'\'),\' \',\'\') AS id_beneficio,
-                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
                 a.datinc as data,
                 CONCAT(\'INFORME - CALENDARIO \',a.anocal,\' - \',a.origem) AS tip_per_arq,
                 b.nome as nome_func,
@@ -7848,7 +7848,7 @@ function selectTABELA_BENEFICIOS_FUNC2($raizCNPJ, $id_usu, $id_emp, $situac)
                 union
                 select
                 replace(replace(replace(concat(a.datinc,a.id_emp, a.id_usu),\'-\',\'\'),\':\',\'\'),\' \',\'\') AS id_beneficio,
-                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
                 a.datinc as data,
                 CONCAT(\'RECIBO - \',a.descricao,\' - \',a.origem) AS tip_per_arq,
                 b.nome as nome_func,
@@ -7870,7 +7870,7 @@ function selectTABELA_BENEFICIOS_FUNC2($raizCNPJ, $id_usu, $id_emp, $situac)
         default:
             $query = 'SELECT RANK () OVER (ORDER BY data desc) as rank,datinc,data,tip_per_arq,nome_func,situac,tipo,arquivo,id from (
                 SELECT replace(replace(replace(concat(a.datinc,a.id_emp, a.id_usu),\'-\',\'\'),\':\',\'\'),\' \',\'\') AS id_beneficio,
-                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
                 a.datinc as data,
                 CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tip_per_arq,
                 b.nome as nome_func,
@@ -7889,7 +7889,7 @@ function selectTABELA_BENEFICIOS_FUNC2($raizCNPJ, $id_usu, $id_emp, $situac)
                 union
                 SELECT
                 replace(replace(replace(concat(a.datinc,a.id_emp, a.id_usu),\'-\',\'\'),\':\',\'\'),\' \',\'\') AS id_beneficio,
-                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
                 a.datinc as data,
                 CONCAT(\'PONTO - \',a.periodo,\' - \',a.origem) AS tip_per_arq,
                 b.nome as nome_func,
@@ -7908,7 +7908,7 @@ function selectTABELA_BENEFICIOS_FUNC2($raizCNPJ, $id_usu, $id_emp, $situac)
                 union
                 select
                 replace(replace(replace(concat(a.datinc,a.id_emp, a.id_usu),\'-\',\'\'),\':\',\'\'),\' \',\'\') AS id_beneficio,
-                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
                 a.datinc as data,
                 CONCAT(\'INFORME - CALENDARIO \',a.anocal,\' - \',a.origem) AS tip_per_arq,
                 b.nome as nome_func,
@@ -7926,7 +7926,7 @@ function selectTABELA_BENEFICIOS_FUNC2($raizCNPJ, $id_usu, $id_emp, $situac)
                 union
                 select
                 replace(replace(replace(concat(a.datinc,a.id_emp, a.id_usu),\'-\',\'\'),\':\',\'\'),\' \',\'\') AS id_beneficio,
-                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH:MI:SS\') AS datinc,
+                to_char(a.datinc ::TIMESTAMP, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,
                 a.datinc as data,
                 CONCAT(\'RECIBO - \',a.descricao,\' - \',a.origem) AS tip_per_arq,
                 b.nome as nome_func,

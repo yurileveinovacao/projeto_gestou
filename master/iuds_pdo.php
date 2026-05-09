@@ -3300,8 +3300,8 @@ function select_GESEMP_email(
 function select_VW_GESACE($id_emp)
 {
     global $pdo;
-    $query = 'SELECT id,usuario,empresa,ip, to_char(datatu, \'DD/MM/YYYY HH24:MM\') AS  datatu
-    ,datatu as data , to_char(datatu, \'YYYY/MM/DD HH24:MM\') AS  datatu1,RANK () OVER ( 
+    $query = 'SELECT id,usuario,empresa,ip, to_char(datatu, \'DD/MM/YYYY HH24:MI\') AS  datatu
+    ,datatu as data , to_char(datatu, \'YYYY/MM/DD HH24:MI\') AS  datatu1,RANK () OVER ( 
 		ORDER BY datatu desc 
 	) rank
     FROM public."VW_GESACE" 
@@ -3686,7 +3686,7 @@ function updateGESUSA_SITUAC(
 function selectLOTES_processados($raizCNPJ, $id_emp)
 {
     global $pdo;
-    $query = 'SELECT  to_char(a.datinc, \'DD/MM/YYYY HH:MM:SS\') AS datinc ,a.datinc as data ,CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
+    $query = 'SELECT  to_char(a.datinc, \'DD/MM/YYYY HH24:MI:SS\') AS datinc ,a.datinc as data ,CONCAT(\'HOLERITE - \',a.competencia,\' - \',a.origem) AS tipo,a.origem ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
 ,(select CASE 
   WHEN z.situac =\'0\' THEN \'0\'
   WHEN z.situac =\'1\' THEN \'1\'
@@ -3699,7 +3699,7 @@ where a.situac<>9 and id_emp =:id_emp
 group by a.id_processamento,a.datinc,b.nome ,a.origem,a.competencia
 
 UNION
-SELECT to_char(a.datinc, \'DD/MM/YYYY HH:MM:SS\') AS datinc,a.datinc as data,CONCAT(\'PONTO  - \',a.periodo,\' - \',a.origem) AS tipo,a.origem  ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
+SELECT to_char(a.datinc, \'DD/MM/YYYY HH24:MI:SS\') AS datinc,a.datinc as data,CONCAT(\'PONTO  - \',a.periodo,\' - \',a.origem) AS tipo,a.origem  ,substring(b.nome,0,POSITION (\' \' IN b.nome)) as nome
 ,(select CASE 
 WHEN z.situac =\'0\' THEN \'0\'
 WHEN z.situac =\'1\' THEN \'1\'
