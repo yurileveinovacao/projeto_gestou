@@ -14,8 +14,8 @@ Hospedado no GCP (Cloud Run + Cloud SQL).
 /createemployee/ → Cadastro via token
 /createaccount/  → Auto-registro
 /config/       → Configs centralizados (database, email, storage, urls, session)
-/docs/         → Documentação e planos
-/scripts/      → Scripts de migração e utilitários
+/docs/         → Documentação viva (pendencias.md) + archive/ histórico
+/scripts/      → Utilitários e migrações de schema (scripts/migrations/) — archive/ guarda migração GCP concluída
 ```
 
 ## Arquitetura de Produção
@@ -92,7 +92,7 @@ gcloud run deploy gestou \
 **Notas**:
 - Uploads (bucket `gestou-uploads-489010`) montados em `/var/www/html/upload` via gcsfuse CSI (ver volume mount no service). Apache serve e PHP grava transparente, sem usar `storage.php`.
 - `MAINTENANCE_MODE=1` + `MAINTENANCE_BYPASS_TOKEN` ativam a página de manutenção (com bypass via `?bypass=<token>` → cookie 24h).
-- Email SMTP: Kinghost (`smtp.kinghost.net`) dá timeout vindo do Cloud Run. Usando Gmail como fallback até migrar email `@gestou.com.br` pra Google Workspace.
+- Email SMTP: usando Gmail (`contato@leveinovacao.com.br`) como fallback. Migração pra `@gestou.com.br` em aberto — ver `docs/pendencias.md`.
 
 ## Acesso ao Banco (Cloud SQL)
 
@@ -108,38 +108,15 @@ Acesso local via proxy:
 psql -h 127.0.0.1 -p 5434 -U gestou -d gestou
 ```
 
-## Status Atual
+## Status
 
-**Fase 6 — Cutover gestou.com.br → Cloud Run** (concluído em 2026-04-24)
-- DNS apontando pro Cloud Run (4 A records + 4 AAAA + CNAME www), SSL emitido.
-- Dump + restore Kinghost → Cloud SQL (106 MB, PG13 → PG17). Scripts FEA aplicados.
-- Uploads 9.7 GB / 52.710 arquivos sincronizados pro bucket GCS (via gcsfuse mount).
-- Email voltou pro Gmail temporariamente (SMTP Kinghost dá timeout do Cloud Run).
-
-**Fase 5 — App Android TWA** (em andamento, 15/21 tarefas)
-- Track A: Conta Play Console (D-U-N-S, cadastro) — **pendente do cliente** (0/6)
-- Track B: PWA — **completo** (7/7) — Lighthouse score 100, deploy feito
-- Track C: Build TWA — **completo** (8/8) — APK assinado, assetlinks validado, teste OK no emulador
-
-**Fase 7 — Novas Features** (7/7 completa)
-- FEA-001: Campo datarescisao auto-preenchido na desativação — **completa**
-- FEA-002: Contadores de experiência no dashboard — **completa** (cards no topo do carrossel, contam TODOS no período)
-- FEA-003: Alertas de experiência (popup + email cron) — **completa** (endpoint pronto, secret/env configurados; falta criar o job no Cloud Scheduler)
-- FEA-004: Observações do colaborador com categorias por empresa — **completa**
-- FEA-005: Justificativas no Fale com RH — **completa** (menu migrado p/ hierarquia Painel RH em 2026-04-24)
-- FEA-006: Turnover mensal no dashboard com controle de permissão — **completa**
-- FEA-007: Dias de experiência personalizáveis por empresa — **completa** (`GESEMP.dias_exp_1`/`dias_exp_2`, edição em `admin/dados_cadastrais.php`, suporta fase única quando os dois valores são iguais)
-
-## Pós-cutover (pendências)
-
-- Cloud Scheduler para FEA-003 — criar o job (secret `cron-secret` + env `CRON_SECRET` já configurados; API `cloudscheduler.googleapis.com` habilitada). Comando: `gcloud scheduler jobs create http cron-check-experiencias --schedule="0 8 * * *" --time-zone=America/Sao_Paulo --uri="https://gestou.com.br/admin/cron_check_experiencias.php?token=<CRON_SECRET>"`
-- Investigar/resolver SMTP Kinghost (Cloud Run → smtp.kinghost.net:587 timeout) ou migrar email pra Google Workspace
-- Fase 5 Track A — Play Console / D-U-N-S liberado em 2026-05-04, sessão dedicada pra finalizar
-- Descomissionar servidor antigo Kinghost (após período estável)
+Em produção em https://gestou.com.br desde 2026-04-24 (cutover GCP concluído).
+Fase 7 (FEA-001 a FEA-007) entregue. Pendências abertas em [`docs/pendencias.md`](docs/pendencias.md).
 
 ## Referência
 
-- `progress.txt` — log ativo de progresso (Fase 4B+) e Codebase Patterns
-- `docs/plano-migracao-gestou-consolidado.md` — plano completo das Fases 4B-6
-- `prd.json` — PRD cumulativo: MIG-001~012 (concluídas) + FEA-001~007 (novas features)
-- `docs/progress-prd-original.txt` — log histórico detalhado das 12 stories do PRD
+- [`docs/pendencias.md`](docs/pendencias.md) — pendências em aberto (operacional, Fase 5 Play Console, backlog)
+- [`progress.txt`](progress.txt) — log cronológico de entregas (vivo)
+- [`prd.json`](prd.json) — PRD cumulativo: MIG-001~012 (concluídas) + FEA-001~007 (entregues)
+- [`docs/archive/`](docs/archive/) — documentação histórica da migração Kinghost → GCP
+- [`scripts/migrations/archive/`](scripts/migrations/archive/) — migrações de schema já aplicadas (FEA-004~007)

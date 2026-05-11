@@ -44,8 +44,8 @@ Para testar fluxos que precisam dos uploads no GCS, defina `STORAGE_DRIVER=gcs` 
 | `master/` | Super-admin (51 PHP) — cadastro de menus, permissões, empresas |
 | `createemployee/`, `createaccount/` | Onboarding via token + auto-registro |
 | `config/` | Configs centralizados — database, mail, session, storage |
-| `scripts/migrations/` | Scripts SQL idempotentes pra alterações de schema |
-| `docs/` | Plano de migração, gcp-setup, test-checklist, log histórico |
+| `scripts/migrations/` | Scripts SQL idempotentes pra alterações de schema (histórico em `archive/`) |
+| `docs/` | Pendências em aberto (`pendencias.md`) e histórico da migração (`archive/`) |
 
 ## Convenções
 
@@ -71,10 +71,10 @@ gcloud run services update gestou --project=gestou-489010 --region=us-central1 \
 | Arquivo | Pra que serve |
 |---|---|
 | [`CLAUDE.md`](CLAUDE.md) | Instruções operacionais: arquitetura, configs, deploy, convenções (também usado por agentes Claude) |
+| [`docs/pendencias.md`](docs/pendencias.md) | Pendências em aberto (operacional, Fase 5 Play Console, backlog) |
 | [`progress.txt`](progress.txt) | Log cronológico de entregas — referência pra "o que foi feito quando" |
 | [`prd.json`](prd.json) | PRD cumulativo com MIG-001~012 (migração) e FEA-001~007 (features novas) |
-| [`docs/plano-migracao-gestou-consolidado.md`](docs/plano-migracao-gestou-consolidado.md) | Plano histórico das 6 fases da migração GCP |
-| [`docs/test-checklist.md`](docs/test-checklist.md) | Checklist de testes manuais usado pré-cutover |
+| [`docs/archive/`](docs/archive/) | Histórico da migração Kinghost → GCP (plano consolidado, checklist, logs) |
 
 ## Contato
 
