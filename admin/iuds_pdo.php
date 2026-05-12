@@ -11280,16 +11280,6 @@ function selectGESDOCTPL_byId($id_tpl, $id_emp)
     return $resultset;
 }
 
-//FEA-008: Libera registro de GESREC criado pelo envio de template (situac=2, aguardando aceite do colaborador)
-function updateGESREC_liberar_template($raiz_cnpj, $id_processamento)
-{
-    global $pdo;
-    $query = 'UPDATE public."GESREC_'.$raiz_cnpj.'" SET situac = 2 WHERE id_processamento =:id_processamento';
-    $statement = $pdo->prepare($query);
-    $statement->bindParam(':id_processamento', $id_processamento, PDO::PARAM_STR);
-    $statement->execute();
-}
-
 //FEA-008: Colaboradores ativos pra modal de envio
 function selectGESUSU_ativos_envio($id_emp)
 {

@@ -38,6 +38,10 @@ if ($template === null) {
 
 set_time_limit(0);
 
+// id_processamento compartilhado por todos os destinatários: agrupa o lote no histórico
+$id_processamento_lote = uniqidRealFEA008();
+$datinc_lote = date('Y-m-d H:i:s');
+
 $enviados = 0;
 $falhas   = [];
 
@@ -59,14 +63,13 @@ foreach ($ids_usu as $id_usu_raw) {
     }
 
     try {
-        $id_processamento = uniqidRealFEA008();
         $id_validador = $raiz_cnpj . uniqid() . uniqidRealFEA008();
         $nome_arquivo = gerarPdfTemplate(
             $template['conteudo_html'],
             $template['titulo_documento'],
             $dados,
             $raiz_cnpj,
-            $id_processamento
+            $id_validador
         );
 
         insertGESREC(
@@ -75,13 +78,12 @@ foreach ($ids_usu as $id_usu_raw) {
             $id_usu,
             $template['titulo_documento'].'.pdf',
             $nome_arquivo,
-            $id_processamento,
+            $id_processamento_lote,
             $id_validador,
             $template['titulo_documento'],
-            date('Y-m-d H:i:s'),
+            $datinc_lote,
             $id_usa_default
         );
-        updateGESREC_liberar_template($raiz_cnpj, $id_processamento);
 
         if (!empty($dados['email'])) {
             $email_destinatario = $dados['email'];

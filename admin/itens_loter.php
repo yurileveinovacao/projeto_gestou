@@ -199,7 +199,7 @@ require_once 'iuds_pdo.php';
 
                                                     <td style="text-align: center;">
 
-                                                        <button type="button" data-toggle="modal" data-target="#Visualizar" name="modal" class="btn btn-outline-primary" title="Visualizar Item">Visualizar</button>
+                                                        <button type="button" data-toggle="modal" data-target="#Visualizar" name="modal" class="btn btn-outline-primary btn-visualizar-item" data-arquivo="<?php echo htmlspecialchars($linha['arquivo'], ENT_QUOTES); ?>" title="Visualizar Item">Visualizar</button>
 
                                                         <?php
 
@@ -255,18 +255,9 @@ require_once 'iuds_pdo.php';
                         <div class="modal-body">
                             <div class="col-md-12">
 
-                                <?php
-
-                                foreach (select_GESREC_arquivo($raiz_cnpj, $id_processamento) as $arquivo_banco) {
-
-                                    $arquivo = $arquivo_banco["arquivo"];
-                                }
-
-                                ?>
-
                                 <div class="col-md-12">
 
-                                    <iframe style="width: 100%; height: 600px;" src="../upload/beneficios/recibos_diversos/<?php echo $raiz_cnpj; ?>/<?php echo $arquivo; ?>"></iframe>
+                                    <iframe id="iframe-visualizar-item" style="width: 100%; height: 600px;" src="" data-base="../upload/beneficios/recibos_diversos/<?php echo $raiz_cnpj; ?>/"></iframe>
 
                                 </div>
 
@@ -360,6 +351,17 @@ require_once 'iuds_pdo.php';
         });
 
     }
+
+    //Visualizar PDF específico de cada destinatário do lote
+    $(document).on('click', '.btn-visualizar-item', function() {
+        var arquivo = $(this).data('arquivo');
+        var $iframe = $('#iframe-visualizar-item');
+        var base = $iframe.data('base');
+        $iframe.attr('src', base + arquivo);
+    });
+    $('#Visualizar').on('hidden.bs.modal', function() {
+        $('#iframe-visualizar-item').attr('src', '');
+    });
 
     //Clique do botão detalhe quando não existirem mensagens
     $(document).ready(function() {

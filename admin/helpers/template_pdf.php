@@ -55,7 +55,7 @@ function _substituirVariaveisTemplate($html, $dados)
     return strtr($html, $vars);
 }
 
-function gerarPdfTemplate($conteudo_html, $titulo, $dados_colaborador, $raiz_cnpj, $id_processamento)
+function gerarPdfTemplate($conteudo_html, $titulo, $dados_colaborador, $raiz_cnpj, $file_id)
 {
     $html  = _sanitizeTemplateHtml($conteudo_html);
     $html  = _substituirVariaveisTemplate($html, $dados_colaborador);
@@ -95,7 +95,7 @@ table td, table th { padding: 4pt 8pt; }
         mkdir($dir, 0777, true);
         umask($umaskOld);
     }
-    $nome_arquivo = $raiz_cnpj.'_'.$id_processamento.'_recibodiversos.pdf';
+    $nome_arquivo = $raiz_cnpj.'_'.$file_id.'_recibodiversos.pdf';
     if (file_put_contents($dir.'/'.$nome_arquivo, $output) === false) {
         throw new Exception('Falha ao gravar PDF em '.$dir.'/'.$nome_arquivo.' (verifique permissões)');
     }
