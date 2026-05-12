@@ -11197,3 +11197,147 @@ function insert_GESDCOL($descricao, $arquivo, $id_emp, $id_usu, $datinc)
     $statement->bindParam(':datinc', $datinc, PDO::PARAM_STR);
     $statement->execute();
 }
+
+//FEA-008: Templates de documentos para envio em lote
+
+//Tabela GESDOCTPL insert
+function insertGESDOCTPL($id_emp, $nome, $titulo, $html, $id_usa)
+{
+    global $pdo;
+    $query =
+        'INSERT INTO public."GESDOCTPL"(id_emp, nome, titulo_documento, conteudo_html, ativo, datinc, id_usa_inc) VALUES (:id_emp, :nome, :titulo, :html, 1, NOW(), :id_usa) RETURNING id_tpl';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->bindParam(':nome', $nome, PDO::PARAM_STR);
+    $statement->bindParam(':titulo', $titulo, PDO::PARAM_STR);
+    $statement->bindParam(':html', $html, PDO::PARAM_STR);
+    $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    return $row ? $row['id_tpl'] : null;
+}
+
+//Tabela GESDOCTPL update
+function updateGESDOCTPL($id_tpl, $id_emp, $nome, $titulo, $html, $id_usa)
+{
+    global $pdo;
+    $query =
+        'UPDATE public."GESDOCTPL" SET nome =:nome, titulo_documento =:titulo, conteudo_html =:html, datatu = NOW(), id_usa_atu =:id_usa WHERE id_tpl =:id_tpl AND id_emp =:id_emp';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_tpl', $id_tpl, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->bindParam(':nome', $nome, PDO::PARAM_STR);
+    $statement->bindParam(':titulo', $titulo, PDO::PARAM_STR);
+    $statement->bindParam(':html', $html, PDO::PARAM_STR);
+    $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
+    $statement->execute();
+}
+
+//Tabela GESDOCTPL soft delete (ativo=0)
+function deleteGESDOCTPL($id_tpl, $id_emp, $id_usa)
+{
+    global $pdo;
+    $query = 'UPDATE public."GESDOCTPL" SET ativo = 0, datatu = NOW(), id_usa_atu =:id_usa WHERE id_tpl =:id_tpl AND id_emp =:id_emp';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_tpl', $id_tpl, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
+    $statement->execute();
+}
+
+//Tabela GESDOCTPL listagem (ativos por empresa)
+function selectGESDOCTPL_lista($id_emp)
+{
+    global $pdo;
+    $query =
+        'SELECT id_tpl, nome, titulo_documento, datinc, datatu FROM public."GESDOCTPL" WHERE id_emp =:id_emp AND ativo = 1 ORDER BY COALESCE(datatu, datinc) DESC';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [0];
+    }
+    return $resultset;
+}
+
+//Tabela GESDOCTPL by id (carrega 1 template pra edição ou envio)
+function selectGESDOCTPL_byId($id_tpl, $id_emp)
+{
+    global $pdo;
+    $query =
+        'SELECT id_tpl, id_emp, nome, titulo_documento, conteudo_html, ativo, datinc, datatu FROM public."GESDOCTPL" WHERE id_tpl =:id_tpl AND id_emp =:id_emp';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_tpl', $id_tpl, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [0];
+    }
+    return $resultset;
+}
+
+//FEA-008: Libera registro de GESREC criado pelo envio de template (situac=2, aguardando aceite do colaborador)
+function updateGESREC_liberar_template($raiz_cnpj, $id_processamento)
+{
+    global $pdo;
+    $query = 'UPDATE public."GESREC_'.$raiz_cnpj.'" SET situac = 2 WHERE id_processamento =:id_processamento';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_processamento', $id_processamento, PDO::PARAM_STR);
+    $statement->execute();
+}
+
+//FEA-008: Colaboradores ativos pra modal de envio
+function selectGESUSU_ativos_envio($id_emp)
+{
+    global $pdo;
+    $query =
+        'SELECT u.id_usu, u.nome, u.cpf, u.funcao, d.nome AS depto_nome
+         FROM public."GESUSU" u
+         LEFT JOIN public."GESDEP" d ON d.id_dep = u.id_dep
+         WHERE u.id_emp =:id_emp AND u.situac = 1
+         ORDER BY u.nome';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [0];
+    }
+    return $resultset;
+}
+
+//FEA-008: Dados do colaborador pra substituir variáveis do template
+function selectGESUSU_dados_template($id_usu)
+{
+    global $pdo;
+    $query =
+        'SELECT u.id_usu, u.nome, u.cpf, u.rg, u.email, u.cod_integracao, u.funcao, u.dataadmissao,
+                u.ctps, u.pis, u.titulo_eleitor,
+                u.endereco, u.numero, u.complemento, u.bairro, u.cep,
+                u.telefone, u.celular,
+                d.nome AS depto_nome,
+                e.nome AS empresa_nome,
+                e.cnpj AS empresa_cnpj,
+                m.nome AS cidade_nome,
+                est.sigla AS uf_sigla
+         FROM public."GESUSU" u
+         LEFT JOIN public."GESDEP" d ON d.id_dep = u.id_dep
+         LEFT JOIN public."GESEMP" e ON e.id_emp = u.id_emp
+         LEFT JOIN public."GESMUN" m ON m.id_mun = u.id_mun
+         LEFT JOIN public."GESEST" est ON est.id_est = m.id_est
+         WHERE u.id_usu =:id_usu';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_usu', $id_usu, PDO::PARAM_INT);
+    $statement->execute();
+    if ($statement->rowCount() > 0) {
+        $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $resultset = [0];
+    }
+    return $resultset;
+}
