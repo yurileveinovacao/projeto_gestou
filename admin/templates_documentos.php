@@ -69,7 +69,7 @@ require_once "util.php";
 
                                 <thead style="text-align: center;">
                                     <div class="col-sm-12 button-tabela">
-                                        <a href="templates_documentos_editar"><button type="button" class="btn btn-organograma btn-icon-split-organograma"><i class="fas fa-plus-circle"></i> Novo Template</button></a>
+                                        <a href="templates_documentos_editar?novo=1"><button type="button" class="btn btn-organograma btn-icon-split-organograma"><i class="fas fa-plus-circle"></i> Novo Template</button></a>
                                     </div>
 
                                     <tr>

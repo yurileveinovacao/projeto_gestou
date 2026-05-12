@@ -4,6 +4,11 @@ require 'restrito.php';
 require_once "iuds_pdo.php";
 require_once "util.php";
 
+// "Novo Template" limpa qualquer id de edição persistente da sessão
+if (isset($_GET['novo'])) {
+    unset($_SESSION['editar_id_tpl']);
+}
+
 // Modo edição vs criação
 $modo_edicao = isset($_SESSION['editar_id_tpl']) && (int)$_SESSION['editar_id_tpl'] > 0;
 $tpl = ['id_tpl' => 0, 'nome' => '', 'titulo_documento' => '', 'conteudo_html' => ''];
