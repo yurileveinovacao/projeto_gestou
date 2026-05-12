@@ -116,6 +116,13 @@ require_once __DIR__.'/../config/database.php';
                                         <!-- HEADER TOTAL Mensagens -->
                                         <div class="d-block card-header py-3 collapsed">
 
+                                            <button type="button" class="btn btn-compartilhar width-100 mb-3" data-toggle="modal" data-target="#modalVisualizarDocumento" data-arquivo="<?php echo htmlspecialchars($arquivo, ENT_QUOTES); ?>">
+                                                <span class="icon mr-1">
+                                                    <i class="fas fa-eye"></i>
+                                                </span>
+                                                <span class="text font-weight-bold">VISUALIZAR</span>
+                                            </button>
+
                                             <a href="../upload/beneficios/recibos_diversos/<?php echo $raiz_cnpj; ?>/<?php echo $arquivo; ?>" download="<?php echo $descricao; ?>">
                                                 <button class="btn btn-compartilhar width-100 mb-3" onclick="onClickDownload()">
                                                     <span class="icon mr-1">
@@ -399,6 +406,36 @@ require_once __DIR__.'/../config/database.php';
     $(function() {
         $('[data-toggle="tooltip"]').tooltip()
     })
+</script>
+
+<!-- Modal de visualização do PDF (FEA-008) -->
+<div class="modal fade" id="modalVisualizarDocumento" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Documento</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="iframeVisualizarDocumento" style="width:100%; height:75vh; border:0;" src="" data-base="../upload/beneficios/recibos_diversos/<?php echo $raiz_cnpj; ?>/"></iframe>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#modalVisualizarDocumento').on('show.bs.modal', function(event) {
+        var $trigger = $(event.relatedTarget);
+        var arquivo = $trigger.data('arquivo');
+        var $iframe = $('#iframeVisualizarDocumento');
+        $iframe.attr('src', $iframe.data('base') + arquivo);
+    });
+    $('#modalVisualizarDocumento').on('hidden.bs.modal', function() {
+        $('#iframeVisualizarDocumento').attr('src', '');
+    });
 </script>
 
 <?php
