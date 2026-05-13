@@ -30,7 +30,7 @@ foreach (selectCOUNT_GESMNU($id_usa_selecionado, $id_emp_selecionado) as $count_
 
 //Se contagem diferente de zero, executar insert em GESMPR de todos menus que estão faltando.
 //Menus na lista padrão entram já com situac=1 (liberados); demais entram com situac=0.
-$menus_padrao = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 20, 21, 22, 23, 31, 32, 33, 37, 57];
+$menus_padrao = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 20, 21, 22, 23, 31, 32, 33, 37, 57, 58];
 if ($contagem != 0) {
     foreach (select_TELAS_INSERT($id_usa_selecionado, $id_emp_selecionado) as $telas_insert) {
         $id_mnu_atual = (int) $telas_insert["id_mnu"];

@@ -1079,7 +1079,7 @@ $id_usa_alterar = $_SESSION['editar_id_usa'];
 <?php
 
 // Menus liberados por padrão ao vincular uma empresa ao usuário
-$menus_padrao_acesso = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 20, 21, 22, 23, 31, 32, 33, 37, 57];
+$menus_padrao_acesso = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 20, 21, 22, 23, 31, 32, 33, 37, 57, 58];
 
 // Atribui 1 empresa ao Usuario ADM
 if (isset($_POST["btn_inc"])) {

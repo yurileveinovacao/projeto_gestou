@@ -5747,7 +5747,8 @@ function updateGESMPR_menus(
             (:id_usa, :id_emp, 31, :datatu, 1),
             (:id_usa, :id_emp, 32, :datatu, 1),
             (:id_usa, :id_emp, 33, :datatu, 1),
-            (:id_usa, :id_emp, 57, :datatu, 1)
+            (:id_usa, :id_emp, 57, :datatu, 1),
+            (:id_usa, :id_emp, 58, :datatu, 1)
         ON CONFLICT (id_usa, id_emp, id_mnu) DO NOTHING';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
