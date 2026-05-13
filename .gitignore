@@ -19,6 +19,11 @@ downloads/
 # ========================================
 **/vendor/
 **/vendor_*/
+# Exceção: composer.json/lock do PHPWord são versionados (Dockerfile precisa pra `composer install`)
+!**/vendor_phpword/
+admin/vendor_phpword/*
+!admin/vendor_phpword/composer.json
+!admin/vendor_phpword/composer.lock
 node_modules/
 
 # ========================================

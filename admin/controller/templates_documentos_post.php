@@ -11,6 +11,34 @@ if (isset($_POST['editar_id_tpl'])) {
     exit;
 }
 
+// Download do .docx de um template tipo='docx' (apontado pelo botão Baixar na listagem)
+if (isset($_GET['baixar'])) {
+    $id_tpl = (int)$_GET['baixar'];
+    $tpl = null;
+    foreach (selectGESDOCTPL_byId($id_tpl, $id_emp_default) as $linha) {
+        if (is_array($linha)) {
+            $tpl = $linha;
+        }
+    }
+    if (!$tpl || ($tpl['tipo'] ?? 'html') !== 'docx' || empty($tpl['arquivo_docx'])) {
+        http_response_code(404);
+        echo 'Template não encontrado ou não é arquivo Word.';
+        exit;
+    }
+    $caminho = __DIR__ . '/../../upload/templates/' . $raiz_cnpj . '/' . $tpl['arquivo_docx'];
+    if (!file_exists($caminho)) {
+        http_response_code(404);
+        echo 'Arquivo não encontrado em disco.';
+        exit;
+    }
+    $nome_baixar = preg_replace('/[^A-Za-z0-9._-]/', '_', $tpl['nome']) . '.docx';
+    header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    header('Content-Disposition: attachment; filename="' . $nome_baixar . '"');
+    header('Content-Length: ' . filesize($caminho));
+    readfile($caminho);
+    exit;
+}
+
 // SAVE (insert ou update conforme id_tpl)
 if (isset($_POST['btn_save'])) {
 

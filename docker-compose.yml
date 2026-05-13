@@ -18,6 +18,7 @@ services:
       SMTP_FROM_NAME: GESTOU
       STORAGE_DRIVER: local
       CONTACT_EMAIL: contato@leveinovacao.com.br
+      TZ: America/Sao_Paulo
     volumes:
       - .:/var/www/html
     depends_on:
@@ -31,6 +32,8 @@ services:
       POSTGRES_DB: gestou
       POSTGRES_USER: gestou
       POSTGRES_PASSWORD: gestou_dev
+      TZ: America/Sao_Paulo
+      PGTZ: America/Sao_Paulo
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./config/schema:/docker-entrypoint-initdb.d

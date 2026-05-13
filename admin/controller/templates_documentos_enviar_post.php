@@ -4,6 +4,7 @@ require '../restrito.php';
 require_once "../iuds_pdo.php";
 require_once "../util2.php";
 require_once __DIR__.'/../helpers/template_pdf.php';
+require_once __DIR__.'/../helpers/template_docx_pdf.php';
 
 header('Content-Type: application/json');
 
@@ -64,13 +65,24 @@ foreach ($ids_usu as $id_usu_raw) {
 
     try {
         $id_validador = $raiz_cnpj . uniqid() . uniqidRealFEA008();
-        $nome_arquivo = gerarPdfTemplate(
-            $template['conteudo_html'],
-            $template['titulo_documento'],
-            $dados,
-            $raiz_cnpj,
-            $id_validador
-        );
+
+        if (($template['tipo'] ?? 'html') === 'docx') {
+            $arquivo_origem = __DIR__ . '/../../upload/templates/' . $raiz_cnpj . '/' . $template['arquivo_docx'];
+            $nome_arquivo = gerarPdfTemplateDocx(
+                $arquivo_origem,
+                $dados,
+                $raiz_cnpj,
+                $id_validador
+            );
+        } else {
+            $nome_arquivo = gerarPdfTemplate(
+                $template['conteudo_html'],
+                $template['titulo_documento'],
+                $dados,
+                $raiz_cnpj,
+                $id_validador
+            );
+        }
 
         insertGESREC(
             $raiz_cnpj,

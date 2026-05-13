@@ -69,14 +69,15 @@ require_once "util.php";
 
                                 <thead style="text-align: center;">
                                     <div class="col-sm-12 button-tabela">
-                                        <a href="templates_documentos_editar?novo=1"><button type="button" class="btn btn-organograma btn-icon-split-organograma"><i class="fas fa-plus-circle"></i> Novo Template</button></a>
+                                        <a href="templates_documentos_novo"><button type="button" class="btn btn-organograma btn-icon-split-organograma"><i class="fas fa-plus-circle"></i> Novo Template</button></a>
                                     </div>
 
                                     <tr>
                                         <th data-orderable="false">Nome interno</th>
                                         <th data-orderable="false">Título do documento</th>
+                                        <th data-orderable="false" width="9%">Tipo</th>
                                         <th data-orderable="false">Última edição</th>
-                                        <th data-orderable="false" class="sorttable_nosort nao_click" width="22%">Ações</th>
+                                        <th data-orderable="false" class="sorttable_nosort nao_click" width="26%">Ações</th>
                                     </tr>
                                 </thead>
 
@@ -85,12 +86,27 @@ require_once "util.php";
                                     foreach (selectGESDOCTPL_lista($id_emp_default) as $linha) {
                                         if ($linha !== 0 && is_array($linha)) {
                                             $ultima_edicao = !empty($linha['datatu']) ? $linha['datatu'] : $linha['datinc'];
+                                            $tipo = $linha['tipo'] ?? 'html';
+                                            $is_docx = ($tipo === 'docx');
                                     ?>
                                             <tr class="align-middle">
                                                 <td><span class="m-0 text-primary tamanho-text"><?php echo htmlspecialchars($linha['nome']); ?></span></td>
                                                 <td><span class="m-0 tamanho-text"><?php echo htmlspecialchars($linha['titulo_documento']); ?></span></td>
+                                                <td style="text-align:center;">
+                                                    <?php if ($is_docx) { ?>
+                                                        <span class="badge badge-info" style="background-color:#1d3a8a; color:#fff; padding:6px 10px;"><i class="fas fa-file-word"></i> Word</span>
+                                                    <?php } else { ?>
+                                                        <span class="badge badge-secondary" style="background-color:#6c757d; color:#fff; padding:6px 10px;"><i class="fas fa-code"></i> HTML</span>
+                                                    <?php } ?>
+                                                </td>
                                                 <td><span class="m-0 tamanho-text"><?php echo date('d/m/Y H:i', strtotime($ultima_edicao)); ?></span></td>
                                                 <td class="content-xy-center">
+
+                                                    <div class="div-acoes">
+                                                        <button type="button" class="btn btn-outline-primary btn-icones btn-preview" id-tpl="<?php echo (int)$linha['id_tpl']; ?>" nome-tpl="<?php echo htmlspecialchars($linha['nome'], ENT_QUOTES); ?>" title="Pré-visualizar com colaborador exemplo">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                    </div>
 
                                                     <div class="div-acoes">
                                                         <button type="button" class="btn btn-success btn-icones btn-enviar" id-tpl="<?php echo (int)$linha['id_tpl']; ?>" titulo-tpl="<?php echo htmlspecialchars($linha['titulo_documento'], ENT_QUOTES); ?>" title="Enviar">
@@ -98,11 +114,21 @@ require_once "util.php";
                                                         </button>
                                                     </div>
 
-                                                    <div class="div-acoes">
-                                                        <button type="button" class="btn btn-primary btn-icones btn-editar" id-tpl="<?php echo (int)$linha['id_tpl']; ?>" title="Editar">
-                                                            <i class="fas fa-pencil-alt"></i>
-                                                        </button>
-                                                    </div>
+                                                    <?php if ($is_docx) { ?>
+                                                        <div class="div-acoes">
+                                                            <a href="controller/templates_documentos_post.php?baixar=<?php echo (int)$linha['id_tpl']; ?>" title="Baixar arquivo .docx">
+                                                                <button type="button" class="btn btn-info btn-icones">
+                                                                    <i class="fas fa-download"></i>
+                                                                </button>
+                                                            </a>
+                                                        </div>
+                                                    <?php } else { ?>
+                                                        <div class="div-acoes">
+                                                            <button type="button" class="btn btn-primary btn-icones btn-editar" id-tpl="<?php echo (int)$linha['id_tpl']; ?>" title="Editar">
+                                                                <i class="fas fa-pencil-alt"></i>
+                                                            </button>
+                                                        </div>
+                                                    <?php } ?>
 
                                                     <div class="div-acoes">
                                                         <button type="button" class="btn btn-danger btn-icones btn-excluir-tpl" id-tpl="<?php echo (int)$linha['id_tpl']; ?>" title="Excluir">
@@ -124,6 +150,27 @@ require_once "util.php";
 
             </div>
 
+        </div>
+
+        <!-- Modal Pré-visualização -->
+        <div class="modal fade" id="modal-preview" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Pré-visualização: <span id="preview-nome-tpl"></span></h5>
+                        <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div class="alert alert-info m-3 mb-0">
+                            <i class="fas fa-info-circle"></i> Esta pré-visualização usa os dados do <strong>primeiro colaborador ativo</strong> da empresa como exemplo. No envio real, cada colaborador receberá um documento com seus próprios dados.
+                        </div>
+                        <iframe id="iframe-preview" style="width:100%; height:75vh; border:0;" src=""></iframe>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Modal Enviar Template -->
@@ -198,6 +245,18 @@ require_once "util.php";
 </html>
 
 <script>
+    // PRE-VIEW — abre modal com PDF on-the-fly do primeiro colab ativo
+    $(document).on('click', '.btn-preview', function() {
+        var id_tpl = $(this).attr('id-tpl');
+        var nome = $(this).attr('nome-tpl');
+        $('#preview-nome-tpl').text(nome);
+        $('#iframe-preview').attr('src', 'controller/templates_documentos_preview.php?id_tpl=' + id_tpl + '&_=' + Date.now());
+        $('#modal-preview').modal('show');
+    });
+    $('#modal-preview').on('hidden.bs.modal', function() {
+        $('#iframe-preview').attr('src', '');
+    });
+
     // EDITAR — envia id_tpl pra controller e abre a tela de edição
     $(document).on('click', '.btn-editar', function() {
         var id_tpl = $(this).attr('id-tpl');

@@ -11201,16 +11201,22 @@ function insert_GESDCOL($descricao, $arquivo, $id_emp, $id_usu, $datinc)
 //FEA-008: Templates de documentos para envio em lote
 
 //Tabela GESDOCTPL insert
-function insertGESDOCTPL($id_emp, $nome, $titulo, $html, $id_usa)
+function insertGESDOCTPL($id_emp, $nome, $titulo, $html, $id_usa, $tipo = 'html', $arquivo_docx = null)
 {
     global $pdo;
     $query =
-        'INSERT INTO public."GESDOCTPL"(id_emp, nome, titulo_documento, conteudo_html, ativo, datinc, id_usa_inc) VALUES (:id_emp, :nome, :titulo, :html, 1, NOW(), :id_usa) RETURNING id_tpl';
+        'INSERT INTO public."GESDOCTPL"(id_emp, nome, titulo_documento, conteudo_html, tipo, arquivo_docx, ativo, datinc, id_usa_inc) VALUES (:id_emp, :nome, :titulo, :html, :tipo, :arquivo_docx, 1, NOW(), :id_usa) RETURNING id_tpl';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
     $statement->bindParam(':nome', $nome, PDO::PARAM_STR);
     $statement->bindParam(':titulo', $titulo, PDO::PARAM_STR);
     $statement->bindParam(':html', $html, PDO::PARAM_STR);
+    $statement->bindParam(':tipo', $tipo, PDO::PARAM_STR);
+    if ($arquivo_docx === null) {
+        $statement->bindValue(':arquivo_docx', null, PDO::PARAM_NULL);
+    } else {
+        $statement->bindParam(':arquivo_docx', $arquivo_docx, PDO::PARAM_STR);
+    }
     $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
     $statement->execute();
     $row = $statement->fetch(PDO::FETCH_ASSOC);
@@ -11250,7 +11256,7 @@ function selectGESDOCTPL_lista($id_emp)
 {
     global $pdo;
     $query =
-        'SELECT id_tpl, nome, titulo_documento, datinc, datatu FROM public."GESDOCTPL" WHERE id_emp =:id_emp AND ativo = 1 ORDER BY COALESCE(datatu, datinc) DESC';
+        'SELECT id_tpl, nome, titulo_documento, tipo, arquivo_docx, datinc, datatu FROM public."GESDOCTPL" WHERE id_emp =:id_emp AND ativo = 1 ORDER BY COALESCE(datatu, datinc) DESC';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
     $statement->execute();
@@ -11267,7 +11273,7 @@ function selectGESDOCTPL_byId($id_tpl, $id_emp)
 {
     global $pdo;
     $query =
-        'SELECT id_tpl, id_emp, nome, titulo_documento, conteudo_html, ativo, datinc, datatu FROM public."GESDOCTPL" WHERE id_tpl =:id_tpl AND id_emp =:id_emp';
+        'SELECT id_tpl, id_emp, nome, titulo_documento, conteudo_html, tipo, arquivo_docx, ativo, datinc, datatu FROM public."GESDOCTPL" WHERE id_tpl =:id_tpl AND id_emp =:id_emp';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_tpl', $id_tpl, PDO::PARAM_INT);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
