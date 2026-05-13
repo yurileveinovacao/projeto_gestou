@@ -256,6 +256,12 @@ require_once "util.php";
     $('#modal-preview').on('hidden.bs.modal', function() {
         $('#iframe-preview').attr('src', '');
     });
+    // Fallback: fecha o modal de preview ao clicar no X ou no botão Fechar
+    // (o data-dismiss padrão pode falhar com duas versões do Bootstrap carregadas)
+    $(document).on('click', '#modal-preview .close, #modal-preview .modal-footer .btn-secondary', function(e) {
+        e.preventDefault();
+        $('#modal-preview').modal('hide');
+    });
 
     // EDITAR — envia id_tpl pra controller e abre a tela de edição
     $(document).on('click', '.btn-editar', function() {
