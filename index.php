@@ -1010,13 +1010,6 @@
       box-shadow: var(--shadow-lg);
       transform: translateY(-4px);
     }
-    .testimonial-quote {
-      font-size: 48px;
-      line-height: 1;
-      color: var(--yellow);
-      font-family: Georgia, serif;
-      margin-bottom: 12px;
-    }
     .testimonial-text {
       font-size: 14px;
       color: var(--gray-600);
@@ -1024,6 +1017,17 @@
       margin-bottom: 24px;
       font-style: italic;
     }
+    .testimonial-text::before,
+    .testimonial-text::after {
+      color: var(--yellow);
+      font-family: Georgia, serif;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 0;
+      vertical-align: -0.35em;
+    }
+    .testimonial-text::before { content: "\201C"; margin-right: 4px; }
+    .testimonial-text::after  { content: "\201D"; margin-left: 4px; }
     .testimonial-author {
       display: flex;
       align-items: center;
@@ -1704,7 +1708,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="testimonial-stars">
           <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
         </div>
-        <div class="testimonial-quote">"</div>
         <p class="testimonial-text">O Gestou foi um excelente investimento em nossa empresa. Com ele, os colaboradores podem acessar seus holerites e espelhos de ponto em qualquer hora pelo celular — além de facilitar para eles, facilita para nós.</p>
         <div class="testimonial-author">
           <img src="img/testimonials/plasroll-logo.png" alt="Plasroll" class="testimonial-avatar" style="object-fit: contain; background: #fff; padding: 4px;">
@@ -1720,7 +1723,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="testimonial-stars">
           <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
         </div>
-        <div class="testimonial-quote">"</div>
         <p class="testimonial-text">Depoimento real de cliente será inserido aqui em breve. Aguardamos o retorno da equipe para preencher com as experiências reais dos nossos clientes.</p>
         <div class="testimonial-author">
           <div class="testimonial-avatar">R</div>
@@ -1736,7 +1738,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="testimonial-stars">
           <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
         </div>
-        <div class="testimonial-quote">"</div>
         <p class="testimonial-text">Depoimento real de cliente será inserido aqui em breve. Aguardamos o retorno da equipe para preencher com as experiências reais dos nossos clientes.</p>
         <div class="testimonial-author">
           <div class="testimonial-avatar">D</div>
