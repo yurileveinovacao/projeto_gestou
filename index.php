@@ -1707,7 +1707,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="testimonial-quote">"</div>
         <p class="testimonial-text">O Gestou foi um excelente investimento em nossa empresa. Com ele, os colaboradores podem acessar seus holerites e espelhos de ponto em qualquer hora pelo celular — além de facilitar para eles, facilita para nós.</p>
         <div class="testimonial-author">
-          <div class="testimonial-avatar">K</div>
+          <img src="img/testimonials/plasroll-logo.png" alt="Plasroll" class="testimonial-avatar" style="object-fit: contain; background: #fff; padding: 4px;">
           <div class="testimonial-author-info">
             <h5>Kamila Batista</h5>
             <span>Líder de RH</span>
