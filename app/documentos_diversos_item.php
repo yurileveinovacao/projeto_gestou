@@ -281,7 +281,7 @@ require_once __DIR__.'/../config/database.php';
 
                                                                 <textarea id="motrep" name="motrep" class="form-control mb-3" style="max-height: 150px; height: 150px; resize: none;" minlength="10" maxlength="200" required></textarea>
 
-                                                                <button type="submit" id="btn-reprovar" name="btn-reprovar" disabled onclick="return confirm('Tem certeza que deseja reprovar esse recibo?'); return false;" class="btn btn-reprovar width-100">
+                                                                <button type="submit" id="btn-reprovar" name="btn-reprovar" onclick="return confirm('Tem certeza que deseja reprovar esse recibo?');" class="btn btn-reprovar width-100">
                                                                     <span class="icon mr-1">
                                                                         <i class="fas fa-times-circle"></i>
                                                                     </span>
@@ -397,12 +397,6 @@ require_once __DIR__.'/../config/database.php';
 
 <!-- HABILITAR BOTÃO REPROVAR APOS DIGITAR 10 CARACTERES -->
 <script>
-    $(document).ready(function() {
-        $('#motrep').on('input', function() {
-            $('#btn-reprovar').prop('disabled', $(this).val().length < 10);
-        });
-    });
-
     $(function() {
         $('[data-toggle="tooltip"]').tooltip()
     })
