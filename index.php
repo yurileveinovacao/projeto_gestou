@@ -1701,17 +1701,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="testimonials-grid">
       <!-- Card 1 -->
       <div class="testimonial-card" data-aos="fade-up" data-aos-delay="0">
-        <span class="testimonial-placeholder-badge">Em breve</span>
         <div class="testimonial-stars">
           <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
         </div>
         <div class="testimonial-quote">"</div>
-        <p class="testimonial-text">Depoimento real de cliente será inserido aqui em breve. Aguardamos o retorno da equipe para preencher com as experiências reais dos nossos clientes.</p>
+        <p class="testimonial-text">O Gestou foi um excelente investimento em nossa empresa. Com ele, os colaboradores podem acessar seus holerites e espelhos de ponto em qualquer hora pelo celular — além de facilitar para eles, facilita para nós.</p>
         <div class="testimonial-author">
-          <div class="testimonial-avatar">G</div>
+          <div class="testimonial-avatar">K</div>
           <div class="testimonial-author-info">
-            <h5>Gestora de DP</h5>
-            <span>Empresa parceira Gestou</span>
+            <h5>Kamila Batista</h5>
+            <span>Líder de RH</span>
           </div>
         </div>
       </div>
