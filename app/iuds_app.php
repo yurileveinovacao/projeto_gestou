@@ -659,9 +659,10 @@ function update_situac_visualizar(
 function consulta_cpf($cpf)
 {
     global $pdo;
-    $query = 'SELECT * from public."VW_APP_GACESSO" WHERE cpf = :cpf and situac = 1';
+    // LIMIT 1: evita envio múltiplo de e-mail quando há contas duplicadas com o mesmo CPF (situac=1 já filtra inativos)
+    $query = 'SELECT * FROM public."VW_APP_GACESSO" WHERE cpf = :cpf AND situac = 1 ORDER BY id_usu DESC LIMIT 1';
     $statement = $pdo->prepare($query);
-    $statement->bindParam(':cpf', $cpf, PDO::PARAM_INT);
+    $statement->bindParam(':cpf', $cpf, PDO::PARAM_STR);
     $statement->execute();
     if ($statement->rowCount() > 0) {
         $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
