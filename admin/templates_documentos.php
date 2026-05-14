@@ -262,6 +262,10 @@ require_once "util.php";
         e.preventDefault();
         $('#modal-preview').modal('hide');
     });
+    $(document).on('click', '#modal-enviar .close, #modal-enviar .modal-footer .btn-secondary', function(e) {
+        e.preventDefault();
+        $('#modal-enviar').modal('hide');
+    });
 
     // EDITAR — envia id_tpl pra controller e abre a tela de edição
     $(document).on('click', '.btn-editar', function() {
