@@ -3,7 +3,7 @@
 Documento vivo. Lista o que ficou em aberto após o cutover (2026-04-24) e o que está esperando
 sessão dedicada / terceiros. Itens concluídos saem daqui — histórico fica no `progress.txt`.
 
-Última atualização: 2026-05-11.
+Última atualização: 2026-05-19.
 
 ---
 
@@ -70,10 +70,29 @@ Tracks B (PWA) e C (build TWA) já concluídos.
 
 | Item | Situação |
 |---|---|
-| **RPA** — Recibo de Pagamento Autônomo | Documentos recebidos da Jéssica — aguarda sessão de detalhamento |
+| **FEA-010 — Líder RH** + **FEA-009 — Módulo RPA** | Escopo fechado em 2026-05-19 com Yuri/Jéssica. Ver [`docs/proposta-lider-e-rpa.md`](proposta-lider-e-rpa.md) e [`prd.json`](../prd.json). Próximo passo: implementar FEA-010 → FEA-009 MVP |
 | **IA 1 — Compliance** (Ponto vs. Convenção + Relatórios vs. Holerite) | Documentos recebidos — aguarda sessão dedicada |
 | **IA 2 — Suporte Bia** (landing + plataforma) | Aguarda sessão dedicada |
 | **Recrutamento e Seleção** | Baixa prioridade — próxima fase |
+
+---
+
+## Débito técnico
+
+### 1. Centralizar a lista de "menus padrão" de novos admins
+
+**Problema:** O array de 26 IDs de menu que define o conjunto de telas liberadas por padrão para qualquer admin recém-criado está **hardcoded em 4 lugares**:
+
+- `master/adicionar_permissao.php:33` (sincronização de permissões faltantes)
+- `master/alterar_usuario.php:1082` (vinculação de empresa nova ao usuário)
+- `master/controller/adicionar_novo_usuario_post.php:111` (criação direta de novo usuário)
+- `master/iuds_pdo.php:5723` (função `updateGESMPR_menus` — INSERT em batch)
+
+Toda FEA nova que cria uma tela precisa lembrar de adicionar o `id_mnu` nos 4 pontos. Já houve esquecimento na FEA-008 (corrigido pelo commit `311c2a7`, adicionou id_mnu=58).
+
+**Ação proposta:** Centralizar em uma única constante PHP (ex.: `MENUS_PADRAO_NOVOS_ADMINS` em `config/permissions.php`) OU em uma tabela (`GESMNU_PADRAO` com flag `is_default`). A FEA-010 vai usar essa lista — bom momento pra fazer o refactor antes, mas não bloqueia a feature.
+
+**Prioridade:** Média — fazer junto com FEA-010 (ou logo depois). Risco baixo: pode ser feito como migração via constante sem mudar comportamento.
 
 ---
 

@@ -251,6 +251,57 @@
       "priority": 19,
       "passes": true,
       "notes": "CONCLUÍDA. Migration aplicada em 2026-04-29 no Cloud SQL — todas as 45 empresas existentes ficam com 45/90 (defaults). DAL refatorado, form de dados cadastrais com seção nova, dashboard/cron/popup/modal todos dinâmicos. Suporta fase única quando dias_exp_1 == dias_exp_2 (caso 90 direto sem prorrogação). Validação no controller: 1 <= dias_exp_1 <= dias_exp_2 <= 90. Commit: 7bae98b feat(FEA-002/003): dias de experiência personalizáveis por empresa."
+    },
+    {
+      "id": "FEA-010",
+      "title": "Líder RH — papel com autonomia de gestão de admins",
+      "description": "Criar o papel de Líder RH (GESUSA.gestor=1) que pode gerenciar admins da própria empresa direto no /admin/, sem precisar do módulo master. Cada empresa tem por padrão 2 Líderes (configurável pelo master). Líder cadastra/edita/desativa admins, com a restrição de manter pelo menos 1 Líder ativo. Master deixa de ser ferramenta do cliente — vira uso interno Leve. Auditoria completa: cada usuário guarda quem criou, alterou e desativou. Estrutura pronta para limitar admins ativos por empresa no futuro (precificação por tier).",
+      "acceptanceCriteria": [
+        "Migration scripts/migrations/add_lider_rh_gesusa.sql idempotente: ALTER TABLE GESUSA ADD COLUMN IF NOT EXISTS id_usa_inc INTEGER NULL, ADD COLUMN IF NOT EXISTS id_usa_desativado INTEGER NULL, ADD COLUMN IF NOT EXISTS data_desativacao TIMESTAMP NULL. GESUSA.gestor (já existe) passa a marcar Líder RH",
+        "Migration scripts/migrations/add_limites_admins_gesemp.sql idempotente: ALTER TABLE GESEMP ADD COLUMN IF NOT EXISTS limite_lideres INT NOT NULL DEFAULT 2, ADD COLUMN IF NOT EXISTS limite_admins_ativos INT NULL (NULL = sem teto)",
+        "Função DAL nova em admin/iuds_pdo.php: selectGESUSA_lideres_ativos($id_emp) — retorna COUNT(*) de admins ativos com gestor=1 na empresa",
+        "Função DAL nova: selectGESEMP_limites($id_emp) — retorna array com limite_lideres e limite_admins_ativos",
+        "admin/cadastro_usuario.php: passa a ser acessível também por Líder RH (gestor=1), não só por master. Restrito a usuários com gestor=1 OR tipo master. Checkbox 'Líder RH' visível, com contador 'X de Y Líderes ativos' ao lado",
+        "admin/cadastro_usuario.php: ao salvar, grava GESUSA.id_usa_inc = $_SESSION['id_usa']. Se marcar gestor=1, valida selectGESUSA_lideres_ativos < limite_lideres da empresa — bloqueia com mensagem se atingiu",
+        "Permissões do admin recém-criado: chama updateGESMPR_menus() (já existente em master/iuds_pdo.php) — herda a lista padrão atual de 26 menus. Sem escolha tela a tela na criação pelo Líder",
+        "admin/alterar_usuario.php: ao alterar, grava id_usa_atu = $_SESSION['id_usa'] (campo já existe). Validação igual ao cadastro se promover/despromover Líder",
+        "Desativação de Líder RH: valida selectGESUSA_lideres_ativos > 1 antes de permitir — bloqueia com mensagem 'É necessário manter pelo menos 1 Líder RH ativo'. Grava id_usa_desativado e data_desativacao",
+        "admin/tabela_usuarios.php: nova coluna 'Criado por' (JOIN com GESUSA pelo id_usa_inc). Filtro 'Ativos | Inativos | Todos'. Badge 'Líder RH' nos usuários com gestor=1",
+        "master/alterar_empresa.php: nova seção 'Limites de usuários' com inputs limite_lideres (numeric, min=1, default 2) e limite_admins_ativos (numeric, opcional, vazio = NULL/sem teto)",
+        "Helper checkLiderRH($id_usa): função utilitária que retorna true se o usuário da sessão é Líder RH ativo. Usar em telas restritas",
+        "Backfill em produção: empresas existentes ficam com limite_lideres=2 e limite_admins_ativos=NULL graças aos DEFAULTs. Admins existentes não recebem gestor=1 automaticamente — atribuição manual via master/admin",
+        "Documento docs/proposta-lider-e-rpa.md reflete escopo final"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": "Pré-requisito da FEA-009 (RPA). Decisões fechadas com Yuri (2026-05-19). Escopo enxuto: sem setorização por departamento, sem perfis configuráveis — reutiliza lista hardcoded de 26 menus. Esforço estimado 3-5 dias. Débito técnico relacionado: centralização da lista de menus padrão (hoje duplicada em 4 lugares) — registrado em docs/pendencias.md."
+    },
+    {
+      "id": "FEA-009",
+      "title": "Módulo RPA — Recibo de Pagamento Autônomo (MVP)",
+      "description": "Implementar gestão digital completa do fluxo de RPA (Recibo de Pagamento Autônomo) para serviços pontuais de prestadores autônomos (art. 442-B CLT). Substitui o controle atual em Word + Excel + papel da cliente Jéssica (TRYP Hotel Ribeirão Preto). Inclui cadastro de autônomos (separado de GESUSU porque não são CLT), lançamento por serviço com aprovação do responsável no app, geração automática de 3 PDFs (autorização, contrato, recibo com INSS discriminado), fluxo de status (rascunho → autorizado → assinado → enviado financeiro → pago), aceite digital pelo autônomo (reutiliza mecanismo do holerite), alerta de risco CLT (>3 diárias/mês) e export Excel mensal pra contabilidade.",
+      "acceptanceCriteria": [
+        "Migration scripts/migrations/create_gesaut.sql: CREATE TABLE GESAUT (id_aut SERIAL PK, id_emp INT NOT NULL, nome VARCHAR(200), cpf VARCHAR(14), rg VARCHAR(20), data_nasc DATE, etnia VARCHAR(30), endereco TEXT, cep VARCHAR(10), bairro VARCHAR(100), cidade VARCHAR(100), uf CHAR(2), pix VARCHAR(100) NOT NULL, ativo SMALLINT DEFAULT 1, datinc TIMESTAMP DEFAULT NOW(), id_usa_inc INT, datatu TIMESTAMP, id_usa_atu INT). Index em (id_emp, ativo) e UNIQUE em (id_emp, cpf)",
+        "Migration scripts/migrations/create_gesrpa.sql: CREATE TABLE GESRPA (id_rpa SERIAL PK, id_emp INT NOT NULL, id_aut INT NOT NULL REFERENCES GESAUT, id_dep INT REFERENCES GESDEP, cargo VARCHAR(100), data_servico DATE, hora_ini TIME, hora_fim TIME, diarias INT DEFAULT 1, valor_liquido NUMERIC(10,2), perc_imposto NUMERIC(5,2) DEFAULT 12.36, valor_bruto NUMERIC(10,2), valor_inss NUMERIC(10,2), justificativa TEXT, status VARCHAR(20) DEFAULT 'rascunho' CHECK (status IN ('rascunho','autorizado','assinado','enviado_fin','pago','cancelado')), autorizado_por INT, data_autorizacao TIMESTAMP, assinado_por INT, ip_assinatura VARCHAR(45), data_assinatura TIMESTAMP, data_envio_fin DATE, data_pgto DATE, contrato_pdf_path VARCHAR(500), recibo_pdf_path VARCHAR(500), autorizacao_pdf_path VARCHAR(500), datinc, id_usa_inc, datatu, id_usa_atu)",
+        "Migration scripts/migrations/create_gesrpacfg.sql: CREATE TABLE GESRPACFG (id_emp INT PK, valor_liquido_padrao NUMERIC(10,2) DEFAULT 150.00, perc_imposto_padrao NUMERIC(5,2) DEFAULT 12.36, texto_autorizacao_html TEXT, texto_contrato_html TEXT, texto_recibo_html TEXT, limite_dias_alerta INT DEFAULT 3, limite_dias_bloqueio INT DEFAULT 4) com seed dos 3 textos baseados nos modelos da Jéssica",
+        "Migrations de menu: insert_menu_rpa.sql cria categoria 'Folha' (se ainda não existir) + itens 'Autônomos' e 'RPA' em GESMNU; insert default ON CONFLICT em GESMPR pra usuários existentes",
+        "Tela admin/autonomos.php — listagem (nome, CPF, PIX, ativo, total_diarias_mes) com busca e filtro ativo/inativo. Botão 'Novo autônomo'",
+        "Tela admin/autonomo_incluir.php / admin/autonomo_alterar.php — form com validação CPF e PIX obrigatórios",
+        "Tela admin/rpas.php — listagem por mês com filtro por status e setor. Colunas: data, autônomo, setor, justificativa, valor bruto, status (badge colorido), ações",
+        "Tela admin/rpa_incluir.php — selecionar autônomo (autocomplete), setor (select GESDEP), data, horário, valor (default GESRPACFG.valor_liquido_padrao), justificativa. Cálculo automático do bruto e INSS via JS",
+        "Validação de risco CLT: antes de salvar, contar diárias do autônomo no mês via selectGESRPA_diarias_mes($id_aut, $mes, $ano). Se >= limite_dias_alerta (3): exibe aviso amarelo. Se >= limite_dias_bloqueio (4): bloqueia salvamento com mensagem",
+        "Geração de PDFs: usa biblioteca já presente no projeto (verificar mPDF/Dompdf/PHPWord). 3 documentos: autorizacao_servico.pdf, contrato_442B.pdf, recibo_rpa.pdf. O recibo precisa discriminar 3 linhas: 'Valor bruto: R$ X', 'INSS retido (12,36%): R$ Y', 'Valor líquido pago: R$ Z'. Salvos via storageUpload em upload/rpa/{cnpj}/{ano-mes}/{id_rpa}_{tipo}.pdf",
+        "Fluxo de aprovação no app: notificação ao responsável (Líder RH ou admin com id_dep igual ao setor do RPA). Tela app/rpa_aprovar.php exibe dados do RPA + PDFs + botões Aprovar/Recusar. Aprovação muda status para 'autorizado', grava autorizado_por e data_autorizacao",
+        "Aceite digital pelo autônomo: tela app/rpa_aceite.php (autônomo entra com CPF + token enviado por SMS/email — método de autenticação a definir). Ao aceitar, grava assinado_por (id_aut), ip_assinatura ($_SERVER['REMOTE_ADDR']), data_assinatura. Status vira 'assinado'. Mesma estrutura usada hoje para holerite (id_usu_aceite, ip_aceite, data_aceite)",
+        "Botões de status no admin: 'Enviar para financeiro' (grava data_envio_fin, status='enviado_fin'), 'Marcar como pago' (grava data_pgto, status='pago'), 'Cancelar' (status='cancelado' com motivo)",
+        "Export Excel mensal: admin/rpa_export_excel.php gera xlsx no formato exato da planilha 'RPA.MARÇO.xlsx' da Jéssica (colunas: envio financeiro, data início, data fim, diárias, valor, valor c/ imp., HRS, nome, cargo, setor, data pgto, justificativa, assinado, endereço, CPF, RG, nascimento, etnia)",
+        "Tela admin/dados_cadastrais.php: nova aba 'RPA' com inputs para valor_liquido_padrao, perc_imposto_padrao e editor dos 3 templates (HTML). Salva em GESRPACFG via INSERT ON CONFLICT",
+        "Permissões por menu via GESMNU/GESMPR. Cards no dashboard de quem tem acesso: 'RPAs pendentes de aprovação' e 'RPAs aguardando pagamento'",
+        "Multi-tenant: todas as queries de GESAUT, GESRPA, GESRPACFG filtradas por id_emp da sessão"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": "Depende de FEA-010 (Líder RH). Decisões fechadas com Jéssica/Yuri (2026-05-19): gross-up 12,36% fixo (INSS), PIX obrigatório, aprovação no app desde MVP, aceite digital tipo holerite (sem ClickSign), alerta CLT amarelo no 3º dia + bloqueio no 4º, contabilidade cuida de DIRF/SEFIP por fora. Esforço estimado 2-3 semanas. Material de referência da TRYP Hotel: Autorização de RPA.pdf, Modelo Contrato RPA.docx, RPA.MARÇO.xlsx. Fase 2 (UX refinements + notif push + dashboard pagamentos) e Fase 3 (assinatura eletrônica jurídica ClickSign/D4Sign) ficam fora deste MVP — abrir FEA-009b e FEA-009c quando chegar a hora."
     }
   ]
 }
