@@ -11339,3 +11339,44 @@ function selectGESUSU_dados_template($id_usu)
     }
     return $resultset;
 }
+
+// FEA-010 — Líder RH: contagem de Líderes ativos na empresa
+function selectGESUSA_lideres_ativos($id_emp)
+{
+    global $pdo;
+    $query = 'SELECT COUNT(*) AS total FROM public."GESUSA" WHERE id_emp_acess =:id_emp AND gestor = 1 AND situac = 1';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    return (int) ($row['total'] ?? 0);
+}
+
+// FEA-010 — Líder RH: limites configurados pela empresa (default 2 / NULL via migration)
+function selectGESEMP_limites($id_emp)
+{
+    global $pdo;
+    $query = 'SELECT limite_lideres, limite_admins_ativos FROM public."GESEMP" WHERE id_emp =:id_emp';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    if (!$row) {
+        return ['limite_lideres' => 2, 'limite_admins_ativos' => null];
+    }
+    return [
+        'limite_lideres' => (int) $row['limite_lideres'],
+        'limite_admins_ativos' => $row['limite_admins_ativos'] !== null ? (int) $row['limite_admins_ativos'] : null,
+    ];
+}
+
+// FEA-010 — Líder RH: confere se o usuário da sessão é Líder RH ativo
+function checkLiderRH($id_usa)
+{
+    global $pdo;
+    $query = 'SELECT 1 FROM public."GESUSA" WHERE id_usa =:id_usa AND gestor = 1 AND situac = 1 LIMIT 1';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
+    $statement->execute();
+    return $statement->rowCount() > 0;
+}
