@@ -11340,11 +11340,15 @@ function selectGESUSU_dados_template($id_usu)
     return $resultset;
 }
 
-// FEA-010 — Líder RH: contagem de Líderes ativos na empresa
+// FEA-010 — Líder RH: contagem de Líderes ativos na empresa.
+// Fonte da verdade é GESGES.gestor (por empresa), não GESUSA.gestor (zumbi).
 function selectGESUSA_lideres_ativos($id_emp)
 {
     global $pdo;
-    $query = 'SELECT COUNT(*) AS total FROM public."GESUSA" WHERE id_emp_acess =:id_emp AND gestor = 1 AND situac = 1';
+    $query = 'SELECT COUNT(DISTINCT g.id_usa) AS total
+              FROM public."GESGES" g
+              INNER JOIN public."GESUSA" u ON u.id_usa = g.id_usa
+              WHERE g.id_emp =:id_emp AND g.gestor = 1 AND u.situac = 1';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
     $statement->execute();
@@ -11370,13 +11374,19 @@ function selectGESEMP_limites($id_emp)
     ];
 }
 
-// FEA-010 — Líder RH: confere se o usuário da sessão é Líder RH ativo
-function checkLiderRH($id_usa)
+// FEA-010 — Líder RH: confere se o usuário é Líder na empresa informada (GESGES.gestor=1).
+// Usar com o id_emp do contexto da sessão (id_emp_default).
+function checkLiderRH($id_usa, $id_emp)
 {
     global $pdo;
-    $query = 'SELECT 1 FROM public."GESUSA" WHERE id_usa =:id_usa AND gestor = 1 AND situac = 1 LIMIT 1';
+    $query = 'SELECT 1
+              FROM public."GESGES" g
+              INNER JOIN public."GESUSA" u ON u.id_usa = g.id_usa
+              WHERE g.id_usa =:id_usa AND g.id_emp =:id_emp AND g.gestor = 1 AND u.situac = 1
+              LIMIT 1';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
     $statement->execute();
     return $statement->rowCount() > 0;
 }
