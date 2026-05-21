@@ -544,9 +544,9 @@ $pode_marcar_lider = $alvo_is_lider || ($lideres_ativos < $limite_lideres);
                                                                                onclick="return confirm('<?php echo $eh_lider_emp ? 'Remover papel de Líder RH desta empresa?' : 'Promover este admin a Líder RH desta empresa?'; ?>');"
                                                                                title="<?php echo $eh_lider_emp ? 'Líder RH ativo — clique para remover' : 'Clique para promover a Líder RH'; ?>">
                                                                                 <?php if ($eh_lider_emp) { ?>
-                                                                                    <i class='bx bxs-toggle-right bx-md text-success'></i>
+                                                                                    <i class="fas fa-toggle-on fa-2x text-success"></i>
                                                                                 <?php } else { ?>
-                                                                                    <i class='bx bxs-toggle-left bx-md text-secondary'></i>
+                                                                                    <i class="fas fa-toggle-off fa-2x text-secondary"></i>
                                                                                 <?php } ?>
                                                                             </a>
                                                                         </th>
