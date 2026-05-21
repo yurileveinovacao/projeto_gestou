@@ -366,6 +366,16 @@ if (isset($_POST["btn_adicionar"])) {
                     echo json_encode(['status' => 'erro', 'mensagem' => 'Limite de admins ativos deve ser ao menos 1 ou ficar em branco.']);
                     exit;
                 }
+                if ($limite_admins_ativos !== null) {
+                    $admins_atuais = selectGESUSA_admins_ativos($id_emp);
+                    if ($limite_admins_ativos < $admins_atuais) {
+                        echo json_encode([
+                            'status' => 'erro',
+                            'mensagem' => 'Limite de admins não pode ser menor que o número atual de admins ativos (' . $admins_atuais . '). Desative admins antes de reduzir o limite.'
+                        ]);
+                        exit;
+                    }
+                }
 
                 if ($desativa_insert == 0) {
 

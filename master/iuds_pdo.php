@@ -6623,6 +6623,23 @@ function upsertGESMPR_lider_menus($id_usa, $id_emp, $is_lider, $datatu)
     $statement->execute();
 }
 
+// FEA-010 — contagem de admins ATIVOS da empresa, excluindo internos (id_tus=1).
+// Internos são contas da equipe Leve para suporte e não devem entrar no limite
+// configurado por limite_admins_ativos.
+function selectGESUSA_admins_ativos($id_emp)
+{
+    global $pdo;
+    $query = 'SELECT COUNT(DISTINCT v.id_usa) AS total
+              FROM public."VW_ADMIN_EMPACESS" v
+              INNER JOIN public."GESUSA" u ON u.id_usa = v.id_usa
+              WHERE v.id_emp =:id_emp AND u.situac = 1 AND (u.id_tus IS NULL OR u.id_tus <> 1)';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    return (int) ($row['total'] ?? 0);
+}
+
 // FEA-010 — Líder RH: contagem de Líderes ativos na empresa (GESGES.gestor=1 + GESUSA.situac=1).
 function selectGESUSA_lideres_ativos($id_emp)
 {

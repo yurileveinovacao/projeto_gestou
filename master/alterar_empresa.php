@@ -206,6 +206,7 @@ $id_emp = $_SESSION["tabela_empresas"]["id_emp_editar"];
                             $limite_lideres_val = $limites_emp['limite_lideres'];
                             $limite_admins_val = $limites_emp['limite_admins_ativos'];
                             $lideres_ativos_emp = selectGESUSA_lideres_ativos($id_emp);
+                            $admins_ativos_emp = selectGESUSA_admins_ativos($id_emp);
 
                             ?>
 
@@ -825,7 +826,9 @@ $id_emp = $_SESSION["tabela_empresas"]["id_emp_editar"];
                                                            value="<?php echo $limite_admins_val !== null ? $limite_admins_val : ''; ?>"
                                                            placeholder="Sem teto">
                                                     <small class="form-text text-muted">
-                                                        Deixe em branco para "sem teto" (default). Preparado para precificação por tier futura.
+                                                        Atualmente: <strong><?php echo $admins_ativos_emp; ?></strong> admin(s) ativo(s) nesta empresa
+                                                        (sem contar admins internos da Leve).
+                                                        Deixe em branco para "sem teto" (default).
                                                     </small>
                                                 </div>
                                             </div>
