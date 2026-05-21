@@ -430,7 +430,13 @@ $pode_marcar_lider = $alvo_is_lider || ($lideres_ativos < $limite_lideres);
                                                             </thead>
 
                                                             <tbody class="texto-table-body" style="font-size: 0.8rem;">
-                                                                <?php foreach (selectGESEMP_emp_disponiveis($id_usa_alterar) as $selectGESEMP1) {
+                                                                <?php
+                                                                // FEA-010: Líder RH só vê empresas que ele mesmo acessa.
+                                                                // Admin interno (id_tus=1) continua vendo todas (master-like).
+                                                                $empresas_disponiveis = $is_admin_interno
+                                                                    ? selectGESEMP_emp_disponiveis($id_usa_alterar)
+                                                                    : selectGESEMP_emp_disponiveis_lider($id_usa_alterar, $id_usa_default);
+                                                                foreach ($empresas_disponiveis as $selectGESEMP1) {
 
                                                                     $id_emp_tab = $selectGESEMP1['id_emp'];
                                                                     $nome_tab = $selectGESEMP1['nomefantasia'];
@@ -472,7 +478,11 @@ $pode_marcar_lider = $alvo_is_lider || ($lideres_ativos < $limite_lideres);
                                                             </thead>
 
                                                             <tbody class="texto-table-body" style="font-size: 0.8rem;">
-                                                                <?php foreach (selectGESEMP_emp_selecionadas($id_usa_alterar) as $selectGESEMP2) {
+                                                                <?php
+                                                                $empresas_selecionadas = $is_admin_interno
+                                                                    ? selectGESEMP_emp_selecionadas($id_usa_alterar)
+                                                                    : selectGESEMP_emp_selecionadas_lider($id_usa_alterar, $id_usa_default);
+                                                                foreach ($empresas_selecionadas as $selectGESEMP2) {
 
                                                                     $id_emp_tab = $selectGESEMP2['id_emp'];
                                                                     $nome_tab = $selectGESEMP2['nomefantasia'];
@@ -966,6 +976,16 @@ if (isset($_REQUEST["btn-inc"])) {
 
         preg_match('/\D/', $id_emp, $match);
 
+        // FEA-010: Líder RH só pode vincular a empresas que ele mesmo acessa.
+        if (!$is_admin_interno && !empty($id_emp) && empty($match)
+            && !adminAcessaEmpresa($id_usa_default, (int) $id_emp)) {
+            echo "<script language=javascript>
+                Swal.fire({icon: 'error', title: 'Você não tem acesso a essa empresa.'})
+                  .then((r) => { if (r.isConfirmed) location.href='" . $link . "'; });
+            </script>";
+            exit;
+        }
+
         if (empty($match) && !empty($id_emp)) {
 
             insertGESVIN_usuario($id_emp, $id_usa);
@@ -1008,7 +1028,11 @@ if (isset($_REQUEST["btn-inc-all"])) {
 
         $link = 'alterar_usuario?al=' . $id_usa . '&tab=3';
 
-        foreach (selectGESEMP_emp_disponiveis($id_usa) as $linha) {
+        // FEA-010: Líder RH só pode adicionar empresas que ele mesmo acessa.
+        $emp_inc_all = $is_admin_interno
+            ? selectGESEMP_emp_disponiveis($id_usa)
+            : selectGESEMP_emp_disponiveis_lider($id_usa, $id_usa_default);
+        foreach ($emp_inc_all as $linha) {
 
             $id_emp = $linha['id_emp'];
 
@@ -1062,6 +1086,16 @@ if (isset($_REQUEST["btn-exc"])) {
         preg_match('/\D/', $id_emp, $match);
 
         $id_emp = preg_replace('/\D+/', '', $id_emp);
+
+        // FEA-010: Líder RH só pode remover vínculo de empresas que ele mesmo acessa.
+        if (!$is_admin_interno && !empty($id_emp)
+            && !adminAcessaEmpresa($id_usa_default, (int) $id_emp)) {
+            echo "<script language=javascript>
+                Swal.fire({icon: 'error', title: 'Você não tem acesso a essa empresa.'})
+                  .then((r) => { if (r.isConfirmed) location.href='" . $link . "'; });
+            </script>";
+            exit;
+        }
 
         if ($match != NULL) {
 
@@ -1123,7 +1157,11 @@ if (isset($_REQUEST["btn-exc-all"])) {
         // Define se existe só a empresa default para exclusão (se 1 - só empresa default, se 0 - maisn empresas)
         $exc_sucess = 1;
 
-        foreach (selectGESEMP_emp_selecionadas($id_usa) as $linha) {
+        // FEA-010: Líder RH só pode remover empresas que ele mesmo acessa.
+        $emp_exc_all = $is_admin_interno
+            ? selectGESEMP_emp_selecionadas($id_usa)
+            : selectGESEMP_emp_selecionadas_lider($id_usa, $id_usa_default);
+        foreach ($emp_exc_all as $linha) {
 
             $id_emp = $linha['id_emp'];
 

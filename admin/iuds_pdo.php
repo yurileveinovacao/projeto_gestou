@@ -8536,6 +8536,60 @@ function selectGESEMP_emp_selecionadas($id_usa)
     return $resultset;
 }
 
+// FEA-010 — checa se um admin tem vínculo com uma empresa específica via GESVIN.
+// Usado para validar handlers de mexer em vínculos por tenant.
+function adminAcessaEmpresa($id_usa, $id_emp)
+{
+    global $pdo;
+    $query = 'SELECT 1 FROM public."VW_ADMIN_EMPACESS" WHERE id_usa =:id_usa AND id_emp =:id_emp LIMIT 1';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    return $statement->rowCount() > 0;
+}
+
+// FEA-010 — variantes filtradas por tenant: mostram apenas empresas que o
+// Líder RH logado também acessa. Evita vazar nome de empresas-cliente de
+// terceiros pra Líderes de empresa.
+// $id_usa_alvo = admin sendo editado; $id_usa_lider = quem está editando.
+function selectGESEMP_emp_selecionadas_lider($id_usa_alvo, $id_usa_lider)
+{
+    global $pdo;
+    $query =
+        'SELECT a.id_emp, a.NOMEFANTASIA, a.CNPJ,
+                replace(coalesce(b.nomefantasia, \'-\'), \'- MATRIZ\', \'\') AS grupo
+         FROM public."VW_ADMIN_EMPACESS" AS a
+         LEFT JOIN public."GESEMP" AS b ON a.id_emp_grupo = b.id_emp
+         WHERE a.id_usa = :id_usa_alvo
+           AND a.id_emp IN (SELECT z.id_emp FROM public."VW_ADMIN_EMPACESS" z WHERE z.id_usa = :id_usa_lider)
+         ORDER BY a.NOMEFANTASIA ASC';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_usa_alvo', $id_usa_alvo, PDO::PARAM_INT);
+    $statement->bindParam(':id_usa_lider', $id_usa_lider, PDO::PARAM_INT);
+    $statement->execute();
+    return $statement->rowCount() > 0 ? $statement->fetchAll(PDO::FETCH_ASSOC) : [0];
+}
+
+function selectGESEMP_emp_disponiveis_lider($id_usa_alvo, $id_usa_lider)
+{
+    global $pdo;
+    $query =
+        'SELECT a.id_emp, a.NOMEFANTASIA, a.CNPJ,
+                replace(coalesce(b.nomefantasia, \'-\'), \'- MATRIZ\', \'\') AS grupo
+         FROM public."VW_ADMIN_EMPACESS" AS a
+         LEFT JOIN public."GESEMP" AS b ON a.id_emp_grupo = b.id_emp
+         WHERE a.id_usa = :id_usa_lider
+           AND a.id_emp NOT IN (SELECT z.id_emp FROM public."VW_ADMIN_EMPACESS" z WHERE z.id_usa = :id_usa_alvo)
+         GROUP BY a.id_emp, a.NOMEFANTASIA, a.CNPJ, b.nomefantasia
+         ORDER BY a.NOMEFANTASIA ASC';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_usa_alvo', $id_usa_alvo, PDO::PARAM_INT);
+    $statement->bindParam(':id_usa_lider', $id_usa_lider, PDO::PARAM_INT);
+    $statement->execute();
+    return $statement->rowCount() > 0 ? $statement->fetchAll(PDO::FETCH_ASSOC) : [0];
+}
+
 // tabela GESEMP_emp_disponiveis select - revisado em 07/03/2023 09:40
 function selectGESEMP_emp_disponiveis($id_usa)
 {
