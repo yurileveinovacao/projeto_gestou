@@ -54,7 +54,7 @@ $pode_marcar_lider = $alvo_is_lider || ($lideres_ativos < $limite_lideres);
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>GESTOU PORTAL - Alterar Usuário</title>
+    <title>GESTOU PORTAL - Alterar Usuário Admin</title>
 
     <!-- Custom fonts for this template-->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
@@ -145,7 +145,7 @@ $pode_marcar_lider = $alvo_is_lider || ($lideres_ativos < $limite_lideres);
                     <!-- DataTales Example -->
                     <div class="card shadow mb-4">
                         <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                            <h6 class="m-0 font-weight-bold text-primary">Alterar Usuário</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">Alterar Usuário Admin</h6>
                             <?php $cor_badge_l = $lideres_ativos > $limite_lideres ? 'badge-danger' : 'badge-info'; ?>
                             <span class="badge <?php echo $cor_badge_l; ?>" title="Líderes RH ativos / limite configurado pelo master">
                                 <i class="fas fa-user-shield"></i>

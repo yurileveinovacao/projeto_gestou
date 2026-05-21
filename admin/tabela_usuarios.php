@@ -39,7 +39,7 @@ $filtro_situac = isset($_GET['filtro']) && in_array($_GET['filtro'], ['ativos', 
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>GESTOU PORTAL - Início</title>
+    <title>GESTOU PORTAL - Usuários Admin</title>
 
     <!-- Custom fonts for this template-->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
@@ -91,7 +91,7 @@ $filtro_situac = isset($_GET['filtro']) && in_array($_GET['filtro'], ['ativos', 
                 <!-- DataTales Example -->
                 <div class="card shadow mb-4">
                     <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                        <h6 class="m-0 font-weight-bold text-primary">Tabela Usuários</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Usuários Admin</h6>
                         <?php if ($pode_gerenciar_admins) {
                             $cor_badge = $lideres_ativos > $limite_lideres ? 'badge-danger' : 'badge-info';
                         ?>
@@ -221,6 +221,8 @@ $filtro_situac = isset($_GET['filtro']) && in_array($_GET['filtro'], ['ativos', 
                         </form>
                     </div>
                 </div>
+            </div>
+            <!-- FIM container-fluid aberto em pagina_restrita.php -->
             </div>
 
         </div>
