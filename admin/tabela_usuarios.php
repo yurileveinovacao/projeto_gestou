@@ -155,11 +155,6 @@ $filtro_situac = isset($_GET['filtro']) && in_array($_GET['filtro'], ['ativos', 
                                                             <i class="fas fa-user-shield"></i> Líder RH
                                                         </span>
                                                     <?php } ?>
-                                                    <?php if ($is_visitante) { ?>
-                                                        <span class="badge badge-secondary ml-1" title="Admin de outra empresa com acesso a esta">
-                                                            <i class="fas fa-external-link-alt"></i> Visitante
-                                                        </span>
-                                                    <?php } ?>
                                                 </td>
                                                 <td><?php echo htmlspecialchars($linha['email']); ?></td>
                                                 <td style="text-align:center">
