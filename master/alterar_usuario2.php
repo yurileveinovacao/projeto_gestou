@@ -185,7 +185,7 @@ if (isset($_REQUEST['lider'], $_REQUEST['emp'])) {
                             <!-- FIM NAV MENUS -->
 
                             <!-- INÍCIO FORM -->
-                            <form id="form" class="needs-validation" novalidate>
+                            <form id="form" class="needs-validation" method="POST" novalidate>
 
                                 <!-- INICIO DIV CLASS COL-MD-12 -->
                                 <div class="col-md-12">
