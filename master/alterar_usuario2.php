@@ -11,6 +11,40 @@ require_once "util.php";
 
 $id_usa_alterar = $_SESSION['editar_id_usa'];
 
+// FEA-010 — handler do toggle de Líder RH por empresa (master)
+if (isset($_REQUEST['lider'], $_REQUEST['emp'])) {
+    $id_emp_lider = (int) $_REQUEST['emp'];
+    $on = $_REQUEST['lider'] === 'on';
+    $redirect = 'alterar_usuario2?al=' . (int) $id_usa_alterar;
+
+    if ($on) {
+        $limites_emp = selectGESEMP_limites($id_emp_lider);
+        $ativos = selectGESUSA_lideres_ativos($id_emp_lider);
+        if ($ativos >= $limites_emp['limite_lideres']) {
+            echo "<script>alert('Limite de " . (int) $limites_emp['limite_lideres'] . " Líderes RH ativos atingido nesta empresa.');
+                  location.href='" . $redirect . "';</script>";
+            exit;
+        }
+    } else {
+        $ativos = selectGESUSA_lideres_ativos($id_emp_lider);
+        if ($ativos <= 1 && checkLiderRH($id_usa_alterar, $id_emp_lider)) {
+            echo "<script>alert('É necessário manter pelo menos 1 Líder RH ativo nesta empresa.');
+                  location.href='" . $redirect . "';</script>";
+            exit;
+        }
+    }
+
+    if (selectGESGES($id_usa_alterar, $id_emp_lider) == 0) {
+        insertGESGES($id_usa_alterar, $id_emp_lider, $on ? 1 : 0);
+    } else {
+        updateGESGES($id_usa_alterar, $id_emp_lider, $on ? 1 : 0);
+    }
+    upsertGESMPR_lider_menus($id_usa_alterar, $id_emp_lider, $on ? 1 : 0, $datatu);
+
+    echo "<script>location.href='" . $redirect . "';</script>";
+    exit;
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -403,15 +437,16 @@ $id_usa_alterar = $_SESSION['editar_id_usa'];
                                                             </div>
 
                                                             <!-- TAB Empresas Selecionadas -->
-                                                            <div class="col-md-5" style="height: 450px; overflow: auto; scrollbar-width: thin; margin-bottom: 16px;">
+                                                            <div class="col-md-6" style="height: 450px; overflow: auto; scrollbar-width: thin; margin-bottom: 16px;">
                                                                 <div class="table" style="min-height: 100%; max-height: auto; overflow-x: auto; scrollbar-width: thin; border: 1px solid #e3e6f0; border-top: none; margin: 0;">
                                                                     <table class="sortable" width="100%" cellspacing="0">
 
                                                                         <thead style="text-align: center;">
                                                                             <tr class="list-head">
-                                                                                <th data-orderable="false" style="width: 45%; border-right: 1px solid #e3e6f0;">Nome</th>
-                                                                                <th data-orderable="false" style="width: 25%; border-right: 1px solid #e3e6f0;">CNPJ</th>
-                                                                                <th data-orderable="false" style="width: 30%">Grupo</th>
+                                                                                <th data-orderable="false" style="width: 38%; border-right: 1px solid #e3e6f0;">Nome</th>
+                                                                                <th data-orderable="false" style="width: 22%; border-right: 1px solid #e3e6f0;">CNPJ</th>
+                                                                                <th data-orderable="false" style="width: 25%; border-right: 1px solid #e3e6f0;">Grupo</th>
+                                                                                <th data-orderable="false" style="width: 15%">Líder RH</th>
                                                                             </tr>
                                                                         </thead>
 
@@ -423,12 +458,25 @@ $id_usa_alterar = $_SESSION['editar_id_usa'];
                                                                                 $cnpj_tab = $selectGESEMP2['cnpj'];
                                                                                 $grupo_tab = $selectGESEMP2['grupo'];
 
-                                                                                if (!empty($id_emp_tab)) { ?>
+                                                                                if (!empty($id_emp_tab)) {
+                                                                                    $eh_lider_emp = checkLiderRH($id_usa_alterar, $id_emp_tab);
+                                                                            ?>
 
                                                                                     <tr id="<?php echo 'selec-' . $id_emp_tab ?>" class="list-emp" name="list-emp-selec" style="border-bottom: 1px solid #e3e6f0;">
                                                                                         <th style="border-right: 1px solid #e3e6f0;"><?php echo '<b>' . $nome_tab . '</b>'; ?></th>
                                                                                         <th style="border-right: 1px solid #e3e6f0; text-align: center;"><?php echo $cnpj_tab; ?></th>
-                                                                                        <th><?php echo $grupo_tab; ?></th>
+                                                                                        <th style="border-right: 1px solid #e3e6f0;"><?php echo $grupo_tab; ?></th>
+                                                                                        <th style="text-align: center;">
+                                                                                            <a href="alterar_usuario2?lider=<?php echo $eh_lider_emp ? 'off' : 'on'; ?>&emp=<?php echo $id_emp_tab; ?>"
+                                                                                               onclick="return confirm('<?php echo $eh_lider_emp ? 'Remover papel de Líder RH desta empresa?' : 'Promover este admin a Líder RH desta empresa?'; ?>');"
+                                                                                               title="<?php echo $eh_lider_emp ? 'Líder RH ativo — clique para remover' : 'Clique para promover a Líder RH'; ?>">
+                                                                                                <?php if ($eh_lider_emp) { ?>
+                                                                                                    <i class='bx bxs-toggle-right bx-md text-success'></i>
+                                                                                                <?php } else { ?>
+                                                                                                    <i class='bx bxs-toggle-left bx-md text-secondary'></i>
+                                                                                                <?php } ?>
+                                                                                            </a>
+                                                                                        </th>
                                                                                     </tr>
 
                                                                             <?php }
