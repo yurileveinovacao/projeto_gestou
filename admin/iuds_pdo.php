@@ -11390,3 +11390,60 @@ function checkLiderRH($id_usa, $id_emp)
     $statement->execute();
     return $statement->rowCount() > 0;
 }
+
+// FEA-010 — Líder RH: listagem de admins da empresa com filtro de situação e "criado por".
+// $filtro_situac: 'ativos' (situac=1), 'inativos' (situac=0) ou 'todos'.
+function select_GESUSA_USUARIOS_lider($id_emp, $filtro_situac = 'ativos')
+{
+    global $pdo;
+    $where_situac = '';
+    if ($filtro_situac === 'ativos') {
+        $where_situac = ' AND v.situac = 1';
+    } elseif ($filtro_situac === 'inativos') {
+        $where_situac = ' AND v.situac = 0';
+    }
+    $query = 'SELECT v.id_usa, v.nome, v.email, v.id_tus, v.situac, v.gestor,
+                     (SELECT c.nome FROM public."GESUSA" c WHERE c.id_usa = u.id_usa_inc) AS criado_por,
+                     u.data_desativacao,
+                     (SELECT d.nome FROM public."GESUSA" d WHERE d.id_usa = u.id_usa_desativado) AS desativado_por
+              FROM public."VW_ADMIN_USUARIOS" v
+              INNER JOIN public."GESUSA" u ON u.id_usa = v.id_usa
+              WHERE v.id_emp =:id_emp' . $where_situac . '
+              ORDER BY v.situac DESC, v.nome';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    return $statement->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// FEA-010 — Líder RH: troca situac com auditoria de desativação.
+// Se $situac=0, grava id_usa_desativado e data_desativacao. Se $situac=1, limpa ambos.
+function updateGESUSA_situac_lider($situac, $id_usa, $datatu, $id_usa_atu)
+{
+    global $pdo;
+    if ((int) $situac === 0) {
+        $query = 'UPDATE public."GESUSA"
+                  SET situac =:situac, datatu =:datatu, id_usa_atu =:id_usa_atu,
+                      id_usa_desativado =:id_usa_desativado, data_desativacao =:data_desativacao
+                  WHERE id_usa =:id_usa';
+        $statement = $pdo->prepare($query);
+        $statement->bindParam(':situac', $situac, PDO::PARAM_INT);
+        $statement->bindParam(':datatu', $datatu, PDO::PARAM_STR);
+        $statement->bindParam(':id_usa_atu', $id_usa_atu, PDO::PARAM_INT);
+        $statement->bindParam(':id_usa_desativado', $id_usa_atu, PDO::PARAM_INT);
+        $statement->bindParam(':data_desativacao', $datatu, PDO::PARAM_STR);
+        $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
+        $statement->execute();
+    } else {
+        $query = 'UPDATE public."GESUSA"
+                  SET situac =:situac, datatu =:datatu, id_usa_atu =:id_usa_atu,
+                      id_usa_desativado = NULL, data_desativacao = NULL
+                  WHERE id_usa =:id_usa';
+        $statement = $pdo->prepare($query);
+        $statement->bindParam(':situac', $situac, PDO::PARAM_INT);
+        $statement->bindParam(':datatu', $datatu, PDO::PARAM_STR);
+        $statement->bindParam(':id_usa_atu', $id_usa_atu, PDO::PARAM_INT);
+        $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
+        $statement->execute();
+    }
+}
