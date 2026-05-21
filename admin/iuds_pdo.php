@@ -11419,9 +11419,10 @@ function select_GESUSA_USUARIOS_lider($id_emp, $filtro_situac = 'ativos')
     return $statement->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// FEA-010 — Líder RH: concede/revoga menus de gestão de admins (Permissão pai,
-// tabela_permissao, tabela_usuarios). Líder RH precisa para ver e gerenciar
-// admins da empresa; ao despromover, o acesso some.
+// FEA-010 — Líder RH: concede/revoga menus de gestão de admins. Por decisão de
+// escopo, o Líder gerencia usuários (id_mnu=36 tabela_usuarios) mas NÃO mexe
+// em permissões de tela (id_mnu=35 tabela_permissao) — esse ficou exclusivo
+// do master. O 34 é só o cabeçalho "Permissão" do menu lateral.
 // $is_lider = 1 libera (situac=1), 0 revoga (situac=0).
 function upsertGESMPR_lider_menus($id_usa, $id_emp, $is_lider, $datatu)
 {
@@ -11430,7 +11431,6 @@ function upsertGESMPR_lider_menus($id_usa, $id_emp, $is_lider, $datatu)
     $query = 'INSERT INTO public."GESMPR" (id_usa, id_emp, id_mnu, datatu, situac)
               VALUES
                   (:id_usa, :id_emp, 34, :datatu, :situac),
-                  (:id_usa, :id_emp, 35, :datatu, :situac),
                   (:id_usa, :id_emp, 36, :datatu, :situac)
               ON CONFLICT (id_usa, id_emp, id_mnu) DO UPDATE SET
                   situac = EXCLUDED.situac,
