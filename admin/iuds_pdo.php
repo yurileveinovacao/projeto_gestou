@@ -11419,6 +11419,30 @@ function select_GESUSA_USUARIOS_lider($id_emp, $filtro_situac = 'ativos')
     return $statement->fetchAll(PDO::FETCH_ASSOC);
 }
 
+// FEA-010 — Líder RH: concede/revoga menus de gestão de admins (Permissão pai,
+// tabela_permissao, tabela_usuarios). Líder RH precisa para ver e gerenciar
+// admins da empresa; ao despromover, o acesso some.
+// $is_lider = 1 libera (situac=1), 0 revoga (situac=0).
+function upsertGESMPR_lider_menus($id_usa, $id_emp, $is_lider, $datatu)
+{
+    global $pdo;
+    $situac = (int) $is_lider === 1 ? 1 : 0;
+    $query = 'INSERT INTO public."GESMPR" (id_usa, id_emp, id_mnu, datatu, situac)
+              VALUES
+                  (:id_usa, :id_emp, 34, :datatu, :situac),
+                  (:id_usa, :id_emp, 35, :datatu, :situac),
+                  (:id_usa, :id_emp, 36, :datatu, :situac)
+              ON CONFLICT (id_usa, id_emp, id_mnu) DO UPDATE SET
+                  situac = EXCLUDED.situac,
+                  datatu = EXCLUDED.datatu';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->bindParam(':datatu', $datatu, PDO::PARAM_STR);
+    $statement->bindParam(':situac', $situac, PDO::PARAM_INT);
+    $statement->execute();
+}
+
 // FEA-010 — Líder RH: aplica lista padrão de 26 menus para um admin recém-criado.
 // Réplica de master/iuds_pdo.php::updateGESMPR_menus — débito técnico de
 // centralização registrado em docs/pendencias.md (lista hoje em 4 lugares).

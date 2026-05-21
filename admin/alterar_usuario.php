@@ -1285,11 +1285,13 @@ if (isset($_REQUEST["btn-submit"])) {
         }
 
         // FEA-010: persistir flag Líder RH em GESGES (insert se não existir, senão update)
+        // + sincronizar permissões dos menus de gestão de admins (34/35/36)
         if (selectGESGES($id_usa, $id_emp_default) == 0) {
             insertGESGES($id_usa, $id_emp_default, $is_lider_novo);
         } else {
             updateGESGES($id_usa, $id_emp_default, $is_lider_novo);
         }
+        upsertGESMPR_lider_menus($id_usa, $id_emp_default, $is_lider_novo, $datatu);
 
         echo "<script language=javascript>
         alert('Dados alterados com Sucesso!');

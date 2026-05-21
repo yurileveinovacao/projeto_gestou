@@ -757,8 +757,10 @@ if (isset($_REQUEST["btn-submit"])) {
         }
 
         // FEA-010: vínculo GESGES com flag de Líder RH + permissões padrão (26 menus)
+        // + menus de gestão de admins (34/35/36) caso seja Líder RH
         insertGESGES($id_usa, $id_emp_default, $is_lider);
         updateGESMPR_menus($id_usa, $id_emp_default, $datatu);
+        upsertGESMPR_lider_menus($id_usa, $id_emp_default, $is_lider, $datatu);
 
         echo "<script language=javascript>
         alert('Dados inseridos com Sucesso!');
