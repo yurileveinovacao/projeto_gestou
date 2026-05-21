@@ -3737,14 +3737,14 @@ ORDER BY data desc
     return $resultset;
 }
 
-//Tabela GESDEP select - revisado em 13/03/2023 09:54
+// FEA-010: master pode listar TODOS os tipos ativos, inclusive ADMIN (id_tus=1).
+// O admin/iuds_pdo.php mantém sua própria selectGESTUS que filtra id_tus != 1.
 function selectGESTUS()
 {
     global $pdo;
     $query =
-        'SELECT * FROM public."GESTUS" WHERE id_tus != 1 AND situac = 1';
+        'SELECT * FROM public."GESTUS" WHERE situac = 1 ORDER BY id_tus';
     $statement = $pdo->prepare($query);
-    // $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
     $statement->execute();
     if ($statement->rowCount() > 0) {
         $resultset = $statement->fetchAll(PDO::FETCH_ASSOC);
