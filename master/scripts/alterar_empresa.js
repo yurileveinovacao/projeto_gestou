@@ -367,6 +367,10 @@ $(function () {
             tipo_i: $('#tipo_i').val(),
             validacao_gestor: $('#validacao_gestor').val(),
 
+            // FEA-010 — Líder RH
+            limite_lideres: $('#limite_lideres').val(),
+            limite_admins_ativos: $('#limite_admins_ativos').val(),
+
             btn_adicionar: 1
         };
 

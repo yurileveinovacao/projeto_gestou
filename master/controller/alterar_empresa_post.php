@@ -286,7 +286,17 @@ if (isset($_POST["btn_adicionar"])) {
             $tipo_i = $_POST["tipo_i"]; //REQUIRED
             $validacao_gestor = $_POST["validacao_gestor"];
 
-            $id_usa = $_SESSION['id_mas'];
+            // FEA-010 — Líder RH: limites configuráveis pela empresa
+            $limite_lideres = isset($_POST['limite_lideres']) ? (int) $_POST['limite_lideres'] : 2;
+            $raw_limite_admins = $_POST['limite_admins_ativos'] ?? '';
+            $limite_admins_ativos = ($raw_limite_admins === '' || $raw_limite_admins === null) ? null : (int) $raw_limite_admins;
+
+            // FEA-010 — bug pré-existente: GESEMP.id_usa_atu tem FK pra GESUSA, mas o controller
+            // gravava aqui $_SESSION['id_mas'] (id de GESMAS). Mapear via email; fallback id_usa=1.
+            $id_usa = selectGESUSA_id_usa_by_master($_SESSION['id_mas']);
+            if ($id_usa === null) {
+                $id_usa = 1;
+            }
 
             // Validação dos campos do formulário
             $nomeValid = validarValor('VALID', $nome, 3);
@@ -339,6 +349,24 @@ if (isset($_POST["btn_adicionar"])) {
                     $validacao_gestor = 0;
                 }
 
+                // FEA-010 — validações dos limites
+                $lideres_atuais = selectGESUSA_lideres_ativos($id_emp);
+                if ($limite_lideres < 1) {
+                    echo json_encode(['status' => 'erro', 'mensagem' => 'Limite de Líderes RH deve ser ao menos 1.']);
+                    exit;
+                }
+                if ($limite_lideres < $lideres_atuais) {
+                    echo json_encode([
+                        'status' => 'erro',
+                        'mensagem' => 'Limite de Líderes não pode ser menor que o número atual de Líderes ativos (' . $lideres_atuais . '). Desative Líderes antes de reduzir o limite.'
+                    ]);
+                    exit;
+                }
+                if ($limite_admins_ativos !== null && $limite_admins_ativos < 1) {
+                    echo json_encode(['status' => 'erro', 'mensagem' => 'Limite de admins ativos deve ser ao menos 1 ou ficar em branco.']);
+                    exit;
+                }
+
                 if ($desativa_insert == 0) {
 
                     // Executa os update
@@ -389,6 +417,9 @@ if (isset($_POST["btn_adicionar"])) {
                         $layout_vis = "VIS";
                         insertGESLAY($id_emp, $layout_vis, $layout_vis, $layout_vis);
                     }
+
+                    // FEA-010: persiste limites de usuários da empresa
+                    updateGESEMP_limites($id_emp, $limite_lideres, $limite_admins_ativos, $datatu, $id_usa);
                 }
 
                 // Define mensagem de sucesso

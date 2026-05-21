@@ -201,6 +201,12 @@ $id_emp = $_SESSION["tabela_empresas"]["id_emp_editar"];
                                 $descricao_layout = $info_banco['descricao_layout'];
                             }
 
+                            // FEA-010 — Líder RH: limites e contagem atual
+                            $limites_emp = selectGESEMP_limites($id_emp);
+                            $limite_lideres_val = $limites_emp['limite_lideres'];
+                            $limite_admins_val = $limites_emp['limite_admins_ativos'];
+                            $lideres_ativos_emp = selectGESUSA_lideres_ativos($id_emp);
+
                             ?>
 
                             <!-- INICIO NAV -->
@@ -210,6 +216,7 @@ $id_emp = $_SESSION["tabela_empresas"]["id_emp_editar"];
                                     <a class="nav-item nav-link" id="nav-endereco-tab" data-toggle="tab" href="#nav-endereco" role="tab" aria-controls="nav-endereco" aria-selected="false">Endereço</a>
                                     <a class="nav-item nav-link" id="nav-integracao-tab" data-toggle="tab" href="#nav-integracao" role="tab" aria-controls="nav-integracao" aria-selected="false">Integração</a>
                                     <a class="nav-item nav-link" id="nav-gestor-tab" data-toggle="tab" href="#nav-gestor" role="tab" aria-controls="nav-gestor" aria-selected="false">Gestor</a>
+                                    <a class="nav-item nav-link" id="nav-limites-tab" data-toggle="tab" href="#nav-limites" role="tab" aria-controls="nav-limites" aria-selected="false">Limites</a>
                                 </div>
                             </nav>
                             <!-- FIM INICIO NAV -->
@@ -781,6 +788,50 @@ $id_emp = $_SESSION["tabela_empresas"]["id_emp_editar"];
                                         </form>
                                     </div>
                                     <!-- FIM DIV GESTOR -->
+
+                                    <!-- INICIO DIV LIMITES (FEA-010) -->
+                                    <div class="tab-pane fade" id="nav-limites" role="tabpanel" aria-labelledby="nav-limites-tab">
+                                        <div class="col-md-12">
+                                            <div class="alert alert-info" role="alert">
+                                                <i class="fas fa-info-circle"></i>
+                                                Configuração dos limites de usuários por empresa. Estes valores controlam
+                                                quantos Líderes RH cada empresa pode ter e (futuramente) o teto total de
+                                                admins ativos para fins de precificação por tier.
+                                            </div>
+
+                                            <div class="form-row">
+                                                <div class="form-group col-md-6">
+                                                    <label for="limite_lideres">Limite de Líderes RH ativos</label>
+                                                    <input type="number"
+                                                           class="form-control"
+                                                           id="limite_lideres"
+                                                           name="limite_lideres"
+                                                           min="1"
+                                                           value="<?php echo $limite_lideres_val; ?>"
+                                                           required>
+                                                    <small class="form-text text-muted">
+                                                        Atualmente: <strong><?php echo $lideres_ativos_emp; ?></strong> Líder(es) RH ativo(s) nesta empresa.
+                                                        O limite não pode ser menor que o número atual de Líderes ativos.
+                                                    </small>
+                                                </div>
+
+                                                <div class="form-group col-md-6">
+                                                    <label for="limite_admins_ativos">Limite de admins ativos (opcional)</label>
+                                                    <input type="number"
+                                                           class="form-control"
+                                                           id="limite_admins_ativos"
+                                                           name="limite_admins_ativos"
+                                                           min="1"
+                                                           value="<?php echo $limite_admins_val !== null ? $limite_admins_val : ''; ?>"
+                                                           placeholder="Sem teto">
+                                                    <small class="form-text text-muted">
+                                                        Deixe em branco para "sem teto" (default). Preparado para precificação por tier futura.
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- FIM DIV LIMITES -->
 
                                     <!-- BOTÃO FORM -->
                                     <div class="textalign-right">

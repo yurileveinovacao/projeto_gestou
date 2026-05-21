@@ -458,16 +458,27 @@ function updateGESEMP_CAMPOS(
     $statement->bindParam(':layout_ponto', $layout_ponto, PDO::PARAM_STR);
     $statement->bindParam(':layout_irrf', $layout_irrf, PDO::PARAM_STR);
     $statement->bindParam(':descricao_layout', $descricao_layout, PDO::PARAM_STR);
-    $statement->bindParam(':id_per_imp', $id_per_imp, PDO::PARAM_INT);
-    $statement->bindParam(':id_per_ace', $id_per_ace, PDO::PARAM_INT);
-    $statement->bindParam(':id_usa_rh', $id_usa_rh, PDO::PARAM_INT);
-    $statement->bindParam(':id_usa_ouv', $id_usa_ouv, PDO::PARAM_INT);
-    $statement->bindParam(':id_emp_grupo', $id_emp_grupo, PDO::PARAM_INT);
+    // FEA-010 — INTs opcionais: bindValue com PARAM_NULL quando vazio (bug pré-existente
+    // que emperrava SQL "$N = ''" — colunas são nullable no schema, basta passar NULL).
+    foreach ([
+        ':id_per_imp'   => $id_per_imp,
+        ':id_per_ace'   => $id_per_ace,
+        ':id_usa_rh'    => $id_usa_rh,
+        ':id_usa_ouv'   => $id_usa_ouv,
+        ':id_emp_grupo' => $id_emp_grupo,
+    ] as $param => $valor) {
+        if ($valor === null || $valor === '') {
+            $statement->bindValue($param, null, PDO::PARAM_NULL);
+        } else {
+            $statement->bindValue($param, (int) $valor, PDO::PARAM_INT);
+        }
+    }
     $statement->bindParam(':tipo_h', $tipo_h, PDO::PARAM_STR);
     $statement->bindParam(':tipo_p', $tipo_p, PDO::PARAM_STR);
     $statement->bindParam(':tipo_i', $tipo_i, PDO::PARAM_STR);
     $statement->bindParam(':validacao_gestor', $validacao_gestor, PDO::PARAM_INT);
-    $statement->bindParam(':datatu', $datatu, PDO::PARAM_INT);
+    // datatu é timestamp (string) — bug pré-existente bindava como INT
+    $statement->bindParam(':datatu', $datatu, PDO::PARAM_STR);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
     $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
     $statement->execute();
@@ -6536,4 +6547,80 @@ function selectGESEMP_VERIFICARAIZCNPJ($raiz_cnpj)
     }
 
     return $resultset;
+}
+
+// FEA-010 — Líder RH: mapeia um master (GESMAS) para o admin (GESUSA) de
+// mesmo email. Necessário porque GESEMP.id_usa_atu tem FK para GESUSA, mas
+// o controller histórico gravava $_SESSION['id_mas'] (id de GESMAS) lá,
+// violando a constraint quando não havia coincidência numérica.
+function selectGESUSA_id_usa_by_master($id_mas)
+{
+    global $pdo;
+    $query = 'SELECT u.id_usa
+              FROM public."GESMAS" m
+              INNER JOIN public."GESUSA" u ON u.email = m.email
+              WHERE m.id_mas =:id_mas
+              LIMIT 1';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_mas', $id_mas, PDO::PARAM_INT);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    return $row ? (int) $row['id_usa'] : null;
+}
+
+// FEA-010 — Líder RH: leitura dos limites configurados para a empresa.
+function selectGESEMP_limites($id_emp)
+{
+    global $pdo;
+    $query = 'SELECT limite_lideres, limite_admins_ativos FROM public."GESEMP" WHERE id_emp =:id_emp';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    if (!$row) {
+        return ['limite_lideres' => 2, 'limite_admins_ativos' => null];
+    }
+    return [
+        'limite_lideres' => (int) $row['limite_lideres'],
+        'limite_admins_ativos' => $row['limite_admins_ativos'] !== null ? (int) $row['limite_admins_ativos'] : null,
+    ];
+}
+
+// FEA-010 — Líder RH: contagem de Líderes ativos na empresa (GESGES.gestor=1 + GESUSA.situac=1).
+function selectGESUSA_lideres_ativos($id_emp)
+{
+    global $pdo;
+    $query = 'SELECT COUNT(DISTINCT g.id_usa) AS total
+              FROM public."GESGES" g
+              INNER JOIN public."GESUSA" u ON u.id_usa = g.id_usa
+              WHERE g.id_emp =:id_emp AND g.gestor = 1 AND u.situac = 1';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    return (int) ($row['total'] ?? 0);
+}
+
+// FEA-010 — Líder RH: persiste limites configurados pelo master.
+// $limite_admins_ativos pode ser NULL (sem teto).
+function updateGESEMP_limites($id_emp, $limite_lideres, $limite_admins_ativos, $datatu, $id_usa_atu)
+{
+    global $pdo;
+    $query = 'UPDATE public."GESEMP"
+              SET limite_lideres =:limite_lideres,
+                  limite_admins_ativos =:limite_admins_ativos,
+                  datatu =:datatu,
+                  id_usa_atu =:id_usa_atu
+              WHERE id_emp =:id_emp';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':limite_lideres', $limite_lideres, PDO::PARAM_INT);
+    if ($limite_admins_ativos === null) {
+        $statement->bindValue(':limite_admins_ativos', null, PDO::PARAM_NULL);
+    } else {
+        $statement->bindParam(':limite_admins_ativos', $limite_admins_ativos, PDO::PARAM_INT);
+    }
+    $statement->bindParam(':datatu', $datatu, PDO::PARAM_STR);
+    $statement->bindParam(':id_usa_atu', $id_usa_atu, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
 }
