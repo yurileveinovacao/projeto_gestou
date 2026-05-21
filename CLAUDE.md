@@ -120,3 +120,71 @@ Fase 7 (FEA-001 a FEA-007) entregue. Pendências abertas em [`docs/pendencias.md
 - [`prd.json`](prd.json) — PRD cumulativo: MIG-001~012 (concluídas) + FEA-001~007 (entregues)
 - [`docs/archive/`](docs/archive/) — documentação histórica da migração Kinghost → GCP
 - [`scripts/migrations/archive/`](scripts/migrations/archive/) — migrações de schema já aplicadas (FEA-004~007)
+- [`Brain/`](Brain/) — cofre Obsidian versionado para logs técnicos de sessão (ver protocolo abaixo)
+
+## Logs de sessão (Brain/)
+
+A pasta `Brain/` é um cofre Obsidian. Estrutura:
+- `Brain/02_Logs/YYYY-MM-DD.md` — log técnico diário da sessão. Múltiplas sessões no mesmo dia separam por `---` e incrementam `## Sessão N: <título>`. Sufixo `-slug` quando há vários logs no mesmo dia (ex: `2026-05-21-ocr-azure.md`).
+
+**Não substitui** `progress.txt`, `docs/pendencias.md` ou `prd.json` — esses continuam vivos. Os logs em `Brain/02_Logs/` capturam o **detalhe técnico** de cada sessão (causa raiz, comandos, decisões) que normalmente se perde após o commit.
+
+### Protocolo Proativo de Finalização de Sessão
+
+Ao detectar que uma tarefa (feature, fix, refactor, deploy) foi concluída e validada, você DEVE:
+
+1. **Propor encerramento**: "Tarefa concluída. Posso registrar a sessão em `Brain/02_Logs/YYYY-MM-DD.md` agora?"
+2. **Se autorizado**, gravar (Write tool) usando frontmatter YAML + estrutura:
+   ```markdown
+   ---
+   date: YYYY-MM-DD
+   projeto: Gestou
+   tipo: log-tecnico
+   tags: [<área>, <tipo>, <domínio>]
+   ---
+
+   # Log Técnico — YYYY-MM-DD
+
+   ## Sessão N: <título curto>
+
+   ### Problema / Contexto
+   <o que motivou a tarefa>
+
+   ### Diagnóstico (quando aplicável)
+   - **Causa raiz**: <análise>
+   - **Código afetado**: `caminho/arquivo.php:linha`
+
+   ### Ações Executadas
+   1. <passo 1>
+   2. <passo 2>
+
+   ### Arquivos Modificados
+   - `admin/file.php`
+   - `app/other.php`
+
+   ### Commits
+   - `<hash>` <mensagem>
+
+   ### Validação
+   - <testes, deploy, screenshots>
+
+   ### Pendências
+   - <itens em aberto; se for crítico, espelhar em `docs/pendencias.md`>
+   ```
+
+   Se já houver log do dia, **acrescente** uma nova `## Sessão N+1` ao fim em vez de sobrescrever.
+
+3. **Atualizar quando relevante**:
+   - `progress.txt` se a sessão fechou uma fase ou entrega macro
+   - `docs/pendencias.md` se restou item em aberto que precisa de outra sessão
+   - `prd.json` se uma FEA/MIG foi entregue
+
+4. **Higiene de contexto**: depois do log, recomende `/compact` se a conversa estiver longa.
+
+**Tags por área (use combinação)**: `php`, `postgres`, `apache`, `frontend`, `backend`, `gcp`, `cloud-run`, `cloud-sql`, `gcs`, `ocr`, `azure-vision`, `smtp`, `auth`, `multi-tenant`, `session`, `migration`, `schema`, `payment`, `infra`, `docs`, `fix`, `feature`, `refactor`, `prd`, `fea`, `mig`.
+
+**O que NÃO salvar**:
+- Sessões triviais (só leitura, perguntas rápidas sem entrega)
+- Comandos triviais (`ls`, `git status`, `cat`)
+- Tentativas falhadas intermediárias se o resultado final foi alcançado por outro caminho
+- Transcrição completa — capture o essencial
