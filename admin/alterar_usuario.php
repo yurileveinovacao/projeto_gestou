@@ -13,6 +13,33 @@ require_once "iuds_pdo.php";
 //ARQUIVO DE UTILITÁRIOS
 require_once "util.php";
 
+// FEA-010 — Líder RH: controle de acesso e contexto
+$id_tus_logado = 0;
+foreach (select_GESUSA_id_usa($id_usa_default) as $usuario) {
+    $id_tus_logado = (int) $usuario['id_tus'];
+}
+$is_admin_interno = ($id_tus_logado == 1);
+$is_lider_rh = checkLiderRH($id_usa_default, $id_emp_default);
+$pode_gerenciar_admins = ($is_admin_interno || $is_lider_rh);
+
+if (!$pode_gerenciar_admins) {
+    echo "<script language=javascript>
+        alert('Somente Líderes RH ou administradores internos podem alterar usuários.');
+        location.href = 'tabela_usuarios';
+    </script>";
+    exit;
+}
+
+$lideres_ativos = selectGESUSA_lideres_ativos($id_emp_default);
+$limites = selectGESEMP_limites($id_emp_default);
+$limite_lideres = $limites['limite_lideres'];
+
+// Status atual do usuário-alvo (preenchido após $_REQUEST['al'] ser tratado)
+$id_usa_alvo = isset($_REQUEST['al']) ? (int) $_REQUEST['al'] : (int) ($_SESSION['id_usa_alterar'] ?? 0);
+$alvo_is_lider = $id_usa_alvo ? checkLiderRH($id_usa_alvo, $id_emp_default) : false;
+// Pode marcar Líder se já era (mantendo) ou se ainda há vaga
+$pode_marcar_lider = $alvo_is_lider || ($lideres_ativos < $limite_lideres);
+
 ?>
 
 <!DOCTYPE html>
@@ -117,8 +144,13 @@ require_once "util.php";
 
                     <!-- DataTales Example -->
                     <div class="card shadow mb-4">
-                        <div class="card-header py-3">
+                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
                             <h6 class="m-0 font-weight-bold text-primary">Alterar Usuário</h6>
+                            <?php $cor_badge_l = $lideres_ativos > $limite_lideres ? 'badge-danger' : 'badge-info'; ?>
+                            <span class="badge <?php echo $cor_badge_l; ?>" title="Líderes RH ativos / limite configurado pelo master">
+                                <i class="fas fa-user-shield"></i>
+                                <?php echo $lideres_ativos; ?> de <?php echo $limite_lideres; ?> Líderes RH ativos
+                            </span>
                         </div>
                         <div class="card-body">
 
@@ -243,6 +275,35 @@ require_once "util.php";
                                                                 </div>
                                                         </div>
                                                     </div>
+
+                                                    <!-- FEA-010: checkbox Líder RH -->
+                                                    <?php if ($linha["id_tus"] != 1) { ?>
+                                                        <div class="form-row">
+                                                            <div class="col-md-12 mb-3">
+                                                                <div class="custom-control custom-checkbox">
+                                                                    <input type="checkbox" class="custom-control-input" id="is_lider" name="is_lider" value="1"
+                                                                        <?php echo $alvo_is_lider ? 'checked' : ''; ?>
+                                                                        <?php echo $pode_marcar_lider ? '' : 'disabled'; ?>>
+                                                                    <label class="custom-control-label" for="is_lider">
+                                                                        <strong>Líder RH</strong>
+                                                                        <span class="text-muted">— marcar para conceder gestão de admins desta empresa</span>
+                                                                    </label>
+                                                                    <?php if (!$pode_marcar_lider) { ?>
+                                                                        <small class="form-text text-danger">
+                                                                            Limite de <?php echo $limite_lideres; ?> Líderes RH ativos já atingido. Desative um Líder para promover outro.
+                                                                        </small>
+                                                                    <?php } else { ?>
+                                                                        <small class="form-text text-muted">
+                                                                            <?php echo $lideres_ativos; ?> de <?php echo $limite_lideres; ?> Líderes RH ativos
+                                                                            <?php if ($alvo_is_lider && $lideres_ativos <= 1) { ?>
+                                                                                — atenção: desmarcar deixará a empresa sem Líder ativo (bloqueado pelo sistema)
+                                                                            <?php } ?>
+                                                                        </small>
+                                                                    <?php } ?>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <?php } ?>
 
                                                     <!-- INÍCIO BOTÃO ENVIAR -->
                                                     <div class="form-group">
@@ -1122,6 +1183,31 @@ if (isset($_REQUEST["btn-submit"])) {
         $numero = $_POST["numero"];
         $cep = $_POST["cep"];
 
+        // FEA-010: checkbox Líder RH + validações
+        $id_usa_alvo_form = (int) $_SESSION["id_usa_alterar"];
+        $is_lider_novo = isset($_POST["is_lider"]) && $_POST["is_lider"] == '1' ? 1 : 0;
+        $is_lider_atual = checkLiderRH($id_usa_alvo_form, $id_emp_default) ? 1 : 0;
+
+        // Promoção: estava 0, vai pra 1 — checar limite
+        if ($is_lider_atual === 0 && $is_lider_novo === 1) {
+            if ($lideres_ativos >= $limite_lideres) {
+                echo "<script language=javascript>
+                    alert('Limite de " . $limite_lideres . " Líderes RH ativos atingido. Desative um Líder antes de promover outro.');
+                    location.href = 'alterar_usuario?al=" . $id_usa_alvo_form . "';
+                </script>";
+                exit;
+            }
+        }
+
+        // Despromoção: estava 1, vai pra 0 — checar manter ≥1 Líder ativo
+        if ($is_lider_atual === 1 && $is_lider_novo === 0 && $lideres_ativos <= 1) {
+            echo "<script language=javascript>
+                alert('É necessário manter pelo menos 1 Líder RH ativo na empresa. Promova outro admin a Líder antes de desmarcar este.');
+                location.href = 'alterar_usuario?al=" . $id_usa_alvo_form . "';
+            </script>";
+            exit;
+        }
+
         //CONVERTER TEXTO EM MAIUSCULO
         $nome = mb_strtoupper($nome, 'UTF-8');
         // $endereco = mb_strtoupper($endereco, 'UTF-8');
@@ -1193,20 +1279,22 @@ if (isset($_REQUEST["btn-submit"])) {
             // UPDATE COM O SELECT DO TIPO DE USUARIO ADMIN
 
             updateGESUSA_usuario_sem_id_tus($nome, $cpf, $email, $telefone, $endereco, $bairro, $complemento, $numero, $cep, $id_mun, $id_dep, $id_usa, $datatu, $id_usa_default);
-
-            echo "<script language=javascript>
-        alert('Dados alterados com Sucesso!');
-        location.href = 'tabela_usuarios';
-        </script>";
         } else {
 
-            updateGESUSA_usuario($nome, $cpf, $email, $telefone, $endereco, $bairro, $complemento, $numero, $cep, $id_tus, $id_mun, $id_dep, $id_usa, $datatu, $id_usa_atu);
+            updateGESUSA_usuario($nome, $cpf, $email, $telefone, $endereco, $bairro, $complemento, $numero, $cep, $id_tus, $id_mun, $id_dep, $id_usa, $datatu, $id_usa_default);
+        }
 
-            echo "<script language=javascript>
+        // FEA-010: persistir flag Líder RH em GESGES (insert se não existir, senão update)
+        if (selectGESGES($id_usa, $id_emp_default) == 0) {
+            insertGESGES($id_usa, $id_emp_default, $is_lider_novo);
+        } else {
+            updateGESGES($id_usa, $id_emp_default, $is_lider_novo);
+        }
+
+        echo "<script language=javascript>
         alert('Dados alterados com Sucesso!');
         location.href = 'tabela_usuarios';
         </script>";
-        }
     } catch (PDOException $erro) {
         echo $erro->getMessage();
     }
