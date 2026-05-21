@@ -6586,6 +6586,43 @@ function selectGESEMP_limites($id_emp)
     ];
 }
 
+// FEA-010 — confere se o usuário é Líder na empresa informada.
+function checkLiderRH($id_usa, $id_emp)
+{
+    global $pdo;
+    $query = 'SELECT 1
+              FROM public."GESGES" g
+              INNER JOIN public."GESUSA" u ON u.id_usa = g.id_usa
+              WHERE g.id_usa =:id_usa AND g.id_emp =:id_emp AND g.gestor = 1 AND u.situac = 1
+              LIMIT 1';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    return $statement->rowCount() > 0;
+}
+
+// FEA-010 — concede/revoga menus de gestão de admins (Permissão pai + tabela_usuarios).
+// Réplica de admin/iuds_pdo.php para uso no /master/.
+function upsertGESMPR_lider_menus($id_usa, $id_emp, $is_lider, $datatu)
+{
+    global $pdo;
+    $situac = (int) $is_lider === 1 ? 1 : 0;
+    $query = 'INSERT INTO public."GESMPR" (id_usa, id_emp, id_mnu, datatu, situac)
+              VALUES
+                  (:id_usa, :id_emp, 34, :datatu, :situac),
+                  (:id_usa, :id_emp, 36, :datatu, :situac)
+              ON CONFLICT (id_usa, id_emp, id_mnu) DO UPDATE SET
+                  situac = EXCLUDED.situac,
+                  datatu = EXCLUDED.datatu';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->bindParam(':datatu', $datatu, PDO::PARAM_STR);
+    $statement->bindParam(':situac', $situac, PDO::PARAM_INT);
+    $statement->execute();
+}
+
 // FEA-010 — Líder RH: contagem de Líderes ativos na empresa (GESGES.gestor=1 + GESUSA.situac=1).
 function selectGESUSA_lideres_ativos($id_emp)
 {
