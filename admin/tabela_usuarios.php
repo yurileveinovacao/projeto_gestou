@@ -198,16 +198,15 @@ $filtro_situac = isset($_GET['filtro']) && in_array($_GET['filtro'], ['ativos', 
 
                                                     <!-- EDITAR -->
                                                     <div class="div-acoes">
-                                                        <?php if ($pode_gerenciar_admins && !$is_visitante) { ?>
+                                                        <?php if ($pode_gerenciar_admins) { ?>
                                                             <a href="alterar_usuario?al=<?php echo $linha['id_usa']; ?>">
-                                                                <button type="button" class="btn btn-primary btn-icones" title="Editar">
+                                                                <button type="button" class="btn btn-primary btn-icones"
+                                                                        title="<?php echo $is_visitante ? 'Editar Líder RH (dados gerais são alterados na empresa principal)' : 'Editar'; ?>">
                                                                     <i class="fas fa-pencil-alt"></i>
                                                                 </button>
                                                             </a>
                                                         <?php } else { ?>
-                                                            <button type="button" class="btn btn-secondary btn-icones"
-                                                                    title="<?php echo $is_visitante ? 'Visitante: dados gerais são alterados na empresa principal' : 'Somente Líderes RH podem editar'; ?>"
-                                                                    disabled>
+                                                            <button type="button" class="btn btn-secondary btn-icones" title="Somente Líderes RH podem editar" disabled>
                                                                 <i class="fas fa-pencil-alt"></i>
                                                             </button>
                                                         <?php } ?>
