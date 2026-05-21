@@ -19,6 +19,8 @@ $pode_gerenciar_admins = ($is_admin_interno || $is_lider_rh);
 $lideres_ativos = selectGESUSA_lideres_ativos($id_emp_default);
 $limites = selectGESEMP_limites($id_emp_default);
 $limite_lideres = $limites['limite_lideres'];
+$limite_admins = $limites['limite_admins_ativos'];
+$admins_ativos = $limite_admins !== null ? selectGESUSA_admins_ativos($id_emp_default) : 0;
 
 $filtro_situac = isset($_GET['filtro']) && in_array($_GET['filtro'], ['ativos', 'inativos', 'todos'], true)
     ? $_GET['filtro']
@@ -95,10 +97,20 @@ $filtro_situac = isset($_GET['filtro']) && in_array($_GET['filtro'], ['ativos', 
                         <?php if ($pode_gerenciar_admins) {
                             $cor_badge = $lideres_ativos > $limite_lideres ? 'badge-danger' : 'badge-info';
                         ?>
-                            <span class="badge <?php echo $cor_badge; ?>" title="Líderes RH ativos / limite configurado pelo master">
-                                <i class="fas fa-user-shield"></i>
-                                <?php echo $lideres_ativos; ?> de <?php echo $limite_lideres; ?> Líderes RH ativos
-                            </span>
+                            <div>
+                                <span class="badge <?php echo $cor_badge; ?>" title="Líderes RH ativos / limite configurado pelo master">
+                                    <i class="fas fa-user-shield"></i>
+                                    <?php echo $lideres_ativos; ?> de <?php echo $limite_lideres; ?> Líderes RH ativos
+                                </span>
+                                <?php if ($limite_admins !== null) {
+                                    $cor_badge_a = $admins_ativos > $limite_admins ? 'badge-danger' : 'badge-info';
+                                ?>
+                                    <span class="badge <?php echo $cor_badge_a; ?> ml-1" title="Admins ativos / limite configurado pelo master (sem contar internos)">
+                                        <i class="fas fa-users"></i>
+                                        <?php echo $admins_ativos; ?> de <?php echo $limite_admins; ?> admins ativos
+                                    </span>
+                                <?php } ?>
+                            </div>
                         <?php } ?>
                     </div>
                     <div class="card-body">

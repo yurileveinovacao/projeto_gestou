@@ -75,6 +75,8 @@ if (isset($_REQUEST['lider'], $_REQUEST['emp'], $_SESSION['id_usa_alterar'])) {
 $lideres_ativos = selectGESUSA_lideres_ativos($id_emp_default);
 $limites = selectGESEMP_limites($id_emp_default);
 $limite_lideres = $limites['limite_lideres'];
+$limite_admins = $limites['limite_admins_ativos'];
+$admins_ativos = $limite_admins !== null ? selectGESUSA_admins_ativos($id_emp_default) : 0;
 
 // Status atual do usuário-alvo (preenchido após $_REQUEST['al'] ser tratado)
 $id_usa_alvo = isset($_REQUEST['al']) ? (int) $_REQUEST['al'] : (int) ($_SESSION['id_usa_alterar'] ?? 0);
@@ -189,11 +191,21 @@ $pode_marcar_lider = $alvo_is_lider || ($lideres_ativos < $limite_lideres);
                     <div class="card shadow mb-4">
                         <div class="card-header py-3 d-flex justify-content-between align-items-center">
                             <h6 class="m-0 font-weight-bold text-primary">Alterar Usuário Admin</h6>
-                            <?php $cor_badge_l = $lideres_ativos > $limite_lideres ? 'badge-danger' : 'badge-info'; ?>
-                            <span class="badge <?php echo $cor_badge_l; ?>" title="Líderes RH ativos / limite configurado pelo master">
-                                <i class="fas fa-user-shield"></i>
-                                <?php echo $lideres_ativos; ?> de <?php echo $limite_lideres; ?> Líderes RH ativos
-                            </span>
+                            <div>
+                                <?php $cor_badge_l = $lideres_ativos > $limite_lideres ? 'badge-danger' : 'badge-info'; ?>
+                                <span class="badge <?php echo $cor_badge_l; ?>" title="Líderes RH ativos / limite configurado pelo master">
+                                    <i class="fas fa-user-shield"></i>
+                                    <?php echo $lideres_ativos; ?> de <?php echo $limite_lideres; ?> Líderes RH ativos
+                                </span>
+                                <?php if ($limite_admins !== null) {
+                                    $cor_badge_a = $admins_ativos > $limite_admins ? 'badge-danger' : 'badge-info';
+                                ?>
+                                    <span class="badge <?php echo $cor_badge_a; ?> ml-1" title="Admins ativos / limite configurado pelo master (sem contar internos)">
+                                        <i class="fas fa-users"></i>
+                                        <?php echo $admins_ativos; ?> de <?php echo $limite_admins; ?> admins ativos
+                                    </span>
+                                <?php } ?>
+                            </div>
                         </div>
                         <div class="card-body">
 
