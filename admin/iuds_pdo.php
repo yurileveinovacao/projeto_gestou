@@ -11490,6 +11490,27 @@ function updateGESMPR_menus($id_usa, $id_emp, $datatu)
     $statement->execute();
 }
 
+// FEA-010 — Líder RH: desvincula um admin "visitante" desta empresa.
+// Remove o vínculo em GESVIN + zera GESGES + zera GESMPR para a empresa em questão.
+// Não toca em GESUSA.situac (admin continua existindo e logando na empresa principal).
+// Retorna o número de linhas removidas em GESVIN (1 = sucesso, 0 = não encontrado).
+function unlinkAdminFromEmpresa($id_usa, $id_emp)
+{
+    global $pdo;
+    // GESMPR daquela empresa (permissões)
+    $pdo->prepare('DELETE FROM public."GESMPR" WHERE id_usa =:id_usa AND id_emp =:id_emp')
+        ->execute([':id_usa' => $id_usa, ':id_emp' => $id_emp]);
+    // GESGES daquela empresa (flag de gestor/Líder)
+    $pdo->prepare('DELETE FROM public."GESGES" WHERE id_usa =:id_usa AND id_emp =:id_emp')
+        ->execute([':id_usa' => $id_usa, ':id_emp' => $id_emp]);
+    // GESVIN: vínculo empresa↔usuário (o que faz aparecer na lista)
+    $stmt = $pdo->prepare('DELETE FROM public."GESVIN"
+                           WHERE tabvin1 = \'GESEMP\' AND id_tab1 =:id_emp
+                             AND tabvin2 = \'GESUSA\' AND id_tab2 =:id_usa');
+    $stmt->execute([':id_usa' => $id_usa, ':id_emp' => $id_emp]);
+    return $stmt->rowCount();
+}
+
 // FEA-010 — Líder RH: troca situac com auditoria de desativação.
 // Se $situac=0, grava id_usa_desativado e data_desativacao. Se $situac=1, limpa ambos.
 function updateGESUSA_situac_lider($situac, $id_usa, $datatu, $id_usa_atu)

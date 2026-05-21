@@ -144,13 +144,20 @@ $filtro_situac = isset($_GET['filtro']) && in_array($_GET['filtro'], ['ativos', 
                                     </tfoot>
 
                                     <tbody class="texto-table-body">
-                                        <?php foreach (select_GESUSA_USUARIOS_lider($id_emp_default, $filtro_situac) as $linha) { ?>
+                                        <?php foreach (select_GESUSA_USUARIOS_lider($id_emp_default, $filtro_situac) as $linha) {
+                                            $is_visitante = ((int) $linha['id_emp_acess'] !== (int) $id_emp_default);
+                                        ?>
                                             <tr<?php echo $linha['situac'] == 0 ? ' class="text-muted"' : ''; ?>>
                                                 <td>
                                                     <span class="m-0 text-primary tamanho-text"><?php echo htmlspecialchars($linha['nome']); ?></span>
                                                     <?php if ($linha['gestor'] == 1) { ?>
                                                         <span class="badge badge-primary ml-1" title="Líder RH desta empresa">
                                                             <i class="fas fa-user-shield"></i> Líder RH
+                                                        </span>
+                                                    <?php } ?>
+                                                    <?php if ($is_visitante) { ?>
+                                                        <span class="badge badge-secondary ml-1" title="Admin de outra empresa com acesso a esta">
+                                                            <i class="fas fa-external-link-alt"></i> Visitante
                                                         </span>
                                                     <?php } ?>
                                                 </td>
@@ -168,9 +175,14 @@ $filtro_situac = isset($_GET['filtro']) && in_array($_GET['filtro'], ['ativos', 
                                                     <?php echo htmlspecialchars($linha['criado_por'] ?? '—'); ?>
                                                 </td>
                                                 <td class="content-xy-center">
-                                                    <!-- SITUACAO -->
+                                                    <!-- SITUACAO / DESVINCULAR -->
                                                     <div class="div-acoes">
-                                                        <?php if ($pode_gerenciar_admins) { ?>
+                                                        <?php if ($pode_gerenciar_admins && $is_visitante) { ?>
+                                                            <a href="tabela_usuarios.php?desv=<?php echo $linha['id_usa']; ?>&filtro=<?php echo $filtro_situac; ?>"
+                                                               onclick="return confirm('Desvincular este admin da empresa atual? Ele continua existindo e logando na empresa principal dele, mas perde acesso a esta.');">
+                                                                <span class="text-warning"><i class='bx bx-unlink bx-lg' title="Desvincular desta empresa"></i></span>
+                                                            </a>
+                                                        <?php } elseif ($pode_gerenciar_admins) { ?>
                                                             <?php if ($linha['situac'] == 1) { ?>
                                                                 <a href="tabela_usuarios.php?de=<?php echo $linha['id_usa']; ?>&filtro=<?php echo $filtro_situac; ?>">
                                                                     <span class="text-success"><i class='bx bxs-toggle-right bx-lg' title="Ativo — clique para desativar"></i></span>
@@ -191,14 +203,16 @@ $filtro_situac = isset($_GET['filtro']) && in_array($_GET['filtro'], ['ativos', 
 
                                                     <!-- EDITAR -->
                                                     <div class="div-acoes">
-                                                        <?php if ($pode_gerenciar_admins) { ?>
+                                                        <?php if ($pode_gerenciar_admins && !$is_visitante) { ?>
                                                             <a href="alterar_usuario?al=<?php echo $linha['id_usa']; ?>">
                                                                 <button type="button" class="btn btn-primary btn-icones" title="Editar">
                                                                     <i class="fas fa-pencil-alt"></i>
                                                                 </button>
                                                             </a>
                                                         <?php } else { ?>
-                                                            <button type="button" class="btn btn-secondary btn-icones" title="Somente Líderes RH podem editar" disabled>
+                                                            <button type="button" class="btn btn-secondary btn-icones"
+                                                                    title="<?php echo $is_visitante ? 'Visitante: dados gerais são alterados na empresa principal' : 'Somente Líderes RH podem editar'; ?>"
+                                                                    disabled>
                                                                 <i class="fas fa-pencil-alt"></i>
                                                             </button>
                                                         <?php } ?>
@@ -303,6 +317,44 @@ $filtro_situac = isset($_GET['filtro']) && in_array($_GET['filtro'], ['ativos', 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FEA-010: ativação/desativação com auditoria e proteção do último Líder RH ativo
 $redirect = "tabela_usuarios.php?filtro=" . $filtro_situac;
+
+// FEA-010: desvincular admin visitante (de outra empresa) — remove só GESVIN/GESGES/GESMPR desta empresa
+if (isset($_REQUEST['desv'])) {
+    if (!$pode_gerenciar_admins) {
+        echo "<script language=javascript>
+            alert('Somente Líderes RH ou administradores internos podem desvincular usuários.');
+            location.href = '" . $redirect . "';
+        </script>";
+        exit;
+    }
+
+    $id_usa_alvo = (int) $_REQUEST['desv'];
+
+    // Se o admin a desvincular é o único Líder RH ativo, bloqueia
+    if (checkLiderRH($id_usa_alvo, $id_emp_default) && $lideres_ativos <= 1) {
+        echo "<script language=javascript>
+            alert('Este admin é o único Líder RH ativo nesta empresa. Promova outro Líder antes de desvinculá-lo.');
+            location.href = '" . $redirect . "';
+        </script>";
+        exit;
+    }
+
+    try {
+        $removidos = unlinkAdminFromEmpresa($id_usa_alvo, $id_emp_default);
+        $msg = $removidos > 0 ? 'Admin desvinculado da empresa com sucesso.' : 'Vínculo não encontrado.';
+        echo "<script language=javascript>
+            alert('" . $msg . "');
+            location.href = '" . $redirect . "';
+        </script>";
+        exit;
+    } catch (PDOException $erro) {
+        echo "<script language=javascript>
+            alert('Erro ao desvincular: " . addslashes($erro->getMessage()) . "');
+            location.href = '" . $redirect . "';
+        </script>";
+        exit;
+    }
+}
 
 if (isset($_REQUEST['de']) || isset($_REQUEST['ha'])) {
     if (!$pode_gerenciar_admins) {
