@@ -40,20 +40,6 @@ $alvo_is_lider = $id_usa_alvo ? checkLiderRH($id_usa_alvo, $id_emp_default) : fa
 // Pode marcar Líder se já era (mantendo) ou se ainda há vaga
 $pode_marcar_lider = $alvo_is_lider || ($lideres_ativos < $limite_lideres);
 
-// FEA-010: detectar se o alvo é "visitante" (id_emp_acess principal != empresa logada).
-// Para visitante, Líder pode mexer só na flag de Líder RH desta empresa — dados gerais
-// (nome, CPF, email, endereço, tipo, departamento) só na empresa principal do admin.
-$alvo_id_emp_acess = 0;
-if ($id_usa_alvo) {
-    foreach (selectGESUSA($id_usa_alvo) as $r) {
-        if (is_array($r) && isset($r['id_emp_acess'])) {
-            $alvo_id_emp_acess = (int) $r['id_emp_acess'];
-        }
-    }
-}
-$alvo_is_visitante = ($alvo_id_emp_acess !== 0 && $alvo_id_emp_acess !== (int) $id_emp_default);
-$ro_attr = $alvo_is_visitante ? 'readonly' : '';
-$disabled_attr = $alvo_is_visitante ? 'disabled' : '';
 
 ?>
 
@@ -188,9 +174,7 @@ $disabled_attr = $alvo_is_visitante ? 'disabled' : '';
                                 <div class="nav nav-tabs mb-3" id="nav-tab" role="tablist">
                                     <a class="nav-item nav-link" id="menu-geral-tab" data-toggle="tab" href="#menu-geral" role="tab" aria-controls="menu-geral" aria-selected="true">Geral</a>
                                     <a class="nav-item nav-link" id="menu-endereco-tab" data-toggle="tab" href="#menu-endereco" role="tab" aria-controls="menu-endereco" aria-selected="false">Endereço</a>
-                                    <?php if (!$alvo_is_visitante) { ?>
-                                        <a class="nav-item nav-link" id="menu-empresa-tab" data-toggle="tab" href="#menu-empresa" role="tab" aria-controls="menu-empresa" aria-selected="false">Empresa</a>
-                                    <?php } ?>
+                                    <a class="nav-item nav-link" id="menu-empresa-tab" data-toggle="tab" href="#menu-empresa" role="tab" aria-controls="menu-empresa" aria-selected="false">Empresa</a>
                                 </div>
                             </nav>
                             <!-- FIM NAV MENUS -->
@@ -212,21 +196,10 @@ $disabled_attr = $alvo_is_visitante ? 'disabled' : '';
 
                                             ?>
 
-                                                    <?php if ($alvo_is_visitante) { ?>
-                                                        <div class="alert alert-warning" role="alert">
-                                                            <i class="fas fa-info-circle"></i>
-                                                            <strong>Admin visitante.</strong>
-                                                            Este admin pertence a outra empresa do grupo — dados gerais
-                                                            (nome, CPF, email, endereço) só podem ser alterados pela
-                                                            empresa principal dele. Aqui você pode apenas <strong>promover
-                                                            ou despromover Líder RH</strong> desta empresa.
-                                                        </div>
-                                                    <?php } ?>
-
                                                     <div class="form-row">
                                                         <div class="col-md-6 mb-3">
                                                             <label for="nome">Nome</label>
-                                                            <input type="text" class="form-control" style="text-transform:uppercase" id="nome" name="nome" minlength="3" value="<?php echo $linha["nome"]; ?>" <?php echo $ro_attr; ?> required>
+                                                            <input type="text" class="form-control" style="text-transform:uppercase" id="nome" name="nome" minlength="3" value="<?php echo $linha["nome"]; ?>" required>
                                                             <div class="invalid-feedback">
                                                                 Inválido! Min. 3 caracteres!
                                                             </div>
@@ -236,7 +209,7 @@ $disabled_attr = $alvo_is_visitante ? 'disabled' : '';
 
                                                         <div class="col-md-6 mb-3">
                                                             <label for="CPF">CPF</label>
-                                                            <input type="text" class="form-control" id="CPF" attrname="CPF" name="CPF" pattern="[0-9]{3}.[0-9]{3}.[0-9]{3}-[0-9]{2}" minlength="14" value="<?php echo $linha["cpf"]; ?>" <?php echo $ro_attr; ?> required>
+                                                            <input type="text" class="form-control" id="CPF" attrname="CPF" name="CPF" pattern="[0-9]{3}.[0-9]{3}.[0-9]{3}-[0-9]{2}" minlength="14" value="<?php echo $linha["cpf"]; ?>" required>
                                                             <div class="invalid-feedback">
                                                                 Inválido!
                                                             </div>
@@ -245,14 +218,14 @@ $disabled_attr = $alvo_is_visitante ? 'disabled' : '';
                                                     <div class="form-row">
                                                         <div class="col-md-6 mb-3">
                                                             <label for="email">Email</label>
-                                                            <input type="email" class="form-control" id="email" name="email" pattern="(?![_.-])((?![_.-][_.-])[\w.-]){0,63}[a-zA-Z._\d]@((?!-)((?!--)[a-zA-Z\d-]){0,63}[a-zA-Z\d]\.){1,2}([a-zA-Z]{2,14}\.)?[a-zA-Z]{2,14}" value="<?php echo $linha["email"]; ?>" <?php echo $ro_attr; ?> required>
+                                                            <input type="email" class="form-control" id="email" name="email" pattern="(?![_.-])((?![_.-][_.-])[\w.-]){0,63}[a-zA-Z._\d]@((?!-)((?!--)[a-zA-Z\d-]){0,63}[a-zA-Z\d]\.){1,2}([a-zA-Z]{2,14}\.)?[a-zA-Z]{2,14}" value="<?php echo $linha["email"]; ?>" required>
                                                             <div class="invalid-feedback">
                                                                 Inválido!
                                                             </div>
                                                         </div>
                                                         <div class="col-md-6 mb-3">
                                                             <label for="telefone">Telefone</label>
-                                                            <input type="text" class="form-control" id="telefone" attrname="telefone" name="telefone" pattern="\([0-9]{3}\)[\s][0-9]{4}-[0-9]{4}" minlength="15" value="<?php echo $linha["telefone"]; ?>" <?php echo $ro_attr; ?>>
+                                                            <input type="text" class="form-control" id="telefone" attrname="telefone" name="telefone" pattern="\([0-9]{3}\)[\s][0-9]{4}-[0-9]{4}" minlength="15" value="<?php echo $linha["telefone"]; ?>">
                                                             <div class="invalid-feedback">
                                                                 Inválido!
                                                             </div>
@@ -261,7 +234,7 @@ $disabled_attr = $alvo_is_visitante ? 'disabled' : '';
                                                     <div class="form-row">
                                                         <div class="col-md-6 mb-3">
                                                             <label for="departamento">Departamento</label>
-                                                            <select class="form-control" id="departamento" name="departamento" <?php echo $disabled_attr; ?>>
+                                                            <select class="form-control" id="departamento" name="departamento">
                                                                 <?php
 
                                                                 foreach (selectGESDEP_id_usa($id_usa_alterar, $id_emp_default) as $dep_banco) {
@@ -286,7 +259,7 @@ $disabled_attr = $alvo_is_visitante ? 'disabled' : '';
                                                             <?php } else { ?>
 
                                                                 <label for="tus">Tipo Usuário</label>
-                                                                <select class="form-control" id="tus" name="tus" <?php echo $disabled_attr; ?>>
+                                                                <select class="form-control" id="tus" name="tus">
                                                                     <!-- <option selected value="0">Escolha o Departamento</option> -->
                                                                 <?php
 
@@ -336,9 +309,7 @@ $disabled_attr = $alvo_is_visitante ? 'disabled' : '';
                                                     <!-- INÍCIO BOTÃO ENVIAR -->
                                                     <div class="form-group">
                                                         <div class="textalign-right">
-                                                            <?php if (!$alvo_is_visitante) { ?>
-                                                                <button id="btn-troca-senha" type="button" data-toggle="modal" data-target="#TrocarSenha" name="modal" class="btn btn-organograma btn-icon-split-organograma"><i class="fas fa-unlock mr-sm-2"></i> Trocar Senha</button>
-                                                            <?php } ?>
+                                                            <button id="btn-troca-senha" type="button" data-toggle="modal" data-target="#TrocarSenha" name="modal" class="btn btn-organograma btn-icon-split-organograma"><i class="fas fa-unlock mr-sm-2"></i> Trocar Senha</button>
                                                             <button type="submit" name="btn-submit" class="btn btn-organograma btn-icon-split-organograma"><i class="fas fa-save mr-sm-2"></i> Salvar</button>
                                                             <a href="tabela_usuarios"><button type="button" class="btn btn-organograma btn-icon-split-organograma"><i class="fas fa-sign-out-alt"></i> Voltar</button></a>
                                                         </div>
@@ -354,14 +325,14 @@ $disabled_attr = $alvo_is_visitante ? 'disabled' : '';
                                             <div class="form-row">
                                                 <div class="col-md-6 mb-3">
                                                     <label for="endereco">Endereço</label>
-                                                    <input type="text" class="form-control" style="text-transform: uppercase;" id="endereco" name="endereco" minlength="3" value="<?php echo $linha["endereco"]; ?>" <?php echo $ro_attr; ?>>
+                                                    <input type="text" class="form-control" style="text-transform: uppercase;" id="endereco" name="endereco" minlength="3" value="<?php echo $linha["endereco"]; ?>">
                                                     <div class="invalid-feedback">
                                                         Inválido!
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6 mb-3">
                                                     <label for="bairro">Bairro</label>
-                                                    <input type="text" class="form-control" style="text-transform: uppercase;" id="bairro" name="bairro" minlength="3" value="<?php echo $linha["bairro"]; ?>" <?php echo $ro_attr; ?>>
+                                                    <input type="text" class="form-control" style="text-transform: uppercase;" id="bairro" name="bairro" minlength="3" value="<?php echo $linha["bairro"]; ?>">
                                                     <div class="invalid-feedback">
                                                         Inválido!
                                                     </div>
@@ -370,14 +341,14 @@ $disabled_attr = $alvo_is_visitante ? 'disabled' : '';
                                             <div class="form-row">
                                                 <div class="col-md-10 mb-3">
                                                     <label for="complemento">Complemento</label>
-                                                    <input type="text" class="form-control" style="text-transform: uppercase;" id="complemento" name="complemento" value="<?php echo $linha["complemento"]; ?>" <?php echo $ro_attr; ?>>
+                                                    <input type="text" class="form-control" style="text-transform: uppercase;" id="complemento" name="complemento" value="<?php echo $linha["complemento"]; ?>">
                                                     <div class="invalid-feedback">
                                                         Inválido!
                                                     </div>
                                                 </div>
                                                 <div class="col-md-2 mb-3">
                                                     <label for="numero">Número</label>
-                                                    <input type="text" class="form-control" style="text-transform: uppercase;" id="numero" name="numero" value="<?php echo $linha["numero"]; ?>" <?php echo $ro_attr; ?>>
+                                                    <input type="text" class="form-control" style="text-transform: uppercase;" id="numero" name="numero" value="<?php echo $linha["numero"]; ?>">
                                                     <div class="invalid-feedback">
                                                         Inválido!
                                                     </div>
@@ -386,7 +357,7 @@ $disabled_attr = $alvo_is_visitante ? 'disabled' : '';
                                             <div class="form-row">
                                                 <div class="form-group col-md-4">
                                                     <label for="estado">Estado</label>
-                                                    <select id="estado" name="estado" class="form-control" <?php echo $disabled_attr; ?> required>
+                                                    <select id="estado" name="estado" class="form-control" required>
                                                         <?php
 
                                                         foreach (selectVW_ADMIN_USUARIOS($id_usa_alterar) as $info_banco) {
@@ -405,7 +376,7 @@ $disabled_attr = $alvo_is_visitante ? 'disabled' : '';
                                                 </div>
                                                 <div class="form-group col-md-6">
                                                     <label for="cidade">Cidade</label>
-                                                    <select id="cidade" name="cidade" class="form-control" <?php echo $disabled_attr; ?> required>
+                                                    <select id="cidade" name="cidade" class="form-control" required>
 
                                                         <?php
 
@@ -420,7 +391,7 @@ $disabled_attr = $alvo_is_visitante ? 'disabled' : '';
                                                 </div>
                                                 <div class="form-group col-md-2">
                                                     <label for="CEP">CEP</label>
-                                                    <input type="text" class="form-control" id="CEP" attrname="cep" name="cep" value="<?php echo $cep ?>" <?php echo $ro_attr; ?>>
+                                                    <input type="text" class="form-control" id="CEP" attrname="cep" name="cep" value="<?php echo $cep ?>">
                                                 </div>
                                             </div>
 
@@ -1341,19 +1312,15 @@ if (isset($_REQUEST["btn-submit"])) {
         echo 'id_usa_default: ' . $id_usa_default . '<br>';
 */
 
-        // FEA-010: para visitante, NÃO mexer em dados gerais — só GESGES (Líder RH).
-        // Dados gerais devem ser alterados pelo Líder da empresa principal do admin.
-        if (!$alvo_is_visitante) {
-            // SE usuario tipo ADMIN
-            if ($id_tus == "") {
+        // SE usuario tipo ADMIN
+        if ($id_tus == "") {
 
-                // UPDATE COM O SELECT DO TIPO DE USUARIO ADMIN
+            // UPDATE COM O SELECT DO TIPO DE USUARIO ADMIN
 
-                updateGESUSA_usuario_sem_id_tus($nome, $cpf, $email, $telefone, $endereco, $bairro, $complemento, $numero, $cep, $id_mun, $id_dep, $id_usa, $datatu, $id_usa_default);
-            } else {
+            updateGESUSA_usuario_sem_id_tus($nome, $cpf, $email, $telefone, $endereco, $bairro, $complemento, $numero, $cep, $id_mun, $id_dep, $id_usa, $datatu, $id_usa_default);
+        } else {
 
-                updateGESUSA_usuario($nome, $cpf, $email, $telefone, $endereco, $bairro, $complemento, $numero, $cep, $id_tus, $id_mun, $id_dep, $id_usa, $datatu, $id_usa_default);
-            }
+            updateGESUSA_usuario($nome, $cpf, $email, $telefone, $endereco, $bairro, $complemento, $numero, $cep, $id_tus, $id_mun, $id_dep, $id_usa, $datatu, $id_usa_default);
         }
 
         // FEA-010: persistir flag Líder RH em GESGES (insert se não existir, senão update)
