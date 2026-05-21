@@ -30,6 +30,48 @@ if (!$pode_gerenciar_admins) {
     exit;
 }
 
+// FEA-010 — handler do toggle de Líder RH por empresa (admin)
+if (isset($_REQUEST['lider'], $_REQUEST['emp'], $_SESSION['id_usa_alterar'])) {
+    $id_usa_alvo_t = (int) $_SESSION['id_usa_alterar'];
+    $id_emp_lider = (int) $_REQUEST['emp'];
+    $on = $_REQUEST['lider'] === 'on';
+    $redirect = 'alterar_usuario?al=' . $id_usa_alvo_t . '&tab=3';
+
+    // Defesa: Líder só pode mexer em empresas que ele acessa
+    if (!$is_admin_interno && !adminAcessaEmpresa($id_usa_default, $id_emp_lider)) {
+        echo "<script>alert('Você não tem acesso a essa empresa.');
+              location.href='" . $redirect . "';</script>";
+        exit;
+    }
+
+    if ($on) {
+        $limites_emp = selectGESEMP_limites($id_emp_lider);
+        $ativos_emp = selectGESUSA_lideres_ativos($id_emp_lider);
+        if ($ativos_emp >= $limites_emp['limite_lideres']) {
+            echo "<script>alert('Limite de " . (int) $limites_emp['limite_lideres'] . " Líderes RH ativos atingido nesta empresa.');
+                  location.href='" . $redirect . "';</script>";
+            exit;
+        }
+    } else {
+        $ativos_emp = selectGESUSA_lideres_ativos($id_emp_lider);
+        if ($ativos_emp <= 1 && checkLiderRH($id_usa_alvo_t, $id_emp_lider)) {
+            echo "<script>alert('É necessário manter pelo menos 1 Líder RH ativo nesta empresa.');
+                  location.href='" . $redirect . "';</script>";
+            exit;
+        }
+    }
+
+    if (selectGESGES($id_usa_alvo_t, $id_emp_lider) == 0) {
+        insertGESGES($id_usa_alvo_t, $id_emp_lider, $on ? 1 : 0);
+    } else {
+        updateGESGES($id_usa_alvo_t, $id_emp_lider, $on ? 1 : 0);
+    }
+    upsertGESMPR_lider_menus($id_usa_alvo_t, $id_emp_lider, $on ? 1 : 0, $datatu);
+
+    echo "<script>location.href='" . $redirect . "';</script>";
+    exit;
+}
+
 $lideres_ativos = selectGESUSA_lideres_ativos($id_emp_default);
 $limites = selectGESEMP_limites($id_emp_default);
 $limite_lideres = $limites['limite_lideres'];
@@ -468,13 +510,14 @@ $pode_marcar_lider = $alvo_is_lider || ($lideres_ativos < $limite_lideres);
                                                     </div>
 
                                                     <!-- TAB Empresas Selecionadas -->
-                                                    <div class="col-md-5" style="height: 450px; overflow: auto; scrollbar-width: thin;">
+                                                    <div class="col-md-6" style="height: 450px; overflow: auto; scrollbar-width: thin;">
                                                         <table class="table table-bordered sortable" width="100%" cellspacing="0">
                                                             <thead style="text-align: center;">
                                                                 <tr class="list-head">
                                                                     <th data-orderable="false">Nome</th>
                                                                     <th data-orderable="false">CNPJ</th>
                                                                     <th data-orderable="false">Grupo</th>
+                                                                    <th data-orderable="false">Líder RH</th>
                                                                 </tr>
                                                             </thead>
 
@@ -488,12 +531,25 @@ $pode_marcar_lider = $alvo_is_lider || ($lideres_ativos < $limite_lideres);
                                                                     $id_emp_tab = $selectGESEMP2['id_emp'];
                                                                     $nome_tab = $selectGESEMP2['nomefantasia'];
                                                                     $cnpj_tab = $selectGESEMP2['cnpj'];
-                                                                    $grupo_tab = $selectGESEMP2['grupo']; ?>
+                                                                    $grupo_tab = $selectGESEMP2['grupo'];
+                                                                    $eh_lider_emp = checkLiderRH($id_usa_alterar, $id_emp_tab);
+                                                                ?>
 
                                                                     <tr id="<?php echo 'selec-' . $id_emp_tab ?>" class="list-emp">
                                                                         <th><?php echo '<b>' . $nome_tab . '</b>'; ?></th>
                                                                         <th><?php echo $cnpj_tab; ?></th>
                                                                         <th><?php echo $grupo_tab; ?></th>
+                                                                        <th style="text-align:center;">
+                                                                            <a href="alterar_usuario?lider=<?php echo $eh_lider_emp ? 'off' : 'on'; ?>&emp=<?php echo $id_emp_tab; ?>"
+                                                                               onclick="return confirm('<?php echo $eh_lider_emp ? 'Remover papel de Líder RH desta empresa?' : 'Promover este admin a Líder RH desta empresa?'; ?>');"
+                                                                               title="<?php echo $eh_lider_emp ? 'Líder RH ativo — clique para remover' : 'Clique para promover a Líder RH'; ?>">
+                                                                                <?php if ($eh_lider_emp) { ?>
+                                                                                    <i class='bx bxs-toggle-right bx-md text-success'></i>
+                                                                                <?php } else { ?>
+                                                                                    <i class='bx bxs-toggle-left bx-md text-secondary'></i>
+                                                                                <?php } ?>
+                                                                            </a>
+                                                                        </th>
                                                                     </tr>
 
                                                                 <?php } ?>
