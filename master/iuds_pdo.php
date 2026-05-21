@@ -3982,14 +3982,16 @@ function select_VW_ADMIN_GESUSA($id_usa)
 function selectGESTUS_id_usa($id_usa)
 {
     global $pdo;
+    // FEA-010: master lista TODOS os tipos ativos, incluindo ADMIN (id_tus=1).
+    // Apenas exclui o tipo atual do admin pra ele já aparecer primeiro na lista.
     $query =
-        'SELECT 1 as id,a.id_tus as id_tus,b.descricao as descricao FROM public."GESUSA" as a 
-            left outer join public."GESTUS" as b on a.id_tus=b.id_tus 
+        'SELECT 1 as id,a.id_tus as id_tus,b.descricao as descricao FROM public."GESUSA" as a
+            left outer join public."GESTUS" as b on a.id_tus=b.id_tus
                 WHERE a.id_usa =:id_usa
             union
-        SELECT 2 as id,c.id_tus as id_tus, c.descricao as descricao FROM public."GESTUS" as c 
-            WHERE c.situac=1 and c.id_tus not in 
-                ((SELECT a.id_tus FROM public."GESUSA" as a left outer join public."GESTUS" as b on a.id_tus=b.id_tus WHERE a.id_usa =:id_usa),1) 
+        SELECT 2 as id,c.id_tus as id_tus, c.descricao as descricao FROM public."GESTUS" as c
+            WHERE c.situac=1 and c.id_tus not in
+                (SELECT a.id_tus FROM public."GESUSA" as a left outer join public."GESTUS" as b on a.id_tus=b.id_tus WHERE a.id_usa =:id_usa)
         order by id asc
 ';
     $statement = $pdo->prepare($query);

@@ -239,30 +239,15 @@ if (isset($_REQUEST['lider'], $_REQUEST['emp'])) {
                                                     </div>
                                                     <div class="form-row">
                                                         <div class="col-md-12 mb-3">
-
-                                                            <?php if ($linha["id_tus"] == 1) { ?>
-
-                                                                <label for="tus">Tipo Usuário</label>
-                                                                <input type="text" class="form-control" id="tusadm" name="tusadm" value="ADMIN" disabled>
-
-                                                            <?php } else { ?>
-
-                                                                <label for="tus">Tipo Usuário</label>
-                                                                <select class="form-control" id="tus" name="tus">
-                                                                    <!-- <option selected value="0">Escolha o Departamento</option> -->
-                                                                <?php
-
-                                                                foreach (selectGESTUS_id_usa($id_usa_alterar) as $tus_banco) {
-
-                                                                    echo '<option value="' . $tus_banco['id_tus'] . '">' . $tus_banco['descricao'] . '</option>';
-                                                                }
-                                                            }
-                                                                ?>
-
-                                                                </select>
-                                                                <div class="invalid-feedback">
-                                                                    Inválido!
-                                                                </div>
+                                                            <label for="tus">Tipo Usuário</label>
+                                                            <select class="form-control" id="tus" name="tus">
+                                                                <?php foreach (selectGESTUS_id_usa($id_usa_alterar) as $tus_banco) { ?>
+                                                                    <option value="<?php echo $tus_banco['id_tus']; ?>"><?php echo $tus_banco['descricao']; ?></option>
+                                                                <?php } ?>
+                                                            </select>
+                                                            <div class="invalid-feedback">
+                                                                Inválido!
+                                                            </div>
                                                         </div>
                                                     </div>
 
