@@ -11396,6 +11396,9 @@ function checkLiderRH($id_usa, $id_emp)
 
 // FEA-010 — Líder RH: listagem de admins da empresa com filtro de situação e "criado por".
 // $filtro_situac: 'ativos' (situac=1), 'inativos' (situac=0) ou 'todos'.
+// Esconde id_tus=1 (admin interno da Leve) — esses só são geridos pelo /master/.
+// Retorna também id_emp_acess para a UI distinguir admin "nativo" desta empresa
+// vs "visitante" (vinculado via GESVIN mas com id_emp_acess apontando para outra).
 function select_GESUSA_USUARIOS_lider($id_emp, $filtro_situac = 'ativos')
 {
     global $pdo;
@@ -11406,12 +11409,14 @@ function select_GESUSA_USUARIOS_lider($id_emp, $filtro_situac = 'ativos')
         $where_situac = ' AND v.situac = 0';
     }
     $query = 'SELECT v.id_usa, v.nome, v.email, v.id_tus, v.situac, v.gestor,
+                     u.id_emp_acess,
                      (SELECT c.nome FROM public."GESUSA" c WHERE c.id_usa = u.id_usa_inc) AS criado_por,
                      u.data_desativacao,
                      (SELECT d.nome FROM public."GESUSA" d WHERE d.id_usa = u.id_usa_desativado) AS desativado_por
               FROM public."VW_ADMIN_USUARIOS" v
               INNER JOIN public."GESUSA" u ON u.id_usa = v.id_usa
-              WHERE v.id_emp =:id_emp' . $where_situac . '
+              WHERE v.id_emp =:id_emp
+                AND v.id_tus <> 1' . $where_situac . '
               ORDER BY v.situac DESC, v.nome';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
