@@ -325,6 +325,28 @@
       "priority": 22,
       "passes": true,
       "notes": "Cliente solicitou. Escopo enxuto e independente da FEA-009 — pode ser entregue antes do RPA. Esforço estimado: 1-2 dias. Plano detalhado em docs/plano-fea-011-download-documentos.md. Decisões fechadas: (1) síncrono em vez de assíncrono (volume típico de 1 colaborador cabe em <30s); (2) checkbox por linha em vez de modal de seleção avançada (UX padrão Gmail/Drive); (3) limite duro de 200 arquivos / 500MB; (4) sem novo menu/permissão — reusa acesso à aba Documentos. NÃO ESCOPO: download em lote da empresa inteira, download de múltiplos colaboradores ao mesmo tempo, agendamento, formato ZIP criptografado, envio por email. ENTREGUE 2026-05-22 (commit 5fe0c3d, deploy gestou-00140-dj2). Validação local feita antes do deploy."
+    },
+    {
+      "id": "FEA-012",
+      "title": "Cadastro manual de empresa no /master/",
+      "description": "Disponibilizar porta de entrada manual no /master/ para cadastrar empresa nova fora do fluxo de aprovação de leads (auto-registro). Hoje master/tabela_empresas.php não tem botão 'Incluir Empresa' — só 'Adicionar Grupo' (que cria via insertGESEMP_NOVA_GRUPO) e 'Adicionar Filial' (que cria filial de matriz existente). Por isso as últimas empresas foram cadastradas via SQL direto, deixando campos NULL e gerando problemas reativos. cadastro_empresa.php existe mas está órfão e o controller tem bugs estruturais (lê POST['cnpj'] mas form envia 'CNPJ', lê resp_rh/resp_ouvidoria inexistentes, usa variáveis não declaradas, mkdir em diretórios que em prod são gcsfuse). Estratégia: reusar alterar_empresa.php em modo 'novo' em vez de consertar o legado — uma única fonte da verdade, aproveita 5 abas já estáveis (Identificação/Endereço/Integração/Gestor/Limites) e AJAX já funcionando.",
+      "acceptanceCriteria": [
+        "Botão 'Incluir Empresa' em master/tabela_empresas.php (entre 'Adicionar Grupo' e 'Adicionar Filial'), sempre habilitado, apontando para alterar_empresa?al=novo",
+        "alterar_empresa.php detecta $_GET['al'] === 'novo' e entra em modo novo: zera variáveis, habilita CNPJ e tipo (M/F) que hoje são disabled, esconde aba Gestor, mostra aba Limites com defaults (limite_lideres=2, limite_admins_ativos=NULL)",
+        "Campos id_emp_h/p/i, tipo_h/p/i, lay_h/p/i ficam OPCIONAIS no insert (sem required) — admin completa configuração de integração depois em modo edição",
+        "id_emp_grupo em modo novo vira select dinâmico com 3 opções: 'Sem grupo' (NULL), 'Vincular a grupo existente' (carrega empresas tipo='M' via nova selectGESEMP_matrizes_grupo), 'Criar novo grupo (esta empresa será a matriz)' (após INSERT faz UPDATE GESEMP SET id_emp_grupo = id_emp via auto-FK). Em modo edição mantém input atual",
+        "controller/alterar_empresa_post.php ganha branch INSERT no btn_adicionar: quando sessão indica modo novo, chama insertGESEMP_MASTER + insertGESLAY('VIS','VIS','VIS' por padrão) + updateGESEMP_limites + upsertGESMPR_lider_menus + auto-FK de grupo se aplicável. Retorna JSON com id_emp do novo registro",
+        "Validações no servidor: CNPJ formato XX.XXX.XXX/XXXX-XX + unicidade (nova função selectGESEMP_cnpj_exists), tipo ∈ {M,F}, nome ≥3 chars, nomefantasia ≥3 chars, id_mun obrigatório, id_per_imp e id_per_ace obrigatórios, limite_lideres ≥1, limite_admins_ativos ≥1 ou NULL",
+        "alterar_empresa.js após resposta de sucesso em modo novo: mostra toast 'Empresa criada!' e redireciona para alterar_empresa?al={novo_id} (modo edição, aba Gestor passa a aparecer)",
+        "Bug pré-existente do id_usa_atu (FK pra GESUSA mas controller gravava id_mas de GESMAS): reaproveitar mitigação da FEA-010 com selectGESUSA_id_usa_by_master + fallback id_usa=1",
+        "Sem criação de diretórios de upload via mkdir (em prod o bucket é gcsfuse, falha silenciosamente). Diretórios são criados sob demanda pelo primeiro upload",
+        "CNPJ duplicado retorna mensagem clara antes do INSERT — sem depender de constraint UNIQUE (que não existe hoje em GESEMP.cnpj)",
+        "Fluxo de aprovação de lead (aprovacao.php → alterar_aprovacao.php) continua funcionando sem regressão — apenas adicionamos uma porta nova de entrada",
+        "cadastro_empresa.php, cadastro_empresa_post.php e tabela_empresas_antigo.php permanecem intocados (dead code documentado em docs/pendencias.md para cleanup futuro)"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": "Motivado pelo Yuri após FEA-011. Plano detalhado em docs/plano-fea-012-cadastro-empresa-master.md. Esforço estimado: 1-2 dias. Independente da FEA-009 — pode ser entregue antes ou em paralelo. NÃO ESCOPO: correção de empresas já cadastradas com NULL (fica para FEA futura ou script de manutenção), refatorar fluxo de aprovação de leads, deletar legado cadastro_empresa.php (cleanup posterior), cadastro em massa/CSV, validação de CNPJ via API externa (só formato + unicidade local). Decisão arquitetural: reusar alterar_empresa.php em modo 'novo' em vez de consertar cadastro_empresa.php legado (que tem bugs estruturais e cobre <60% dos campos)."
     }
   ]
 }
