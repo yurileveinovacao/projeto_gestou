@@ -323,8 +323,8 @@
         "Log no endpoint: registrar em error_log (Cloud Logging) operação com id_emp, id_usu (colaborador), id_usa (admin que executou), qtd_arquivos, tamanho_total_mb. Útil pra auditoria e detecção de uso anômalo"
       ],
       "priority": 22,
-      "passes": false,
-      "notes": "Cliente solicitou. Escopo enxuto e independente da FEA-009 — pode ser entregue antes do RPA. Esforço estimado: 1-2 dias. Plano detalhado em docs/plano-fea-011-download-documentos.md. Decisões fechadas: (1) síncrono em vez de assíncrono (volume típico de 1 colaborador cabe em <30s); (2) checkbox por linha em vez de modal de seleção avançada (UX padrão Gmail/Drive); (3) limite duro de 200 arquivos / 500MB; (4) sem novo menu/permissão — reusa acesso à aba Documentos. NÃO ESCOPO: download em lote da empresa inteira, download de múltiplos colaboradores ao mesmo tempo, agendamento, formato ZIP criptografado, envio por email."
+      "passes": true,
+      "notes": "Cliente solicitou. Escopo enxuto e independente da FEA-009 — pode ser entregue antes do RPA. Esforço estimado: 1-2 dias. Plano detalhado em docs/plano-fea-011-download-documentos.md. Decisões fechadas: (1) síncrono em vez de assíncrono (volume típico de 1 colaborador cabe em <30s); (2) checkbox por linha em vez de modal de seleção avançada (UX padrão Gmail/Drive); (3) limite duro de 200 arquivos / 500MB; (4) sem novo menu/permissão — reusa acesso à aba Documentos. NÃO ESCOPO: download em lote da empresa inteira, download de múltiplos colaboradores ao mesmo tempo, agendamento, formato ZIP criptografado, envio por email. ENTREGUE 2026-05-22 (commit 5fe0c3d, deploy gestou-00140-dj2). Validação local feita antes do deploy."
     }
   ]
 }
