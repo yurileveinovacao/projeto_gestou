@@ -6643,13 +6643,15 @@ function selectGESUSA_admins_ativos($id_emp)
 }
 
 // FEA-010 — Líder RH: contagem de Líderes ativos na empresa (GESGES.gestor=1 + GESUSA.situac=1).
+// Internos da Leve (id_tus=1) não entram na contagem.
 function selectGESUSA_lideres_ativos($id_emp)
 {
     global $pdo;
     $query = 'SELECT COUNT(DISTINCT g.id_usa) AS total
               FROM public."GESGES" g
               INNER JOIN public."GESUSA" u ON u.id_usa = g.id_usa
-              WHERE g.id_emp =:id_emp AND g.gestor = 1 AND u.situac = 1';
+              WHERE g.id_emp =:id_emp AND g.gestor = 1 AND u.situac = 1
+                AND (u.id_tus IS NULL OR u.id_tus <> 1)';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
     $statement->execute();
