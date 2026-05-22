@@ -3,7 +3,7 @@
 Documento vivo. Lista o que ficou em aberto após o cutover (2026-04-24) e o que está esperando
 sessão dedicada / terceiros. Itens concluídos saem daqui — histórico fica no `progress.txt`.
 
-Última atualização: 2026-05-19.
+Última atualização: 2026-05-21.
 
 ---
 
@@ -70,7 +70,8 @@ Tracks B (PWA) e C (build TWA) já concluídos.
 
 | Item | Situação |
 |---|---|
-| **FEA-010 — Líder RH** + **FEA-009 — Módulo RPA** | Escopo fechado em 2026-05-19 com Yuri/Jéssica. Ver [`docs/proposta-lider-e-rpa.md`](proposta-lider-e-rpa.md) e [`prd.json`](../prd.json). Próximo passo: implementar FEA-010 → FEA-009 MVP |
+| **FEA-010 — Líder RH** | ✅ Entregue em 2026-05-21 (revisão `gestou-00138-bvp`). Backfill manual de Líderes em produção fica a cargo do Yuri via `/master/`. Ver [`progress.txt`](../progress.txt) |
+| **FEA-009 — Módulo RPA** | Escopo fechado em 2026-05-19 com Yuri/Jéssica. Pré-requisito (FEA-010) entregue. Próximo passo: iniciar MVP. Ver [`docs/proposta-lider-e-rpa.md`](proposta-lider-e-rpa.md) |
 | **IA 1 — Compliance** (Ponto vs. Convenção + Relatórios vs. Holerite) | Documentos recebidos — aguarda sessão dedicada |
 | **IA 2 — Suporte Bia** (landing + plataforma) | Aguarda sessão dedicada |
 | **Recrutamento e Seleção** | Baixa prioridade — próxima fase |
@@ -81,18 +82,23 @@ Tracks B (PWA) e C (build TWA) já concluídos.
 
 ### 1. Centralizar a lista de "menus padrão" de novos admins
 
-**Problema:** O array de 26 IDs de menu que define o conjunto de telas liberadas por padrão para qualquer admin recém-criado está **hardcoded em 4 lugares**:
+**Problema:** O array de 26 IDs de menu que define o conjunto de telas liberadas por padrão para qualquer admin recém-criado está **hardcoded em 5 lugares** (FEA-010 adicionou o 5º):
 
 - `master/adicionar_permissao.php:33` (sincronização de permissões faltantes)
 - `master/alterar_usuario.php:1082` (vinculação de empresa nova ao usuário)
 - `master/controller/adicionar_novo_usuario_post.php:111` (criação direta de novo usuário)
-- `master/iuds_pdo.php:5723` (função `updateGESMPR_menus` — INSERT em batch)
+- `master/iuds_pdo.php` — função `updateGESMPR_menus` (INSERT em batch)
+- `admin/iuds_pdo.php` — função `updateGESMPR_menus` (cópia da DAL para o admin, FEA-010)
 
-Toda FEA nova que cria uma tela precisa lembrar de adicionar o `id_mnu` nos 4 pontos. Já houve esquecimento na FEA-008 (corrigido pelo commit `311c2a7`, adicionou id_mnu=58).
+Toda FEA nova que cria uma tela precisa lembrar de adicionar o `id_mnu` nos 5 pontos. Já houve esquecimento na FEA-008 (corrigido pelo commit `311c2a7`, adicionou id_mnu=58).
 
-**Ação proposta:** Centralizar em uma única constante PHP (ex.: `MENUS_PADRAO_NOVOS_ADMINS` em `config/permissions.php`) OU em uma tabela (`GESMNU_PADRAO` com flag `is_default`). A FEA-010 vai usar essa lista — bom momento pra fazer o refactor antes, mas não bloqueia a feature.
+**Ação proposta:** Centralizar em uma única constante PHP (ex.: `MENUS_PADRAO_NOVOS_ADMINS` em `config/permissions.php`) OU em uma tabela (`GESMNU_PADRAO` com flag `is_default`).
 
-**Prioridade:** Média — fazer junto com FEA-010 (ou logo depois). Risco baixo: pode ser feito como migração via constante sem mudar comportamento.
+**Prioridade:** Média — risco baixo, pode ser refactor sem mudar comportamento.
+
+### 2. Coluna zumbi `GESUSA.gestor`
+
+`GESUSA.gestor` ainda existe (tinyint default 0) mas foi **descontinuada como modelo de Líder RH** — a flag viva é `GESGES.gestor` (por empresa, INSERT/UPDATE pelas funções do admin). Sem análise prévia ampla **não dropar**: usos remanescentes podem estar em telas legadas. Ver [`memory/gesusa_gestor_zumbi.md`](../.claude/projects/-media-rafo-dados-IA-gestou-www-www/memory/gesusa_gestor_zumbi.md) (cofre local de memória).
 
 ---
 

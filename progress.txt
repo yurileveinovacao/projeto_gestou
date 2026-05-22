@@ -319,6 +319,26 @@ PRD atualizado: prd.json (MIG-001~012 concluídas + FEA-001~006 concluídas)
 ### 2026-05-04 — D-U-N-S Number aprovado pra Play Console (Fase 5 Track A)
 - D-U-N-S liberado. Sessão dedicada pra finalizar publicação do TWA na Play Store fica pendente — passos restantes: criar conta Play Console, listing, upload do APK assinado existente, screenshots, política de privacidade.
 
+### 2026-05-21 — FEA-010 Líder RH entregue ✅
+- **Conceito:** novo papel "Líder RH" (GESGES.gestor=1, por empresa) que ganha autonomia de gestão de admins direto no `/admin/`, sem precisar do `/master/`. Master vira ferramenta interna Leve. Pré-requisito da FEA-009 (RPA).
+- **Migrations aplicadas no Cloud SQL (5 — idempotentes):**
+  - `add_lider_rh_gesusa.sql` — GESUSA ganha `id_usa_inc`, `id_usa_desativado`, `data_desativacao` (auditoria de admin).
+  - `add_limites_admins_gesemp.sql` — GESEMP ganha `limite_lideres` (NOT NULL DEFAULT 2) e `limite_admins_ativos` (NULL = sem teto). 45 empresas existentes ficam com default 2/NULL.
+  - `normalizar_links_gesmnu.sql` — 10 links absolutos `https://www.gestou.com.br/...` em GESMNU.link normalizados pra URLs relativas (faziam o menu master redirecionar pra prod fora de produção).
+  - `reativar_gestus_admin.sql` — GESTUS id_tus=1 (ADMIN) volta a situac=1, agora que `/admin/` filtra internos da listagem.
+  - `renomear_menu_usuarios_admin.sql` — GESMNU id_mnu=36 vira "Usuários Admin" (diferencia de "Colaboradores").
+- **DAL nova (admin/iuds_pdo.php + master/iuds_pdo.php):** `checkLiderRH`, `upsertGESMPR_lider_menus`, `selectGESUSA_admins_ativos`, `selectGESEMP_emp_disponiveis_lider`, `selectGESEMP_emp_selecionadas_lider`, `adminAcessaEmpresa`, `unlinkAdminFromEmpresa`, `selectGESUSA_id_usa_by_master` (id_mas→id_usa).
+- **UI principais:**
+  - `admin/tabela_usuarios.php` — filtro Ativos/Inativos/Todos, coluna "Criado por", badge "Líder RH", badge "X de Y Líderes RH ativos" + condicional admins ativos, ícone Desvincular pra visitantes (admin multi-empresa) vs toggle ativar/desativar pra nativos. Nome do menu renomeado pra "Usuários Admin".
+  - `admin/cadastro_usuario.php` — checkbox Líder RH com validação de limite por empresa; grava id_usa_inc; promoção concede menus extras (id_mnu 34 + 36) via upsertGESMPR_lider_menus.
+  - `admin/alterar_usuario.php` — toggle Líder por empresa na aba Empresas (handler `?lider=on|off&emp=N`), validação ≥1 Líder ativo, isolamento por tenant nas variantes _lider (impede vazamento de empresas entre clientes).
+  - `master/alterar_empresa.php` — seção "Limites de usuários" (limite_lideres + limite_admins_ativos opcional). Controller valida redução.
+  - `master/alterar_usuario2.php` — toggle Líder por empresa + Tipo Usuário ADMIN editável (apenas no master). Bugfix `<form>` sem method="POST" fazia POST cair em $_GET.
+- **Decisões de modelo:** Líder é por empresa (GESGES.gestor), não global. Admin interno (id_tus=1) não conta no badge e não aparece na listagem do `/admin/`. Visitante (admin de outra empresa) recebe ação "Desvincular" (remove GESVIN+GESGES+GESMPR só da empresa atual), não "Desativar" (que tocaria GESUSA.situac global).
+- **Débitos técnicos abertos:** (1) GESUSA.gestor é coluna zumbi — o modelo vivo é GESGES.gestor; ver `memory/gesusa_gestor_zumbi.md`. (2) Lista hardcoded de 26 menus padrão duplicada em 5 lugares.
+- **Backfill de produção (pendente, manual via /master/):** Yuri prefere promover Líderes/marcar internos manualmente após o deploy — sem migration de dados.
+- **Deploy:** imagem `gestou:latest` (sha 27fa0797), revisão Cloud Run `gestou-00138-bvp` servindo 100%. Smoke test 200 em /, /admin, /master, /app.
+
 ## Verificação de uploads pós-cutover (até 2026-04-29)
 - Total de objetos no bucket criados depois do cutover real: **12 arquivos** (excluindo os 6066 do dia 24/abr que vieram do `rsync` do FTP-mirror).
 - Distribuição: 5 notificações RH (CNPJ 08708780, 27/abr), 6 mensagens de mural broadcast (5 CNPJs, 29/abr), 2 fotos de aprovação de cadastro (27 e 28/abr).

@@ -255,7 +255,7 @@
     {
       "id": "FEA-010",
       "title": "Líder RH — papel com autonomia de gestão de admins",
-      "description": "Criar o papel de Líder RH (GESUSA.gestor=1) que pode gerenciar admins da própria empresa direto no /admin/, sem precisar do módulo master. Cada empresa tem por padrão 2 Líderes (configurável pelo master). Líder cadastra/edita/desativa admins, com a restrição de manter pelo menos 1 Líder ativo. Master deixa de ser ferramenta do cliente — vira uso interno Leve. Auditoria completa: cada usuário guarda quem criou, alterou e desativou. Estrutura pronta para limitar admins ativos por empresa no futuro (precificação por tier).",
+      "description": "Criar o papel de Líder RH (GESGES.gestor=1, por empresa) que pode gerenciar admins da própria empresa direto no /admin/, sem precisar do módulo master. Cada empresa tem por padrão 2 Líderes (configurável pelo master). Líder cadastra/edita/desativa admins, com a restrição de manter pelo menos 1 Líder ativo. Master deixa de ser ferramenta do cliente — vira uso interno Leve. Auditoria completa: cada usuário guarda quem criou, alterou e desativou. Estrutura pronta para limitar admins ativos por empresa no futuro (precificação por tier).",
       "acceptanceCriteria": [
         "Migration scripts/migrations/add_lider_rh_gesusa.sql idempotente: ALTER TABLE GESUSA ADD COLUMN IF NOT EXISTS id_usa_inc INTEGER NULL, ADD COLUMN IF NOT EXISTS id_usa_desativado INTEGER NULL, ADD COLUMN IF NOT EXISTS data_desativacao TIMESTAMP NULL. GESUSA.gestor (já existe) passa a marcar Líder RH",
         "Migration scripts/migrations/add_limites_admins_gesemp.sql idempotente: ALTER TABLE GESEMP ADD COLUMN IF NOT EXISTS limite_lideres INT NOT NULL DEFAULT 2, ADD COLUMN IF NOT EXISTS limite_admins_ativos INT NULL (NULL = sem teto)",
@@ -273,8 +273,8 @@
         "Documento docs/proposta-lider-e-rpa.md reflete escopo final"
       ],
       "priority": 20,
-      "passes": false,
-      "notes": "Pré-requisito da FEA-009 (RPA). Decisões fechadas com Yuri (2026-05-19). Escopo enxuto: sem setorização por departamento, sem perfis configuráveis — reutiliza lista hardcoded de 26 menus. Esforço estimado 3-5 dias. Débito técnico relacionado: centralização da lista de menus padrão (hoje duplicada em 4 lugares) — registrado em docs/pendencias.md."
+      "passes": true,
+      "notes": "CONCLUÍDA em 2026-05-21. 5 migrations aplicadas no Cloud SQL (add_lider_rh_gesusa, add_limites_admins_gesemp, normalizar_links_gesmnu, reativar_gestus_admin, renomear_menu_usuarios_admin). Decisão arquitetural: Líder RH é POR EMPRESA via GESGES.gestor (não GESUSA.gestor — esta virou coluna zumbi, registrada em memory/gesusa_gestor_zumbi.md). DAL nova: checkLiderRH, upsertGESMPR_lider_menus (id_mnu 34+36), selectGESUSA_admins_ativos (exclui id_tus=1), variantes _lider isoladas por tenant, adminAcessaEmpresa/unlinkAdminFromEmpresa para visitantes. UI: tabela_usuarios admin renomeada pra 'Usuários Admin', com filtro Ativos/Inativos/Todos, coluna 'Criado por', badge 'Líder RH', badges duplos de contagem, ação Desvincular (remove GESVIN+GESGES+GESMPR só da empresa atual) pra admins de outra empresa. master/alterar_usuario2 com toggle Líder por empresa e Tipo ADMIN editável (apenas no master). Backfill de Líderes em produção é manual via /master/ (Yuri optou por não automatizar). Deploy: revisão gestou-00138-bvp (imagem sha 27fa0797). Pré-requisito da FEA-009 (RPA) destravado."
     },
     {
       "id": "FEA-009",
