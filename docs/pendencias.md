@@ -75,21 +75,11 @@ Tracks B (PWA) e C (build TWA) já concluídos.
 
 ## Débito técnico
 
-### 1. Centralizar a lista de "menus padrão" de novos admins
+### 1. Centralizar a lista de "menus padrão" de novos admins → **virou FEA-013** (planejada em 2026-05-22)
 
-**Problema:** O array de 26 IDs de menu que define o conjunto de telas liberadas por padrão para qualquer admin recém-criado está **hardcoded em 5 lugares** (FEA-010 adicionou o 5º):
+Originalmente listado como débito técnico nº 1. Yuri optou por tratar como FEA dedicada em vez de Fase 0 da FEA-009. Plano detalhado em [`plano-fea-013-centralizar-menus-padrao.md`](plano-fea-013-centralizar-menus-padrao.md). Entrada no `prd.json`. Esforço estimado: ~½ dia. Recomendado entregar ANTES da FEA-009 (RPA) para não repetir o problema com os 2 menus novos (Folha > Autônomos, Folha > RPA).
 
-- `master/adicionar_permissao.php:33` (sincronização de permissões faltantes)
-- `master/alterar_usuario.php:1082` (vinculação de empresa nova ao usuário)
-- `master/controller/adicionar_novo_usuario_post.php:111` (criação direta de novo usuário)
-- `master/iuds_pdo.php` — função `updateGESMPR_menus` (INSERT em batch)
-- `admin/iuds_pdo.php` — função `updateGESMPR_menus` (cópia da DAL para o admin, FEA-010)
-
-Toda FEA nova que cria uma tela precisa lembrar de adicionar o `id_mnu` nos 5 pontos. Já houve esquecimento na FEA-008 (corrigido pelo commit `311c2a7`, adicionou id_mnu=58).
-
-**Ação proposta:** Centralizar em uma única constante PHP (ex.: `MENUS_PADRAO_NOVOS_ADMINS` em `config/permissions.php`) OU em uma tabela (`GESMNU_PADRAO` com flag `is_default`).
-
-**Prioridade:** Média — risco baixo, pode ser refactor sem mudar comportamento.
+Resumo do problema preservado para histórico: array de 26 IDs hardcoded em 5 lugares (`master/adicionar_permissao.php:33`, `master/alterar_usuario.php:1133`, `master/controller/adicionar_novo_usuario_post.php:111`, `master/iuds_pdo.php::updateGESMPR_menus`, `admin/iuds_pdo.php::updateGESMPR_menus`). Esquecimento histórico: commit `311c2a7` corrigiu id_mnu=58 esquecido na FEA-008.
 
 ### 2. Coluna zumbi `GESUSA.gestor`
 

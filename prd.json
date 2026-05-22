@@ -301,7 +301,7 @@
       ],
       "priority": 21,
       "passes": false,
-      "notes": "Depende de FEA-010 (Líder RH) — ENTREGUE em 2026-05-21. Decisões fechadas com Jéssica/Yuri (2026-05-19): gross-up 12,36% fixo (INSS), PIX obrigatório, aprovação no app desde MVP, aceite digital tipo holerite (sem ClickSign), alerta CLT amarelo no 3º dia + bloqueio no 4º, contabilidade cuida de DIRF/SEFIP por fora. Esforço estimado 2-3 semanas. Material de referência da TRYP Hotel: Autorização de RPA.pdf, Modelo Contrato RPA.docx, RPA.MARÇO.xlsx. Fase 2 (UX refinements + notif push + dashboard pagamentos) e Fase 3 (assinatura eletrônica jurídica ClickSign/D4Sign) ficam fora deste MVP — abrir FEA-009b e FEA-009c quando chegar a hora. RECONCILIAÇÃO PÓS-FEA-010 (2026-05-22): (1) Líder RH é GESGES.gestor=1 POR EMPRESA, não GESUSA.gestor — esta virou coluna zumbi. Toda query funcional de 'quem é Líder' deve JOIN em GESGES e filtrar id_tus<>1 (internos da Leve fora). (2) Lista de menus padrão agora hardcoded em 5 lugares — antecipar centralização (débito técnico nº 1 em docs/pendencias.md) ANTES da FEA-009 pra não repetir o problema com 'Folha > Autônomos' e 'Folha > RPA'. (3) Backfill manual de Líderes em produção implica empresas sem Líder no rollout — default proposto: aprovação em fila (a confirmar com Jéssica). (4) Aceite digital do autônomo só via email (sem SMS) — confirmar se todos os autônomos da TRYP têm email cadastrado. (5) Config do RPA em /admin/dados_cadastrais.php (não /master/) já alinhado com decisão FEA-010 de master virar uso interno Leve."
+      "notes": "Depende de FEA-010 (Líder RH) — ENTREGUE em 2026-05-21. Decisões fechadas com Jéssica/Yuri (2026-05-19): gross-up 12,36% fixo (INSS), PIX obrigatório, aprovação no app desde MVP, aceite digital tipo holerite (sem ClickSign), alerta CLT amarelo no 3º dia + bloqueio no 4º, contabilidade cuida de DIRF/SEFIP por fora. Esforço estimado 2-3 semanas. Material de referência da TRYP Hotel: Autorização de RPA.pdf, Modelo Contrato RPA.docx, RPA.MARÇO.xlsx. Fase 2 (UX refinements + notif push + dashboard pagamentos) e Fase 3 (assinatura eletrônica jurídica ClickSign/D4Sign) ficam fora deste MVP — abrir FEA-009b e FEA-009c quando chegar a hora. RECONCILIAÇÃO PÓS-FEA-010 (2026-05-22): (1) Líder RH é GESGES.gestor=1 POR EMPRESA, não GESUSA.gestor — esta virou coluna zumbi. Toda query funcional de 'quem é Líder' deve JOIN em GESGES e filtrar id_tus<>1 (internos da Leve fora). (2) Lista de menus padrão agora hardcoded em 5 lugares — extraído como FEA-013 separada (recomendado entregar ANTES da FEA-009). (3) Config do RPA em /admin/dados_cadastrais.php (não /master/) já alinhado com decisão FEA-010 de master virar uso interno Leve. DECISÕES YURI (2026-05-22, sessão 4): (a) empresas sem Líder RH cadastrado → RPA fica em rascunho sem bloqueio nem auto-aprovação (fila desbloqueia quando alguém for promovido); (b) email obrigatório em GESAUT (NOT NULL) — sem bypass, sem SMS no MVP. Plano detalhado em docs/plano-fea-009-rpa-mvp.md (6 fases com deploys intermediários)."
     },
     {
       "id": "FEA-011",
@@ -347,6 +347,28 @@
       "priority": 23,
       "passes": false,
       "notes": "Motivado pelo Yuri após FEA-011. Plano detalhado em docs/plano-fea-012-cadastro-empresa-master.md. Esforço estimado: 1-2 dias. Independente da FEA-009 — pode ser entregue antes ou em paralelo. NÃO ESCOPO: correção de empresas já cadastradas com NULL (fica para FEA futura ou script de manutenção), refatorar fluxo de aprovação de leads, deletar legado cadastro_empresa.php (cleanup posterior), cadastro em massa/CSV, validação de CNPJ via API externa (só formato + unicidade local). Decisão arquitetural: reusar alterar_empresa.php em modo 'novo' em vez de consertar cadastro_empresa.php legado (que tem bugs estruturais e cobre <60% dos campos)."
+    },
+    {
+      "id": "FEA-013",
+      "title": "Centralizar lista de \"menus padrão\" de novos admins",
+      "description": "Refactor para extrair o array de 26 IDs de menu (que define o conjunto de telas liberadas por padrão para qualquer admin recém-criado) que hoje está hardcoded em 5 lugares diferentes (master/adicionar_permissao.php, master/alterar_usuario.php, master/controller/adicionar_novo_usuario_post.php, master/iuds_pdo.php::updateGESMPR_menus e admin/iuds_pdo.php::updateGESMPR_menus). Toda FEA nova que cria uma tela precisa lembrar de adicionar o id_mnu nos 5 pontos — já houve esquecimento histórico (commit 311c2a7 corrigiu id_mnu=58 esquecido na FEA-008). A FEA-009 (RPA) vai adicionar 2 menus novos (Folha > Autônomos, Folha > RPA), aumentando o risco. Esta FEA centraliza tudo em config/permissions.php numa constante MENUS_PADRAO_NOVOS_ADMINS, mantendo comportamento idêntico. Originalmente listado como 'débito técnico nº 1' em docs/pendencias.md.",
+      "acceptanceCriteria": [
+        "Arquivo novo config/permissions.php com constante MENUS_PADRAO_NOVOS_ADMINS = [1,2,3,4,5,6,7,8,9,10,11,12,13,15,16,17,20,21,22,23,31,32,33,37,57,58] e comentário explicando que toda FEA que adiciona tela ao kit básico de admin deve atualizar a lista",
+        "master/adicionar_permissao.php:33 substitui $menus_padrao = [...] por require_once __DIR__.'/../config/permissions.php' + uso de MENUS_PADRAO_NOVOS_ADMINS",
+        "master/alterar_usuario.php:1133 substitui $menus_padrao_acesso = [...] da mesma forma",
+        "master/controller/adicionar_novo_usuario_post.php:111 substitui o array literal embutido pela constante",
+        "master/iuds_pdo.php::updateGESMPR_menus reescrita: constrói VALUES dinamicamente a partir da constante (implode com 26 placeholders) em vez de 26 linhas hardcoded no INSERT batch",
+        "admin/iuds_pdo.php::updateGESMPR_menus (réplica da FEA-010) reescrita da mesma forma",
+        "Comportamento idêntico ao atual: criar admin novo gera os mesmos 26 registros em GESMPR com situac=1, vincular admin a nova empresa também",
+        "Validação local: comparar SELECT COUNT(*) + lista de id_mnu em GESMPR antes e depois do refactor — diff zero",
+        "Item 'Débito técnico nº 1' removido de docs/pendencias.md",
+        "CLAUDE.md atualizado: adicionar config/permissions.php na tabela de 'Configs centralizados (config/)'",
+        "id_mnu 34 e 36 (exclusivos do Líder RH) NÃO entram nesta constante — continuam em upsertGESMPR_lider_menus (função separada, escopo diferente)",
+        "Deploy em prod com smoke test: criar 1 admin de teste, verificar acesso aos menus padrão"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": "Refactor isolado, baixo risco, comportamento idêntico. Extraído do 'débito técnico nº 1' em docs/pendencias.md. Yuri (2026-05-22) optou por tratar como FEA separada em vez de Fase 0 da FEA-009. Esforço estimado: ~½ dia (3-4 horas). Plano detalhado em docs/plano-fea-013-centralizar-menus-padrao.md. Recomendado entregar ANTES da FEA-009 para evitar repetir o problema com os 2 menus novos do RPA. Decisão arquitetural: constante PHP em vez de tabela GESMNU_PADRAO — sem migration, sem custo de leitura no banco, lista evolui junto com o código no diff. Tabela fica para FEA futura caso seja necessário tornar a lista configurável por tenant."
     }
   ]
 }
