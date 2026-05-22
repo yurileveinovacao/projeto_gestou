@@ -11242,6 +11242,36 @@ function select_DOCUMENTOS($raiz_cnpj, $id_usu, $id_emp)
     return $resultset;
 }
 
+// FEA-011 — Resolve o path absoluto de um documento listado em select_DOCUMENTOS.
+// Retorna null para tipos desconhecidos. Não checa file_exists — quem chama decide.
+function resolveDocumentoPath($tipo, $arquivo, $raiz_cnpj, $cpf = null)
+{
+    if (empty($arquivo)) {
+        return null;
+    }
+    $base = __DIR__ . '/../upload';
+    switch ($tipo) {
+        case 'Holerite':
+            return $base . '/beneficios/holerite/' . $raiz_cnpj . '/' . $arquivo;
+        case 'IRRF':
+            return $base . '/beneficios/irrf/' . $raiz_cnpj . '/' . $arquivo;
+        case 'Ponto':
+            return $base . '/beneficios/ponto/' . $raiz_cnpj . '/' . $arquivo;
+        case 'Diversos':
+            return $base . '/beneficios/recibos_diversos/' . $raiz_cnpj . '/' . $arquivo;
+        case 'Documento':
+            if (empty($cpf)) {
+                return null;
+            }
+            return $base . '/colaboradores/' . $raiz_cnpj . '/' . $cpf . '/' . $arquivo;
+        case 'Atestado':
+            // arquivo_path em justificativas já é caminho completo relativo a /var/www/html
+            return __DIR__ . '/../' . ltrim($arquivo, '/');
+        default:
+            return null;
+    }
+}
+
 //INSERT insert_GESDCOL revisado - 05/09/2024 17:52
 function insert_GESDCOL($descricao, $arquivo, $id_emp, $id_usu, $datinc)
 {

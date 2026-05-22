@@ -931,7 +931,23 @@ unset($_SESSION['alterar_colaborador']['token']);
                                         <!-- INICIO MENU DOCUMENTOS -->
                                         <div class="tab-pane fade" id="menu-documentos" role="tabpanel" aria-labelledby="menu-documentos-tab">
 
+                                            <?php
+                                            // FEA-011: CPF e nome do colaborador (necessários no endpoint do ZIP)
+                                            $colab_cpf = '';
+                                            $colab_nome = '';
+                                            foreach (selectGESUSU($id_fun) as $u) {
+                                                $colab_cpf = $u['cpf'];
+                                                $colab_nome = $u['nome'];
+                                            }
+                                            $_SESSION['alterar_colaborador']['colab_cpf'] = $colab_cpf;
+                                            $_SESSION['alterar_colaborador']['colab_nome'] = $colab_nome;
+                                            ?>
+
                                             <div class="col-md-12 mb-2 w-100 d-flex">
+                                                <button type="button" id="baixar_zip_documentos" class="btn btn-outline-primary mr-2" disabled>
+                                                    <i class="fas fa-file-archive mr-sm-2"></i>
+                                                    Baixar selecionados (<span id="zip_count">0</span>)
+                                                </button>
                                                 <button type="button" id="incluir_documento" class="btn btn-organograma btn-icon-split-organograma ml-auto">
                                                     <i class="fas fa-plus-circle mr-sm-2"></i> Incluir
                                                 </button>
@@ -944,6 +960,9 @@ unset($_SESSION['alterar_colaborador']['token']);
                                                     <!-- INICIO THEAD -->
                                                     <thead>
                                                         <tr>
+                                                            <th data-orderable="false" class="sorttable_nosort nao_click textalign-center" style="vertical-align: middle; width: 5%;">
+                                                                <input type="checkbox" id="zip_check_all" title="Selecionar todos">
+                                                            </th>
                                                             <th data-orderable="false" style="vertical-align: middle;">Descrição</th>
                                                             <th data-orderable="false" style="vertical-align: middle;">Tipo</th>
                                                             <th data-orderable="false" style="vertical-align: middle;">Competência</th>
@@ -954,6 +973,7 @@ unset($_SESSION['alterar_colaborador']['token']);
                                                     <!-- INICIO TFOOT -->
                                                     <tfoot>
                                                         <tr>
+                                                            <th rowspan="1" colspan="1"></th>
                                                             <th rowspan="1" colspan="1">Descrição</th>
                                                             <th rowspan="1" colspan="1">Tipo</th>
                                                             <th rowspan="1" colspan="1">Competência</th>
@@ -981,6 +1001,11 @@ unset($_SESSION['alterar_colaborador']['token']);
                                                                 $tipo = $select['tipo']; ?>
 
                                                                 <tr data-token="<?php echo $token; ?>">
+
+                                                                    <!-- CHECKBOX FEA-011 -->
+                                                                    <td style="text-align: center; width: 5%;">
+                                                                        <input type="checkbox" class="zip_check" value="<?php echo $token; ?>">
+                                                                    </td>
 
                                                                     <!-- DESCRIÇÃO -->
                                                                     <td style="width: 40%;">
@@ -1547,6 +1572,78 @@ unset($_SESSION['alterar_colaborador']['token']);
             });
         });
     });
+
+    // FEA-011 — Download em lote de documentos do colaborador (ZIP)
+    // Usa fetch+blob em vez de submit de form porque o <form id="form"> pai engloba toda a aba
+    // — HTML não permite forms aninhados.
+    (function() {
+        var $btn = $('#baixar_zip_documentos');
+        var $checkAll = $('#zip_check_all');
+
+        function atualizarBotao() {
+            var marcados = $('.zip_check:checked').length;
+            $('#zip_count').text(marcados);
+            $btn.prop('disabled', marcados === 0);
+        }
+
+        function resetBotao() {
+            $btn.html('<i class="fas fa-file-archive mr-sm-2"></i>Baixar selecionados (<span id="zip_count">0</span>)');
+            atualizarBotao();
+        }
+
+        $checkAll.on('change', function() {
+            $('.zip_check').prop('checked', this.checked);
+            atualizarBotao();
+        });
+
+        $(document).on('change', '.zip_check', function() {
+            if (!this.checked) $checkAll.prop('checked', false);
+            atualizarBotao();
+        });
+
+        $btn.on('click', function() {
+            var tokens = $('.zip_check:checked').map(function() { return this.value; }).get();
+            if (tokens.length === 0) return;
+
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-sm-2"></i>Gerando ZIP...');
+
+            var formData = new FormData();
+            tokens.forEach(function(t) { formData.append('tokens[]', t); });
+
+            fetch('controller/documentos_zip_post.php', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            }).then(function(response) {
+                if (!response.ok) {
+                    return response.json().catch(function() { return { erro: 'Erro HTTP ' + response.status }; })
+                        .then(function(err) { throw new Error(err.erro || ('Erro HTTP ' + response.status)); });
+                }
+                var disp = response.headers.get('Content-Disposition') || '';
+                var match = disp.match(/filename="?([^";]+)"?/);
+                var filename = match ? match[1] : 'documentos.zip';
+                return response.blob().then(function(blob) { return { blob: blob, filename: filename }; });
+            }).then(function(result) {
+                var url = URL.createObjectURL(result.blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = result.filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                $('.zip_check, #zip_check_all').prop('checked', false);
+            }).catch(function(err) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', title: 'Erro ao baixar', text: err.message });
+                } else {
+                    alert('Erro ao baixar: ' + err.message);
+                }
+            }).then(function() {
+                resetBotao();
+            });
+        });
+    })();
     </script>
 
 </body>

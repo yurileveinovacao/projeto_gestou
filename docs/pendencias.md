@@ -3,7 +3,7 @@
 Documento vivo. Lista o que ficou em aberto após o cutover (2026-04-24) e o que está esperando
 sessão dedicada / terceiros. Itens concluídos saem daqui — histórico fica no `progress.txt`.
 
-Última atualização: 2026-05-21 (sessão da noite).
+Última atualização: 2026-05-22.
 
 ---
 
@@ -65,7 +65,8 @@ Tracks B (PWA) e C (build TWA) já concluídos.
 | Item | Situação |
 |---|---|
 | **FEA-010 — Líder RH** | ✅ Entregue em 2026-05-21 (revisão `gestou-00138-bvp`). Backfill manual de Líderes em produção fica a cargo do Yuri via `/master/`. Ver [`progress.txt`](../progress.txt) |
-| **FEA-009 — Módulo RPA** | Escopo fechado em 2026-05-19 com Yuri/Jéssica. Pré-requisito (FEA-010) entregue. Próximo passo: iniciar MVP. Ver [`docs/proposta-lider-e-rpa.md`](proposta-lider-e-rpa.md) |
+| **FEA-009 — Módulo RPA** | Escopo fechado em 2026-05-19 com Yuri/Jéssica. Pré-requisito (FEA-010) entregue. Reconciliação pós-FEA-010 em 2026-05-22. Próximo passo: iniciar MVP. Ver [`docs/proposta-lider-e-rpa.md`](proposta-lider-e-rpa.md) |
+| **FEA-011 — Download em lote de documentos (ZIP)** | Solicitado por cliente em 2026-05-22. Escopo enxuto, independente da FEA-009 (pode entregar antes). Esforço 1-2 dias. Plano em [`docs/plano-fea-011-download-documentos.md`](plano-fea-011-download-documentos.md) |
 | **IA 1 — Compliance** (Ponto vs. Convenção + Relatórios vs. Holerite) | Documentos recebidos — aguarda sessão dedicada |
 | **IA 2 — Suporte Bia** (landing + plataforma) | Aguarda sessão dedicada |
 | **Recrutamento e Seleção** | Baixa prioridade — próxima fase |
