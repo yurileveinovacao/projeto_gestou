@@ -1,6 +1,6 @@
 # Líder RH + Módulo RPA — Escopo final
 
-**Data:** 2026-05-19 · **Status:** Decisões fechadas com Yuri/Jéssica · **Pronto para implementação**
+**Data:** 2026-05-19 (escopo original) · **Atualizado:** 2026-05-22 (reconciliação pós-entrega da FEA-010) · **Status:** FEA-010 entregue · FEA-009 pronta pra implementação
 
 ---
 
@@ -14,12 +14,14 @@ A Jéssica (TRYP Hotel Ribeirão Preto) entregou material sobre o **fluxo de RPA
 
 **Problema:** Hoje qualquer admin enxerga e mexe em tudo da empresa. Para criar/desativar usuários do painel é preciso acionar o time interno via `/master/`. Não há registro de quem criou cada usuário.
 
-**Solução:**
-- Papel único novo: **Líder RH** (`GESUSA.gestor=1`), sem setorização — enxerga a empresa inteira como os admins de hoje
+**Solução (entregue 2026-05-21):**
+- Papel único novo: **Líder RH** (`GESGES.gestor=1`, **por empresa** — modelo final escolhido na implementação), sem setorização — enxerga a empresa inteira como os admins de hoje
+- ⚠️ `GESUSA.gestor` (coluna no usuário) **NÃO** é a fonte da verdade. Virou coluna zumbi após a entrega — ver [`memory/gesusa_gestor_zumbi.md`](../.claude/projects/-media-rafo-dados-IA-gestou-www-www/memory/gesusa_gestor_zumbi.md). Toda query nova de "quem é Líder RH" deve consultar `GESGES.gestor=1` filtrando por `id_emp`
 - A diferença está na **gestão de usuários:** Líder RH pode criar, editar, ativar e desativar admins direto no `/admin/`, sem precisar do master
 - **Master vira uso interno Leve** (suporte/manutenção). Deixa de ser ferramenta exposta ao cliente
 - Cada usuário registra **quem o criou, alterou e desativou** (auditoria completa)
 - Estrutura preparada para **limitar admins ativos por empresa** no futuro (precificação por tier) — campo já existe, sem teto agora
+- **Internos da Leve (`GESTUS.id_tus=1` = ADMIN)** não contam nos contadores de Líderes/admins ativos e não são listados em fluxos funcionais (hotfix `b0d433c`)
 
 **Decisões fechadas:**
 
@@ -33,19 +35,20 @@ A Jéssica (TRYP Hotel Ribeirão Preto) entregou material sobre o **fluxo de RPA
 | Auditoria | Criado por + alterado por + desativado por (com timestamps) |
 
 **Aproveitamento do que já existe:**
-- `GESUSA.gestor` (bool, hoje sem uso) passa a significar "Líder RH"
-- `admin/cadastro_usuario.php` e `admin/tabela_usuarios.php` já existem — recebem regra de acesso e novas colunas
-- Função `updateGESMPR_menus()` já cria admin com a lista padrão — reutilizada
+- `GESGES.gestor` (bool por empresa, já presente no schema) virou a flag de Líder RH
+- `admin/cadastro_usuario.php` e `admin/tabela_usuarios.php` já existem — receberam regra de acesso e novas colunas
+- Função `updateGESMPR_menus()` já cria admin com a lista padrão — reutilizada (com cópia adicional em `admin/iuds_pdo.php` — ver débito técnico)
 
 **O que é novo:**
 - `GESUSA.id_usa_inc` — admin que criou este usuário
 - `GESUSA.id_usa_desativado` + `GESUSA.data_desativacao` — auditoria de desativação
 - `GESEMP.limite_lideres` (default 2) — controlado pelo master
 - `GESEMP.limite_admins_ativos` (default NULL) — preparado pra tier
-- Regra de acesso: telas de gestão de usuários no `/admin/` só liberam para `gestor=1`
+- Regra de acesso: telas de gestão de usuários no `/admin/` só liberam para `GESGES.gestor=1` na empresa atual
 - Validação: bloqueia desativação se sobrar 0 Líderes ativos
 - Validação: bloqueia promoção a Líder se atingiu `limite_lideres`
 - Coluna "Criado por" + filtro "ativos/inativos" na listagem
+- Backfill de Líderes em produção é **manual** via `/master/` (Yuri, conforme alinhar com cada gestor)
 
 **Esforço estimado:** ~3-5 dias
 
@@ -65,6 +68,20 @@ A Jéssica (TRYP Hotel Ribeirão Preto) entregou material sobre o **fluxo de RPA
 | **Aprovação no app** | **Desde o MVP** — fluxo digital pelo app do responsável |
 | **Assinatura do autônomo** | Reutiliza o mecanismo de **aceite do holerite** (`id_usu_aceite`, `ip_aceite`, `data_aceite`) — sem ClickSign/D4Sign por ora |
 | **DIRF/SEFIP** | Contabilidade cuida por fora. Gestou só faz **controle interno + export Excel mensal** |
+
+### Reconciliação com a FEA-010 (entregue 2026-05-21)
+
+Itens revistos depois que o modelo final do Líder RH ficou pronto em produção:
+
+| Item | Como ficou |
+|------|------------|
+| **Quem aprova RPA** | Líder RH da empresa (`GESGES.gestor=1` + `id_emp` da sessão) OU admin com `id_dep` igual ao setor do RPA. Sempre filtrar `id_tus IS NULL OR id_tus <> 1` para excluir internos da Leve. Reaproveitar/estender `selectGESUSA_lideres_ativos` (`admin/iuds_pdo.php:11402`) |
+| **Filtro `id_tus<>1`** | Padrão obrigatório em toda query funcional (notificações, dashboards "RPAs pendentes", listas de responsáveis). Internos da Leve nunca aparecem em fluxo operacional |
+| **Lista de menus padrão** | Hardcoded em **5 lugares** agora (não 4). Os novos `id_mnu` "Folha > Autônomos" e "Folha > RPA" precisam entrar em todos. Se visíveis ao Líder, entrar também em `upsertGESMPR_lider_menus`. Vale antecipar a centralização (débito técnico nº 1 em `docs/pendencias.md`) antes de codificar a FEA-009 |
+| **Empresa sem Líder RH no rollout** | Backfill é manual, então existirão empresas sem Líder no início do MVP. **Decisão (default proposto):** permitir cadastro de RPA, aprovação fica em fila até alguém ser promovido. Alternativas: bloquear cadastro / fallback liberando qualquer admin. **A confirmar com Jéssica.** |
+| **Aceite digital do autônomo** | Token via **email apenas** — não há infra de SMS contratada. Risco: autônomo sem email cadastrado. **A confirmar com Jéssica** se algum autônomo da TRYP não tem email |
+| **Config do RPA** | Fica em `/admin/dados_cadastrais.php` (não no `/master/`) — alinhado com decisão da FEA-010 de master virar uso interno |
+| **Auditoria nas novas tabelas** | GESAUT/GESRPA/GESRPACFG seguem o padrão da FEA-010 (`id_usa_inc`, `id_usa_atu`, `datinc`, `datatu`). Avaliar `id_usa_desativado` em GESAUT se a Jéssica quiser rastrear quem inativou autônomos |
 
 ### Solução (MVP)
 
@@ -103,7 +120,15 @@ FEA-010 (Líder RH, 3-5 dias)
 
 ## Débito técnico identificado (não bloqueia)
 
-A lista de "menus padrão" para criação de admins está **hardcoded em 4 lugares** (`master/adicionar_permissao.php`, `master/alterar_usuario.php`, `master/controller/adicionar_novo_usuario_post.php`, `master/iuds_pdo.php`). Toda FEA nova precisa lembrar de atualizar os 4. Vale centralizar em constante única ou tabela num refactor futuro — registrado em `docs/pendencias.md`.
+A lista de "menus padrão" para criação de admins está **hardcoded em 5 lugares** (atualizado pós-FEA-010):
+
+- `master/adicionar_permissao.php:33`
+- `master/alterar_usuario.php:1082`
+- `master/controller/adicionar_novo_usuario_post.php:111`
+- `master/iuds_pdo.php` — função `updateGESMPR_menus`
+- `admin/iuds_pdo.php` — função `updateGESMPR_menus` (cópia adicionada pela FEA-010)
+
+Toda FEA nova que cria tela precisa atualizar os 5. Vale centralizar em constante única (`config/permissions.php`) ou tabela (`GESMNU_PADRAO`) num refactor curto **antes** da FEA-009 — registrado em `docs/pendencias.md`.
 
 ---
 
