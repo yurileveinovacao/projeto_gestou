@@ -8,6 +8,7 @@
  **/
 
 require_once __DIR__.'/../config/database.php';
+require_once __DIR__.'/../config/permissions.php';
 
 //Tabela GESCON update - revisado em 04/01/2022 10:19
 function updateGESCON(
@@ -11549,41 +11550,18 @@ function upsertGESMPR_lider_menus($id_usa, $id_emp, $is_lider, $datatu)
     $statement->execute();
 }
 
-// FEA-010 — Líder RH: aplica lista padrão de 26 menus para um admin recém-criado.
-// Réplica de master/iuds_pdo.php::updateGESMPR_menus — débito técnico de
-// centralização registrado em docs/pendencias.md (lista hoje em 4 lugares).
+// FEA-010 — Líder RH: aplica lista padrão de menus para um admin recém-criado.
+// FEA-013 (2026-05-24): lista centralizada em config/permissions.php.
 function updateGESMPR_menus($id_usa, $id_emp, $datatu)
 {
     global $pdo;
+    $valores = [];
+    foreach (MENUS_PADRAO_NOVOS_ADMINS as $id_mnu) {
+        $valores[] = "(:id_usa, :id_emp, $id_mnu, :datatu, 1)";
+    }
     $query = 'INSERT INTO public."GESMPR" (id_usa, id_emp, id_mnu, datatu, situac)
-        VALUES
-            (:id_usa, :id_emp, 1, :datatu, 1),
-            (:id_usa, :id_emp, 2, :datatu, 1),
-            (:id_usa, :id_emp, 3, :datatu, 1),
-            (:id_usa, :id_emp, 4, :datatu, 1),
-            (:id_usa, :id_emp, 5, :datatu, 1),
-            (:id_usa, :id_emp, 6, :datatu, 1),
-            (:id_usa, :id_emp, 7, :datatu, 1),
-            (:id_usa, :id_emp, 16, :datatu, 1),
-            (:id_usa, :id_emp, 8, :datatu, 1),
-            (:id_usa, :id_emp, 9, :datatu, 1),
-            (:id_usa, :id_emp, 10, :datatu, 1),
-            (:id_usa, :id_emp, 11, :datatu, 1),
-            (:id_usa, :id_emp, 12, :datatu, 1),
-            (:id_usa, :id_emp, 13, :datatu, 1),
-            (:id_usa, :id_emp, 20, :datatu, 1),
-            (:id_usa, :id_emp, 23, :datatu, 1),
-            (:id_usa, :id_emp, 21, :datatu, 1),
-            (:id_usa, :id_emp, 22, :datatu, 1),
-            (:id_usa, :id_emp, 37, :datatu, 1),
-            (:id_usa, :id_emp, 15, :datatu, 1),
-            (:id_usa, :id_emp, 17, :datatu, 1),
-            (:id_usa, :id_emp, 31, :datatu, 1),
-            (:id_usa, :id_emp, 32, :datatu, 1),
-            (:id_usa, :id_emp, 33, :datatu, 1),
-            (:id_usa, :id_emp, 57, :datatu, 1),
-            (:id_usa, :id_emp, 58, :datatu, 1)
-        ON CONFLICT (id_usa, id_emp, id_mnu) DO NOTHING';
+              VALUES ' . implode(',', $valores) . '
+              ON CONFLICT (id_usa, id_emp, id_mnu) DO NOTHING';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
     $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);

@@ -59,6 +59,7 @@ Hospedado no GCP (Cloud Run + Cloud SQL).
 | `app.php` | URL base e email de contato | APP_URL, CONTACT_EMAIL |
 | `session.php` | Sessões em PostgreSQL (tabela `php_sessions`). Requer database.php | (nenhuma própria — usa DB_*) |
 | `ocr.php` | ⚠️ Legado (Google Vision) — NÃO USADO. OCR agora é Azure, direto nos controllers | — |
+| `permissions.php` | Constante `MENUS_PADRAO_NOVOS_ADMINS` (26 id_mnu liberados a admins recém-criados). Adicione novos IDs aqui quando uma FEA incluir tela no kit básico | — |
 
 ## Timezones
 

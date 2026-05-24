@@ -30,11 +30,11 @@ foreach (selectCOUNT_GESMNU($id_usa_selecionado, $id_emp_selecionado) as $count_
 
 //Se contagem diferente de zero, executar insert em GESMPR de todos menus que estão faltando.
 //Menus na lista padrão entram já com situac=1 (liberados); demais entram com situac=0.
-$menus_padrao = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 20, 21, 22, 23, 31, 32, 33, 37, 57, 58];
+//FEA-013: MENUS_PADRAO_NOVOS_ADMINS vem de config/permissions.php (já incluído via iuds_pdo.php).
 if ($contagem != 0) {
     foreach (select_TELAS_INSERT($id_usa_selecionado, $id_emp_selecionado) as $telas_insert) {
         $id_mnu_atual = (int) $telas_insert["id_mnu"];
-        $situac_default = in_array($id_mnu_atual, $menus_padrao, true) ? 1 : 0;
+        $situac_default = in_array($id_mnu_atual, MENUS_PADRAO_NOVOS_ADMINS, true) ? 1 : 0;
         insertGESMNU_add($id_usa_selecionado, $id_emp_selecionado, $id_mnu_atual, $datatu, $situac_default);
     }
 }

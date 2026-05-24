@@ -1129,8 +1129,8 @@ if (isset($_REQUEST['lider'], $_REQUEST['emp'])) {
 
 <?php
 
-// Menus liberados por padrão ao vincular uma empresa ao usuário
-$menus_padrao_acesso = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 20, 21, 22, 23, 31, 32, 33, 37, 57, 58];
+// FEA-013: lista de menus padrão centralizada em config/permissions.php
+// (já incluída via require_once iuds_pdo.php no topo).
 
 // Atribui 1 empresa ao Usuario ADM
 if (isset($_POST["btn_inc"])) {
@@ -1146,7 +1146,7 @@ if (isset($_POST["btn_inc"])) {
         foreach (select_TELAS_INSERT($id_usa, $id_emp) as $tela) {
             if (!is_array($tela) || !isset($tela['id_mnu'])) continue;
             $id_mnu = (int) $tela['id_mnu'];
-            $situac = in_array($id_mnu, $menus_padrao_acesso, true) ? 1 : 0;
+            $situac = in_array($id_mnu, MENUS_PADRAO_NOVOS_ADMINS, true) ? 1 : 0;
             insertGESMPR($id_usa, $id_emp, $id_mnu, $datatu, $situac);
         }
     } catch (PDOException $erro) {
@@ -1173,7 +1173,7 @@ if (isset($_POST["btn_inc_all"])) {
                 foreach (select_TELAS_INSERT($id_usa, $id_emp) as $tela) {
                     if (!is_array($tela) || !isset($tela['id_mnu'])) continue;
                     $id_mnu = (int) $tela['id_mnu'];
-                    $situac = in_array($id_mnu, $menus_padrao_acesso, true) ? 1 : 0;
+                    $situac = in_array($id_mnu, MENUS_PADRAO_NOVOS_ADMINS, true) ? 1 : 0;
                     insertGESMPR($id_usa, $id_emp, $id_mnu, $datatu, $situac);
                 }
             }

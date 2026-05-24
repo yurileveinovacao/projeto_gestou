@@ -1,7 +1,7 @@
 # FEA-013 — Centralizar lista de "menus padrão" de novos admins
 
-**Status:** rascunho de plano (aguardando aprovação)
-**Data:** 2026-05-22
+**Status:** aprovado após auditoria minuciosa em 2026-05-24 — pronto para execução
+**Data:** 2026-05-22 (plano), 2026-05-24 (revisão + aprovação)
 **Esforço estimado:** ~½ dia (3-4 horas)
 **Dependências:** nenhuma
 **Bloqueia:** FEA-009 (RPA) — sem centralizar, os 2 menus novos (Folha > Autônomos, Folha > RPA) precisariam ser editados em 5 lugares com risco de esquecer um
@@ -34,9 +34,18 @@ Substituir os 5 pontos hardcoded por **uma única fonte da verdade** que todos c
 
 ## 3. Estratégia
 
-Criar uma constante PHP em `config/permissions.php` (segue o padrão de `config/database.php`, `config/mail.php`, `config/storage.php` já presentes).
+Criar uma **constante PHP** (`const`, não variável global) em `config/permissions.php`.
 
-**Por que constante PHP e não tabela GESMNU_PADRAO?**
+**Por que `const` em vez de variável global (padrão dos outros configs)?**
+
+Os configs existentes (`database.php`, `mail.php`, `app.php`) usam variáveis globais (`$pdo`, `$conn`, `$app_url`) ou funções (`configureMailer`). Para a lista de menus, prefiro `const`:
+
+- Variável global precisaria de `global $menus_padrao;` dentro de cada função que usa — burocracia
+- `const` resolve em compile-time, é imutável e acessível em **qualquer escopo** (inclusive dentro de `updateGESMPR_menus`)
+- `const` em arquivo top-level funciona em PHP 7.4 (suporta arrays desde 5.6)
+- Não é "config de ambiente" — é constante de domínio. `const` é o tipo correto
+
+**Por que constante PHP e não tabela `GESMNU_PADRAO`?**
 - Refactor mínimo, zero risco de migração
 - Lista evolui junto com o código (cada FEA que adiciona menu também edita a constante — visível no diff)
 - Tabela traria custo de migration + leitura no banco em todo cadastro de admin, sem ganho real
@@ -68,19 +77,61 @@ Sem outras funções — apenas a constante. Mantém-se simples.
 
 ### 4.2 Refatorar os 5 pontos
 
-| # | Arquivo | Alteração |
-|---|---|---|
-| 1 | `master/adicionar_permissao.php:33` | substituir `$menus_padrao = [...]` por `require_once __DIR__.'/../config/permissions.php';` e usar `MENUS_PADRAO_NOVOS_ADMINS` |
-| 2 | `master/alterar_usuario.php:1133` | substituir `$menus_padrao_acesso = [...]` por `require_once + uso da constante` |
-| 3 | `master/controller/adicionar_novo_usuario_post.php:111` | substituir array literal embutido pela constante |
-| 4 | `master/iuds_pdo.php` (`updateGESMPR_menus`) | reescrever para construir VALUES dinamicamente a partir da constante (vai virar `foreach (MENUS_PADRAO_NOVOS_ADMINS as $id_mnu) { ... }` com `executeMany` ou loop de prepared statements). Comportamento idêntico ao INSERT batch atual. |
-| 5 | `admin/iuds_pdo.php` (`updateGESMPR_menus`) | idem ao item 4 |
+| # | Arquivo | Nível | Path do require | Alteração |
+|---|---|---|---|---|
+| 1 | `master/adicionar_permissao.php:33` | 1 | `__DIR__.'/../config/permissions.php'` | substituir `$menus_padrao = [...]` por `require_once + uso de MENUS_PADRAO_NOVOS_ADMINS` |
+| 2 | `master/alterar_usuario.php:1133` | 1 | `__DIR__.'/../config/permissions.php'` | substituir `$menus_padrao_acesso = [...]` por `require_once + uso da constante` |
+| 3 | `master/controller/adicionar_novo_usuario_post.php:111` | 2 | `__DIR__.'/../../config/permissions.php'` | substituir array literal embutido pela constante |
+| 4 | `master/iuds_pdo.php` (`updateGESMPR_menus`, linha 5730) | 1 | `__DIR__.'/../config/permissions.php'` | reescrever para construir VALUES dinamicamente a partir da constante. **Preservar** `ON CONFLICT (id_usa, id_emp, id_mnu) DO NOTHING` e `situac=1` hardcoded |
+| 5 | `admin/iuds_pdo.php` (`updateGESMPR_menus`, linha 11555) | 1 | `__DIR__.'/../config/permissions.php'` | idem ao item 4 |
 
-### 4.3 Documentar
+**Padrão de construção dinâmica do VALUES** (itens 4 e 5):
 
-- Atualizar `docs/pendencias.md` removendo o item "Débito técnico nº 1" e referenciando esta FEA na seção de "concluídos" (se houver) ou simplesmente removendo
-- Atualizar comentário no topo de `config/permissions.php` lembrando que a constante deve ser atualizada quando novas telas forem adicionadas
-- Inclusão em CLAUDE.md (seção "Configs centralizados (config/)"): adicionar linha do `permissions.php`
+```php
+require_once __DIR__.'/../config/permissions.php';
+
+function updateGESMPR_menus($id_usa, $id_emp, $datatu) {
+    global $pdo;
+
+    // Monta VALUES dinamicamente a partir da constante
+    $valores = [];
+    foreach (MENUS_PADRAO_NOVOS_ADMINS as $id_mnu) {
+        $valores[] = "(:id_usa, :id_emp, $id_mnu, :datatu, 1)";
+    }
+    $query = 'INSERT INTO public."GESMPR" (id_usa, id_emp, id_mnu, datatu, situac)
+              VALUES ' . implode(',', $valores) . '
+              ON CONFLICT (id_usa, id_emp, id_mnu) DO NOTHING';
+
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_usa', $id_usa, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->bindParam(':datatu', $datatu, PDO::PARAM_STR);
+    $statement->execute();
+}
+```
+
+`$id_mnu` é inteiro de fonte confiável (constante hardcoded no código), pode ser interpolado direto na string sem risco de injection. Os 3 params dinâmicos (`id_usa`, `id_emp`, `datatu`) continuam via bindParam.
+
+### 4.3 Comportamento preservado — pontos sutis
+
+- **`ON CONFLICT DO NOTHING`** mantido em ambas as funções. **Não atualiza** `situac` se já existe registro com `id_mnu` na mesma `(id_usa, id_emp)`. Refactor **não "ativa"** menus já desabilitados (situac=0) no banco — é o comportamento atual, esperado pelo Yuri.
+- **Ordem dos IDs** muda ligeiramente nos itens 4 e 5 (de "ordem histórica" 1-7,16,8-13,20,23,21,22,37,15,17,31-33,57,58 → ordem crescente da constante). Sem impacto: INSERT é insensível à ordem e ON CONFLICT garante idempotência.
+- **`situac=1`** hardcoded continua aplicado a todos os 26 IDs (idêntico ao atual).
+- **Assinatura `updateGESMPR_menus($id_usa, $id_emp, $datatu)`** preservada — 3 call sites externos não precisam mudar (ver seção 4.4).
+
+### 4.4 Call sites da função (não alteram, mas catalogados)
+
+`updateGESMPR_menus` é chamada em 3 lugares **fora** das duas definições. Assinatura preservada → zero impacto:
+
+- `admin/cadastro_usuario.php:774` — admin cria usuário novo na empresa atual (FEA-010)
+- `master/controller/alterar_aprovacao_post.php:268` — quando uma empresa é aprovada
+- `master/controller/usuarios_master_post.php:514` — **chamada comentada**, ignorar
+
+### 4.5 Documentar
+
+- `docs/pendencias.md` — débito técnico nº 1 já redirecionado para esta FEA (commit anterior). Após entrega, podemos remover o item de vez (decisão pós-deploy).
+- Comentário no topo de `config/permissions.php` lembrando que a constante deve ser atualizada quando novas telas forem adicionadas ao kit padrão
+- `CLAUDE.md` seção "Configs centralizados (config/)": adicionar linha do `permissions.php`
 
 ---
 
@@ -90,6 +141,7 @@ Sem outras funções — apenas a constante. Mantém-se simples.
 - Mudar a interface de `updateGESMPR_menus` (continua recebendo `$id_usa, $id_emp, $datatu`)
 - Tocar nos menus específicos do **Líder RH** (`upsertGESMPR_lider_menus` com id_mnu 34+36 — função separada, escopo diferente)
 - Reorganizar nomenclatura de funções (DAL continua igual)
+- **Lista `$menus_suporte` em `master/controller/alterar_aprovacao_post.php:278`** (24 IDs, faltam 57 e 58) — descoberta na auditoria de 2026-05-24. **Semântica diferente**: define o que usuários internos da Leve (Yuri id=1, suporte id=39) ganham acesso quando uma empresa é aprovada (não é o "kit do admin do cliente"). Pode virar futura constante `MENUS_SUPORTE_INTERNO_LEVE` em FEA dedicada — não urgente, não bloqueia FEA-009
 
 ---
 
@@ -108,11 +160,13 @@ Critério de sucesso: **diff zero** no banco entre cenários "antes" e "depois" 
 
 ## 7. Riscos
 
-| Risco | Mitigação |
+| Risco | Status após auditoria 2026-05-24 |
 |---|---|
-| Algum dos 5 pontos hoje tem um id_mnu **diferente** dos outros 4 (deriva) | Rodar grep antes do refactor, comparar as 5 listas. Se houver divergência, anotar e perguntar ao Yuri qual é a "verdade" antes de uniformizar |
-| Função `updateGESMPR_menus` atual usa `INSERT ... VALUES (...),(...),(...)` batch com 26 linhas — performático. Loop pode ficar mais lento | Construir dinamicamente o `VALUES (...),(...),(...)` em PHP a partir da constante: `implode(',', array_map(...))`. Resultado: 1 prepared statement com mesmo número de bindings |
-| `require_once` em arquivos de `master/controller/` precisa ajustar path relativo | Padrão já existente no projeto: `require_once __DIR__.'/../../config/permissions.php'` |
+| Algum dos 5 pontos hoje tem um id_mnu **diferente** dos outros 4 (deriva) | ✅ **Verificado**: 5 listas idênticas em conteúdo (26 IDs), diferença só de ordem (sem impacto) |
+| Função `updateGESMPR_menus` atual usa `INSERT ... VALUES (...),(...),(...)` batch com 26 linhas — performático. Loop pode ficar mais lento | ✅ **Mitigado**: padrão de implementação (seção 4.2) constrói `VALUES (...),(...),(...)` dinamicamente em uma string e executa em 1 prepared statement (mesma performance) |
+| `require_once` em arquivos de `master/controller/` precisa ajustar path relativo | ✅ **Confirmado**: 1 nível pra `master/`, `master/iuds_pdo.php`, `admin/iuds_pdo.php`; 2 níveis pra `master/controller/` |
+| Existe outro lugar com lista similar de menus não mapeado | ⚠️ **Achado**: 6º lugar (`$menus_suporte` em `alterar_aprovacao_post:278`) mas com semântica diferente — fora do escopo (ver seção 5) |
+| Refactor pode "ativar" menus desabilitados (`situac=0`) por engano | ✅ **Comportamento preservado**: `ON CONFLICT DO NOTHING` mantido — refactor não toca em registros existentes |
 
 ---
 
