@@ -75,11 +75,9 @@ Tracks B (PWA) e C (build TWA) já concluídos.
 
 ## Débito técnico
 
-### 1. Centralizar a lista de "menus padrão" de novos admins → **virou FEA-013** (planejada em 2026-05-22)
+### 1. ~~Centralizar a lista de "menus padrão" de novos admins~~ → **ENTREGUE em 2026-05-24** (FEA-013, commit `fc638e1`, deploy `gestou-00141-hhx`)
 
-Originalmente listado como débito técnico nº 1. Yuri optou por tratar como FEA dedicada em vez de Fase 0 da FEA-009. Plano detalhado em [`plano-fea-013-centralizar-menus-padrao.md`](plano-fea-013-centralizar-menus-padrao.md). Entrada no `prd.json`. Esforço estimado: ~½ dia. Recomendado entregar ANTES da FEA-009 (RPA) para não repetir o problema com os 2 menus novos (Folha > Autônomos, Folha > RPA).
-
-Resumo do problema preservado para histórico: array de 26 IDs hardcoded em 5 lugares (`master/adicionar_permissao.php:33`, `master/alterar_usuario.php:1133`, `master/controller/adicionar_novo_usuario_post.php:111`, `master/iuds_pdo.php::updateGESMPR_menus`, `admin/iuds_pdo.php::updateGESMPR_menus`). Esquecimento histórico: commit `311c2a7` corrigiu id_mnu=58 esquecido na FEA-008.
+Lista centralizada em `config/permissions.php` (constante `MENUS_PADRAO_NOVOS_ADMINS`). Os 5 lugares hardcoded agora consomem a constante. Comportamento preservado.
 
 ### 2. Coluna zumbi `GESUSA.gestor`
 

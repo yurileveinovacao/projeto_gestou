@@ -367,8 +367,8 @@
         "Deploy em prod com smoke test: criar 1 admin de teste, verificar acesso aos menus padrão"
       ],
       "priority": 24,
-      "passes": false,
-      "notes": "Refactor isolado, baixo risco, comportamento idêntico. Extraído do 'débito técnico nº 1' em docs/pendencias.md. Yuri (2026-05-22) optou por tratar como FEA separada em vez de Fase 0 da FEA-009. Esforço estimado: ~½ dia (3-4 horas). Plano detalhado em docs/plano-fea-013-centralizar-menus-padrao.md. Recomendado entregar ANTES da FEA-009 para evitar repetir o problema com os 2 menus novos do RPA. Decisão arquitetural: constante PHP em vez de tabela GESMNU_PADRAO — sem migration, sem custo de leitura no banco, lista evolui junto com o código no diff. Tabela fica para FEA futura caso seja necessário tornar a lista configurável por tenant."
+      "passes": true,
+      "notes": "Refactor isolado, baixo risco, comportamento idêntico. Extraído do 'débito técnico nº 1' em docs/pendencias.md. Yuri (2026-05-22) optou por tratar como FEA separada em vez de Fase 0 da FEA-009. Esforço estimado: ~½ dia (3-4 horas). Plano detalhado em docs/plano-fea-013-centralizar-menus-padrao.md. Decisão arquitetural: constante PHP (const MENUS_PADRAO_NOVOS_ADMINS em config/permissions.php) em vez de tabela GESMNU_PADRAO — sem migration, sem custo de leitura no banco, lista evolui junto com o código no diff. Auditoria pré-implementação (2026-05-24) confirmou: 5 listas idênticas, achou 6º lugar com semântica diferente ($menus_suporte em alterar_aprovacao_post:278 — fora do escopo). ENTREGUE 2026-05-24 (commit fc638e1, deploy gestou-00141-hhx). Validação local: lint OK, função refatorada produz 26 IDs corretos com situac=1, ON CONFLICT DO NOTHING preservado (não reativa menu desabilitado)."
     }
   ]
 }
