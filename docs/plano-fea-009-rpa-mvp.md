@@ -2,7 +2,7 @@
 
 **Status:** rascunho de plano (aguardando aprovação)
 **Data:** 2026-05-22
-**Esforço estimado:** 2-3 semanas (6 fases)
+**Esforço estimado:** 3 semanas (6 fases, com Opção B do aceite e export/import CSV de autônomos)
 **Dependências:**
 - FEA-010 (Líder RH) — ENTREGUE em 2026-05-21 ✅
 - FEA-013 (centralizar menus padrão) — **recomendado entregar antes** ⏳
@@ -41,10 +41,10 @@ A FEA-009 é dividida em **6 fases sequenciais** com pontos de validação inter
 | Fase | Conteúdo | Esforço | Deployável? |
 |---|---|---|---|
 | 1 | Schema (3 migrations) + menus + DAL básica | 3-4 dias | Sim (sem UI ainda) |
-| 2 | Cadastro de autônomos (CRUD GESAUT) | 2-3 dias | Sim (admin já cadastra autônomos, sem RPA ainda) |
+| 2 | Cadastro de autônomos (CRUD GESAUT + export/import CSV) | 3 dias | Sim (admin já cadastra autônomos individualmente ou em massa, sem RPA ainda) |
 | 3 | Cadastro de RPA + cálculo INSS + validação CLT + 3 PDFs | 3-4 dias | Sim (RPAs em rascunho/autorizado, sem aprovação no app ainda) |
 | 4 | Aprovação no app (notif + tela rpa_aprovar) | 2-3 dias | Sim (fluxo completo até `autorizado`) |
-| 5 | Aceite digital pelo autônomo (token email + tela) | 2 dias | Sim (fluxo até `assinado`) |
+| 5 | Aceite digital (Opção B: token email + termo + confirmação + PDF de evidência + reenvio) | 3 dias | Sim (fluxo até `assinado`) |
 | 6 | Status financeiro + export Excel + config admin + dashboard | 2-3 dias | MVP fechado |
 
 Fora deste MVP (FEAs futuras):
@@ -111,6 +111,7 @@ CREATE TABLE public."GESRPA" (
     data_autorizacao TIMESTAMP,
     assinado_por INT REFERENCES "GESAUT"(id_aut),
     ip_assinatura VARCHAR(45),
+    user_agent_assinatura TEXT,
     data_assinatura TIMESTAMP,
     data_envio_fin DATE,
     data_pgto DATE,
@@ -118,6 +119,7 @@ CREATE TABLE public."GESRPA" (
     contrato_pdf_path VARCHAR(500),
     recibo_pdf_path VARCHAR(500),
     autorizacao_pdf_path VARCHAR(500),
+    evidencia_pdf_path VARCHAR(500),
     datinc TIMESTAMP DEFAULT NOW(),
     id_usa_inc INT,
     datatu TIMESTAMP,
@@ -155,7 +157,7 @@ Seed dos 3 textos (`texto_*_html`) baseado nos modelos da Jéssica (PDF/DOCX con
 - Verifica/cria a categoria `'Folha'` em GESMNU (se não existir)
 - Insere `'Autônomos'` (id_mnu auto) e `'RPA'` (id_mnu auto)
 - Anota os IDs gerados (X, Y)
-- **Pós-FEA-013**: adiciona X e Y na constante `MENUS_PADRAO_NOVOS_ADMINS` em `config/permissions.php`. Se a FEA-013 não estiver pronta ainda, atualizar os 5 lugares hardcoded (caso emergencial)
+- **Adicionar X e Y na constante `MENUS_PADRAO_NOVOS_ADMINS`** em `config/permissions.php` (FEA-013 já entregue em 2026-05-24 — basta editar 1 arquivo)
 - `INSERT INTO GESMPR ... ON CONFLICT` pra liberar acesso aos usuários existentes
 
 ### 3.5 DAL base em `admin/iuds_pdo.php`
@@ -183,15 +185,18 @@ Funções novas:
 
 ### 4.1 Telas
 
-- **`admin/autonomos.php`** — listagem com colunas: nome, CPF, PIX, ativo, total de diárias no mês corrente. Busca por nome/CPF. Filtro ativo/inativo. Botão "Novo autônomo".
+- **`admin/autonomos.php`** — listagem com colunas: nome, CPF, PIX, ativo, total de diárias no mês corrente. Busca por nome/CPF. Filtro ativo/inativo. Botões: "Novo autônomo", "Exportar (CSV)", "Importar (CSV)".
 - **`admin/autonomo_incluir.php`** — form com campos: nome (req), CPF (req, máscara, validação dígito), RG, data nasc, etnia (select), endereço completo, email (**req**), PIX (req).
-- **`admin/autonomo_alterar.php`** — mesmo form, modo edição. Inclui toggle ativo/inativo.
+- **`admin/autonomo_alterar.php`** — mesmo form, modo edição. Inclui toggle ativo/inativo. **Alerta**: se o autônomo tem RPAs anteriores e admin tenta mudar email/CPF/PIX, modal "Este autônomo tem N RPAs anteriores. A mudança não afeta documentos já assinados. Confirma?"
+- **`admin/autonomos_importar.php`** — tela de upload do CSV com preview das linhas (validação prévia: CPFs duplicados, emails inválidos, linhas incompletas marcadas em vermelho). Botão "Confirmar importação" só habilita se 100% das linhas estão válidas.
 
 ### 4.2 Controllers
 
 - `admin/controller/autonomo_incluir_post.php` — valida CPF (formato + unicidade `id_emp + cpf`), email (formato), PIX (não vazio). Chama `insertGESAUT`.
-- `admin/controller/autonomo_alterar_post.php` — chama `updateGESAUT`.
+- `admin/controller/autonomo_alterar_post.php` — chama `updateGESAUT`. Audit via `datatu`, `id_usa_atu`.
 - `admin/controller/autonomo_toggle_ativo_post.php` — flip do `ativo` (1↔0).
+- `admin/controller/autonomos_exportar_get.php` — gera CSV via PhpSpreadsheet (já no projeto). Cabeçalho: nome, cpf, rg, data_nasc, etnia, endereco, cep, bairro, cidade, uf, email, pix. Filename `autonomos_{nome_empresa}_{YYYY-MM-DD}.csv`.
+- `admin/controller/autonomos_importar_post.php` — recebe CSV, valida linha a linha (CPF formato + dígito + não-duplicado na empresa, email formato, PIX não-vazio), reporta erros por linha. Em caso de sucesso, faz `INSERT` em massa com `ON CONFLICT (id_emp, cpf) DO NOTHING`.
 
 ### 4.3 Validações funcionais
 
@@ -199,8 +204,14 @@ Funções novas:
 - CPF único por empresa (constraint UNIQUE no banco + check antes do insert pra UX melhor)
 - Email obrigatório com formato válido
 - PIX obrigatório (sem validação de formato — pode ser CPF, email, telefone, chave aleatória)
+- CSV de importação: cabeçalho obrigatório na primeira linha, máximo 500 autônomos por arquivo, encoding UTF-8
 
-**Deploy intermediário ok?** Sim — admin já cadastra autônomos, ainda sem fluxo de RPA.
+**Caso de uso do export/import**:
+- Rollout inicial da TRYP: Yuri exporta planilha existente → importa de uma vez
+- Empresa de grupo com várias unidades: admin exporta da Empresa A → importa na Empresa B (cada uma mantém sua cópia isolada, multi-tenant preservado)
+- Backup operacional: admin pode baixar lista local periodicamente
+
+**Deploy intermediário ok?** Sim — admin já cadastra autônomos individualmente ou em massa, ainda sem fluxo de RPA.
 
 ---
 
@@ -321,25 +332,41 @@ Implementação: nenhuma lógica especial — se `selectGESUSA_responsaveis_apro
 Ao mudar RPA para `autorizado`:
 - Email para `GESAUT.email` com link `https://gestou.com.br/app/rpa_aceite?token={hash}`
 - Token = hash do `id_rpa + id_aut + secret`. Validade 7 dias (configurável)
+- Botão "Reenviar email de aceite" disponível ao admin em `/admin/rpas.php` (caso o autônomo não tenha recebido ou o token tenha expirado) — gera novo token, invalida o anterior, registra evento
 
-### 7.2 Tela `app/rpa_aceite.php`
+### 7.2 Tela `app/rpa_aceite.php` — Opção B (assinatura eletrônica simples robusta)
 
-- **Não requer login** (autônomo não tem conta no sistema)
+- **Não requer login** (autônomo não tem conta no sistema — decisão Yuri 2026-05-24)
 - Autônomo entra com CPF (validação dupla: CPF do GESAUT linkado ao RPA do token)
-- Exibe: dados do RPA, valores discriminados, 3 PDFs pra leitura
-- Botão "Aceitar e assinar"
-- Ao aceitar: muda status para `assinado`, grava `assinado_por = id_aut`, `ip_assinatura = $_SERVER['REMOTE_ADDR']`, `data_assinatura = NOW()`
+- Exibe: dados do RPA, valores discriminados, 3 PDFs pra leitura (com botão de download)
+- **Checkbox de termo de uso explícito**: "Li e aceito os termos de prestação de serviço autônomo (art. 442-B CLT). Reconheço que este aceite digital tem valor probatório equivalente à assinatura à mão para fins operacionais."
+- Botão "Aceitar e assinar" — desabilitado até checkbox marcado
+- **Confirmação dupla**: modal antes do submit: "Você está prestes a assinar digitalmente este RPA. Esta ação é registrada e auditável. Confirma?"
+- Ao confirmar: muda status para `assinado`, grava `assinado_por = id_aut`, `ip_assinatura = $_SERVER['REMOTE_ADDR']`, `data_assinatura = NOW()`, `user_agent_assinatura` (texto do `$_SERVER['HTTP_USER_AGENT']`)
 
-### 7.3 Sem SMS no MVP
+### 7.3 PDF de evidência da assinatura
+
+Após o aceite, sistema gera PDF adicional **`evidencia_aceite.pdf`** anexado ao RPA com:
+- Identificação do RPA (id, autônomo, empresa, data do serviço, valores)
+- Hash do token usado
+- IP, user-agent, timestamp do aceite
+- Declaração formal: "Em DD/MM/AAAA às HH:MM:SS, o autônomo {nome} (CPF {cpf}) acessou o link de aceite com token {hash} a partir do IP {ip} e do navegador {user-agent}, marcou expressamente o termo de uso e confirmou o aceite digital deste RPA."
+- Salvo em `upload/rpa/{cnpj_raiz}/{ano-mes}/{id_rpa}_evidencia.pdf`. Path em `GESRPA.evidencia_pdf_path` (nova coluna na migration `create_gesrpa.sql`)
+
+### 7.4 Sem SMS no MVP
 
 Confirmado em 2026-05-22: aceite só via email. Autônomo sem email não consegue ser pago via RPA digital. Admin precisa cadastrar email.
 
-### 7.4 Validação Fase 5
+### 7.5 Validação Fase 5
 
 - Após aprovação, autônomo recebe email
 - Link abre tela de aceite, mostra dados corretos
+- Termo de uso obrigatório (botão desabilitado sem checkbox)
+- Confirmação dupla aparece antes do submit
 - Aceitar muda status para `assinado` com registros completos
+- PDF de evidência gerado e salvo no bucket
 - Token expirado retorna mensagem clara
+- Admin consegue reenviar token expirado pelo `/admin/rpas.php`
 - CPF errado retorna erro (não revelando se o RPA existe ou não, por segurança)
 
 ---
@@ -415,6 +442,9 @@ Os 2 menus novos (Folha > Autônomos, Folha > RPA) já estão em GESMNU/GESMPR d
 - [ ] 2 menus (Folha > Autônomos, Folha > RPA) criados em GESMNU e liberados em GESMPR
 - [ ] Constante `MENUS_PADRAO_NOVOS_ADMINS` da FEA-013 atualizada com os 2 novos id_mnu (ou os 5 lugares hardcoded como fallback se FEA-013 atrasar)
 - [ ] CRUD de autônomos funcional (lista, incluir, alterar, ativar/desativar)
+- [ ] Export CSV de autônomos com cabeçalho padronizado
+- [ ] Import CSV de autônomos com validação por linha e preview antes da confirmação
+- [ ] Alerta na edição quando autônomo tem RPAs anteriores (mudança não afeta documentos assinados)
 - [ ] Email obrigatório em GESAUT — bloqueia cadastro sem email
 - [ ] CPF único por empresa
 - [ ] Cadastro de RPA com cálculo automático de bruto + INSS
@@ -425,7 +455,11 @@ Os 2 menus novos (Folha > Autônomos, Folha > RPA) já estão em GESMNU/GESMPR d
 - [ ] Empresa sem Líder RH: RPA fica em rascunho sem erro, sem email
 - [ ] Tela `app/rpa_aprovar.php` permite aprovar/recusar com registros corretos
 - [ ] Email de aceite enviado ao autônomo após aprovação
-- [ ] Tela `app/rpa_aceite.php` valida CPF + token, registra IP + timestamp ao aceitar
+- [ ] Tela `app/rpa_aceite.php` valida CPF + token, registra IP + user-agent + timestamp ao aceitar
+- [ ] Checkbox de termo de uso obrigatório antes do botão "Aceitar"
+- [ ] Confirmação dupla (modal) antes do submit final
+- [ ] PDF de evidência (`evidencia_pdf_path`) gerado automaticamente após aceite, com declaração formal + hash do token + IP + user-agent
+- [ ] Admin consegue reenviar email de aceite via `/admin/rpas.php` (invalida token anterior)
 - [ ] Botões "Enviar financeiro", "Marcar pago" e "Cancelar" funcionam com a máquina de estados
 - [ ] Export Excel mensal com layout idêntico ao `RPA.MARÇO.xlsx` da Jéssica
 - [ ] Aba RPA em `admin/dados_cadastrais.php` persiste configs
@@ -498,7 +532,7 @@ Cada fase termina com deploy intermediário pra reduzir risco de big-bang no fim
 7. **Fase 6 — Status + export + config + dashboard** (2-3 dias) → MVP fechado
 8. **Validação final com Jéssica** (1 dia) — fluxo end-to-end em prod com dados reais
 
-Total: ~3 semanas (com folga pra ajustes em cada fase)
+Total: ~3 semanas (com folga pra ajustes em cada fase, incluindo Opção B e export/import CSV)
 
 ---
 
