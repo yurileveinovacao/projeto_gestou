@@ -11621,3 +11621,330 @@ function updateGESUSA_situac_lider($situac, $id_usa, $datatu, $id_usa_atu)
         $statement->execute();
     }
 }
+
+// =============================================================================
+// FEA-009 — Módulo RPA (Recibo de Pagamento Autônomo)
+// Tabelas: GESAUT (autônomos), GESRPA (recibos), GESRPACFG (config por empresa)
+// =============================================================================
+
+// --- GESAUT ------------------------------------------------------------------
+
+function insertGESAUT($id_emp, $nome, $cpf, $email, $pix, $rg, $data_nasc, $etnia, $endereco, $cep, $bairro, $cidade, $uf, $id_usa_inc)
+{
+    global $pdo;
+    $query = 'INSERT INTO public."GESAUT"
+        (id_emp, nome, cpf, rg, data_nasc, etnia, endereco, cep, bairro, cidade, uf, email, pix, ativo, id_usa_inc)
+        VALUES
+        (:id_emp, :nome, :cpf, :rg, :data_nasc, :etnia, :endereco, :cep, :bairro, :cidade, :uf, :email, :pix, 1, :id_usa_inc)
+        RETURNING id_aut';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->bindParam(':nome', $nome, PDO::PARAM_STR);
+    $statement->bindParam(':cpf', $cpf, PDO::PARAM_STR);
+    $statement->bindValue(':rg', $rg ?: null, $rg ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':data_nasc', $data_nasc ?: null, $data_nasc ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':etnia', $etnia ?: null, $etnia ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':endereco', $endereco ?: null, $endereco ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':cep', $cep ?: null, $cep ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':bairro', $bairro ?: null, $bairro ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':cidade', $cidade ?: null, $cidade ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':uf', $uf ?: null, $uf ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindParam(':email', $email, PDO::PARAM_STR);
+    $statement->bindParam(':pix', $pix, PDO::PARAM_STR);
+    $statement->bindParam(':id_usa_inc', $id_usa_inc, PDO::PARAM_INT);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    return $row ? $row['id_aut'] : null;
+}
+
+function updateGESAUT($id_aut, $id_emp, $nome, $cpf, $email, $pix, $rg, $data_nasc, $etnia, $endereco, $cep, $bairro, $cidade, $uf, $id_usa_atu)
+{
+    global $pdo;
+    $query = 'UPDATE public."GESAUT" SET
+        nome =:nome, cpf =:cpf, rg =:rg, data_nasc =:data_nasc, etnia =:etnia,
+        endereco =:endereco, cep =:cep, bairro =:bairro, cidade =:cidade, uf =:uf,
+        email =:email, pix =:pix, datatu = NOW(), id_usa_atu =:id_usa_atu
+        WHERE id_aut =:id_aut AND id_emp =:id_emp';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_aut', $id_aut, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->bindParam(':nome', $nome, PDO::PARAM_STR);
+    $statement->bindParam(':cpf', $cpf, PDO::PARAM_STR);
+    $statement->bindValue(':rg', $rg ?: null, $rg ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':data_nasc', $data_nasc ?: null, $data_nasc ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':etnia', $etnia ?: null, $etnia ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':endereco', $endereco ?: null, $endereco ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':cep', $cep ?: null, $cep ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':bairro', $bairro ?: null, $bairro ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':cidade', $cidade ?: null, $cidade ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':uf', $uf ?: null, $uf ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindParam(':email', $email, PDO::PARAM_STR);
+    $statement->bindParam(':pix', $pix, PDO::PARAM_STR);
+    $statement->bindParam(':id_usa_atu', $id_usa_atu, PDO::PARAM_INT);
+    $statement->execute();
+}
+
+function toggleGESAUT_ativo($id_aut, $id_emp, $novo_ativo, $id_usa_atu)
+{
+    global $pdo;
+    $query = 'UPDATE public."GESAUT" SET ativo =:ativo, datatu = NOW(), id_usa_atu =:id_usa_atu
+              WHERE id_aut =:id_aut AND id_emp =:id_emp';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_aut', $id_aut, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->bindParam(':ativo', $novo_ativo, PDO::PARAM_INT);
+    $statement->bindParam(':id_usa_atu', $id_usa_atu, PDO::PARAM_INT);
+    $statement->execute();
+}
+
+function selectGESAUT($id_aut, $id_emp)
+{
+    global $pdo;
+    $query = 'SELECT * FROM public."GESAUT" WHERE id_aut =:id_aut AND id_emp =:id_emp';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_aut', $id_aut, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    return $statement->rowCount() > 0 ? $statement->fetchAll(PDO::FETCH_ASSOC) : [0];
+}
+
+function selectGESAUT_lista($id_emp, $filtro_ativo = 'ativos')
+{
+    global $pdo;
+    $where = '';
+    if ($filtro_ativo === 'ativos')       $where = ' AND ativo = 1';
+    elseif ($filtro_ativo === 'inativos') $where = ' AND ativo = 0';
+    $query = 'SELECT a.id_aut, a.nome, a.cpf, a.email, a.pix, a.ativo,
+                     (SELECT COUNT(*) FROM public."GESRPA" r
+                      WHERE r.id_aut = a.id_aut AND r.id_emp = a.id_emp
+                        AND date_part(\'month\', r.data_servico) = date_part(\'month\', NOW())
+                        AND date_part(\'year\', r.data_servico)  = date_part(\'year\', NOW())
+                        AND r.status <> \'cancelado\') AS diarias_mes_atual
+              FROM public."GESAUT" a
+              WHERE a.id_emp =:id_emp' . $where . '
+              ORDER BY a.nome';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    return $statement->rowCount() > 0 ? $statement->fetchAll(PDO::FETCH_ASSOC) : [0];
+}
+
+function selectGESAUT_cpf_exists($id_emp, $cpf, $excluir_id_aut = null)
+{
+    global $pdo;
+    $sql = 'SELECT COUNT(*) AS qtd FROM public."GESAUT" WHERE id_emp =:id_emp AND cpf =:cpf';
+    if ($excluir_id_aut !== null) {
+        $sql .= ' AND id_aut <>:id_aut';
+    }
+    $statement = $pdo->prepare($sql);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->bindParam(':cpf', $cpf, PDO::PARAM_STR);
+    if ($excluir_id_aut !== null) {
+        $statement->bindParam(':id_aut', $excluir_id_aut, PDO::PARAM_INT);
+    }
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    return ((int) $row['qtd']) > 0;
+}
+
+// --- GESRPA ------------------------------------------------------------------
+
+function insertGESRPA($id_emp, $id_aut, $id_dep, $cargo, $data_servico, $hora_ini, $hora_fim, $diarias,
+                      $valor_liquido, $perc_imposto, $valor_bruto, $valor_inss, $justificativa, $id_usa_inc)
+{
+    global $pdo;
+    $query = 'INSERT INTO public."GESRPA"
+        (id_emp, id_aut, id_dep, cargo, data_servico, hora_ini, hora_fim, diarias,
+         valor_liquido, perc_imposto, valor_bruto, valor_inss, justificativa,
+         status, id_usa_inc)
+        VALUES
+        (:id_emp, :id_aut, :id_dep, :cargo, :data_servico, :hora_ini, :hora_fim, :diarias,
+         :valor_liquido, :perc_imposto, :valor_bruto, :valor_inss, :justificativa,
+         \'rascunho\', :id_usa_inc)
+        RETURNING id_rpa';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->bindParam(':id_aut', $id_aut, PDO::PARAM_INT);
+    $statement->bindValue(':id_dep', $id_dep ?: null, $id_dep ? PDO::PARAM_INT : PDO::PARAM_NULL);
+    $statement->bindValue(':cargo', $cargo ?: null, $cargo ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindParam(':data_servico', $data_servico, PDO::PARAM_STR);
+    $statement->bindValue(':hora_ini', $hora_ini ?: null, $hora_ini ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindValue(':hora_fim', $hora_fim ?: null, $hora_fim ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindParam(':diarias', $diarias, PDO::PARAM_INT);
+    $statement->bindParam(':valor_liquido', $valor_liquido, PDO::PARAM_STR);
+    $statement->bindParam(':perc_imposto', $perc_imposto, PDO::PARAM_STR);
+    $statement->bindParam(':valor_bruto', $valor_bruto, PDO::PARAM_STR);
+    $statement->bindParam(':valor_inss', $valor_inss, PDO::PARAM_STR);
+    $statement->bindValue(':justificativa', $justificativa ?: null, $justificativa ? PDO::PARAM_STR : PDO::PARAM_NULL);
+    $statement->bindParam(':id_usa_inc', $id_usa_inc, PDO::PARAM_INT);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    return $row ? $row['id_rpa'] : null;
+}
+
+// Atualiza status do RPA com campos auxiliares por transição.
+// $extras: array assoc com chaves opcionais: autorizado_por, assinado_por, ip_assinatura,
+//          user_agent_assinatura, data_envio_fin, data_pgto, motivo_cancelamento.
+function updateGESRPA_status($id_rpa, $id_emp, $novo_status, $id_usa_atu, array $extras = [])
+{
+    global $pdo;
+    $set = ['status =:status', 'datatu = NOW()', 'id_usa_atu =:id_usa_atu'];
+    $params = [
+        ':status'     => $novo_status,
+        ':id_usa_atu' => $id_usa_atu,
+        ':id_rpa'     => $id_rpa,
+        ':id_emp'     => $id_emp,
+    ];
+    $mapa = [
+        'autorizado_por'        => ['col' => 'autorizado_por',        'time' => 'data_autorizacao'],
+        'assinado_por'          => ['col' => 'assinado_por',          'time' => 'data_assinatura'],
+        'ip_assinatura'         => ['col' => 'ip_assinatura'],
+        'user_agent_assinatura' => ['col' => 'user_agent_assinatura'],
+        'data_envio_fin'        => ['col' => 'data_envio_fin'],
+        'data_pgto'             => ['col' => 'data_pgto'],
+        'motivo_cancelamento'   => ['col' => 'motivo_cancelamento'],
+    ];
+    foreach ($extras as $k => $v) {
+        if (!isset($mapa[$k])) continue;
+        $col = $mapa[$k]['col'];
+        $set[] = "$col =:$col";
+        $params[":$col"] = $v;
+        if (isset($mapa[$k]['time'])) {
+            $set[] = $mapa[$k]['time'] . ' = NOW()';
+        }
+    }
+    $sql = 'UPDATE public."GESRPA" SET ' . implode(', ', $set) . ' WHERE id_rpa =:id_rpa AND id_emp =:id_emp';
+    $statement = $pdo->prepare($sql);
+    $statement->execute($params);
+}
+
+function updateGESRPA_pdf_paths($id_rpa, $id_emp, array $paths)
+{
+    global $pdo;
+    $cols = [];
+    $params = [':id_rpa' => $id_rpa, ':id_emp' => $id_emp];
+    $permitido = ['autorizacao_pdf_path', 'contrato_pdf_path', 'recibo_pdf_path', 'evidencia_pdf_path'];
+    foreach ($paths as $col => $val) {
+        if (!in_array($col, $permitido, true)) continue;
+        $cols[] = "$col =:$col";
+        $params[":$col"] = $val;
+    }
+    if (!$cols) return;
+    $sql = 'UPDATE public."GESRPA" SET ' . implode(', ', $cols) . ', datatu = NOW() WHERE id_rpa =:id_rpa AND id_emp =:id_emp';
+    $pdo->prepare($sql)->execute($params);
+}
+
+function selectGESRPA($id_rpa, $id_emp)
+{
+    global $pdo;
+    $query = 'SELECT r.*, a.nome AS autonomo_nome, a.cpf AS autonomo_cpf, a.email AS autonomo_email, a.pix AS autonomo_pix,
+                     d.nome AS setor_nome
+              FROM public."GESRPA" r
+              INNER JOIN public."GESAUT" a ON a.id_aut = r.id_aut
+              LEFT JOIN public."GESDEP" d  ON d.id_dep = r.id_dep
+              WHERE r.id_rpa =:id_rpa AND r.id_emp =:id_emp';
+    $statement = $pdo->prepare($query);
+    $statement->bindParam(':id_rpa', $id_rpa, PDO::PARAM_INT);
+    $statement->bindParam(':id_emp', $id_emp, PDO::PARAM_INT);
+    $statement->execute();
+    return $statement->rowCount() > 0 ? $statement->fetchAll(PDO::FETCH_ASSOC) : [0];
+}
+
+function selectGESRPA_lista($id_emp, $mes, $ano, $status_filtro = null, $id_dep = null)
+{
+    global $pdo;
+    $where = ' AND date_part(\'month\', r.data_servico) =:mes AND date_part(\'year\', r.data_servico) =:ano';
+    $params = [':id_emp' => $id_emp, ':mes' => $mes, ':ano' => $ano];
+    if ($status_filtro) {
+        $where .= ' AND r.status =:status';
+        $params[':status'] = $status_filtro;
+    }
+    if ($id_dep) {
+        $where .= ' AND r.id_dep =:id_dep';
+        $params[':id_dep'] = $id_dep;
+    }
+    $query = 'SELECT r.id_rpa, r.data_servico, r.valor_bruto, r.valor_liquido, r.valor_inss,
+                     r.status, r.justificativa, r.data_pgto,
+                     a.nome AS autonomo_nome, a.cpf AS autonomo_cpf,
+                     d.nome AS setor_nome
+              FROM public."GESRPA" r
+              INNER JOIN public."GESAUT" a ON a.id_aut = r.id_aut
+              LEFT JOIN public."GESDEP" d  ON d.id_dep = r.id_dep
+              WHERE r.id_emp =:id_emp' . $where . '
+              ORDER BY r.data_servico DESC, r.id_rpa DESC';
+    $statement = $pdo->prepare($query);
+    $statement->execute($params);
+    return $statement->rowCount() > 0 ? $statement->fetchAll(PDO::FETCH_ASSOC) : [0];
+}
+
+// Conta diárias de um autônomo no mês/ano corrente (exclui canceladas) — usado pra validação CLT
+function selectGESRPA_diarias_mes($id_aut, $id_emp, $mes, $ano)
+{
+    global $pdo;
+    $query = 'SELECT COALESCE(SUM(diarias), 0) AS total
+              FROM public."GESRPA"
+              WHERE id_aut =:id_aut AND id_emp =:id_emp
+                AND date_part(\'month\', data_servico) =:mes
+                AND date_part(\'year\', data_servico)  =:ano
+                AND status <> \'cancelado\'';
+    $statement = $pdo->prepare($query);
+    $statement->execute([':id_aut' => $id_aut, ':id_emp' => $id_emp, ':mes' => $mes, ':ano' => $ano]);
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    return (int) $row['total'];
+}
+
+// --- GESRPACFG ---------------------------------------------------------------
+
+// Retorna config da empresa. Se não existir, cria com defaults antes (auto-init).
+function selectGESRPACFG($id_emp)
+{
+    global $pdo;
+    $pdo->prepare('INSERT INTO public."GESRPACFG" (id_emp) VALUES (:id_emp) ON CONFLICT (id_emp) DO NOTHING')
+        ->execute([':id_emp' => $id_emp]);
+    $statement = $pdo->prepare('SELECT * FROM public."GESRPACFG" WHERE id_emp =:id_emp');
+    $statement->execute([':id_emp' => $id_emp]);
+    return $statement->fetch(PDO::FETCH_ASSOC);
+}
+
+function upsertGESRPACFG($id_emp, array $campos, $id_usa_atu)
+{
+    global $pdo;
+    $permitido = ['valor_liquido_padrao', 'perc_imposto_padrao', 'texto_autorizacao_html',
+                  'texto_contrato_html', 'texto_recibo_html', 'limite_dias_alerta', 'limite_dias_bloqueio'];
+    $sets = [];
+    $params = [':id_emp' => $id_emp, ':id_usa_atu' => $id_usa_atu];
+    foreach ($campos as $col => $val) {
+        if (!in_array($col, $permitido, true)) continue;
+        $sets[] = "$col =:$col";
+        $params[":$col"] = $val;
+    }
+    $sets_str = implode(', ', $sets);
+    $cols_insert = implode(', ', array_merge(['id_emp'], array_keys(array_filter($campos, function ($k) use ($permitido) {
+        return in_array($k, $permitido, true);
+    }, ARRAY_FILTER_USE_KEY))));
+    $vals_insert = ':id_emp' . (count($sets) > 0 ? ', ' . implode(', ', array_map(function ($s) {
+        return ':' . explode(' ', $s)[0];
+    }, $sets)) : '');
+    $sql = 'INSERT INTO public."GESRPACFG" (' . $cols_insert . ', datatu, id_usa_atu)
+            VALUES (' . $vals_insert . ', NOW(), :id_usa_atu)
+            ON CONFLICT (id_emp) DO UPDATE SET ' . $sets_str . ', datatu = NOW(), id_usa_atu =:id_usa_atu';
+    $pdo->prepare($sql)->execute($params);
+}
+
+// --- Responsáveis pela aprovação --------------------------------------------
+
+// Retorna Líderes RH da empresa (GESGES.gestor=1) + admins vinculados ao setor (id_dep).
+// Filtra internos da Leve (id_tus<>1). Usado para notificação de aprovação de RPA.
+function selectGESUSA_responsaveis_aprovacao($id_emp, $id_dep = null)
+{
+    global $pdo;
+    $sql = 'SELECT DISTINCT u.id_usa, u.nome, u.email
+            FROM public."GESUSA" u
+            INNER JOIN public."GESGES" g ON g.id_usa = u.id_usa AND g.id_emp =:id_emp AND g.gestor = 1
+            WHERE u.situac = 1
+              AND (u.id_tus IS NULL OR u.id_tus <> 1)
+            ORDER BY u.nome';
+    $statement = $pdo->prepare($sql);
+    $statement->execute([':id_emp' => $id_emp]);
+    return $statement->rowCount() > 0 ? $statement->fetchAll(PDO::FETCH_ASSOC) : [0];
+}
