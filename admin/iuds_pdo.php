@@ -11988,6 +11988,16 @@ function selectGESRPA_by_token($token)
     return $stmt->rowCount() > 0 ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [0];
 }
 
+// Conta RPAs por status (FEA-009 Fase 6 — pra cards do dashboard)
+function selectGESRPA_count_por_status($id_emp, $status)
+{
+    global $pdo;
+    $stmt = $pdo->prepare('SELECT COUNT(*) AS qtd FROM public."GESRPA" WHERE id_emp =:id_emp AND status =:status');
+    $stmt->execute([':id_emp' => $id_emp, ':status' => $status]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return (int) ($row['qtd'] ?? 0);
+}
+
 // Marca token como invalidado (usado ao reenviar — gera novo token na sequência)
 function invalidarTokenAceiteRPA($id_rpa, $id_emp)
 {

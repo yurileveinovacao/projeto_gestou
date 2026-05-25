@@ -105,6 +105,7 @@ function _badge_status($s) {
 
                         <div class="col-sm-12 button-tabela mb-3">
                             <a href="rpa_incluir.php" class="btn btn-organograma btn-icon-split-organograma"><i class="fas fa-plus-circle"></i> Novo RPA</a>
+                            <a href="controller/rpa_exportar_excel_get.php?mes=<?php echo $mes; ?>&ano=<?php echo $ano; ?>" class="btn btn-organograma btn-icon-split-organograma"><i class="fas fa-file-excel"></i> Exportar Excel (mês)</a>
                         </div>
 
                         <div class="table-responsive">

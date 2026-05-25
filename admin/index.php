@@ -203,7 +203,50 @@ if (!empty($_SESSION["colaborador_filtro_situac"])) {
                         </div>
 
 
-                        <!-- 
+                        <!--
+                            FEA-009 Fase 6 — CARDS RPA (pendentes de aprovação + aguardando pagamento)
+                        -->
+                        <?php
+                        $rpa_pendentes = selectGESRPA_count_por_status($id_emp_default, 'rascunho');
+                        $rpa_aguard_pgto = selectGESRPA_count_por_status($id_emp_default, 'enviado_fin');
+                        ?>
+                        <?php if ($rpa_pendentes > 0): ?>
+                        <div class="col-md-12">
+                            <a href="rpas.php?status=rascunho" style="text-decoration: none;">
+                                <div class="card border-left-warning h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">RPAs pendentes de aprovação</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $rpa_pendentes; ?></div>
+                                            </div>
+                                            <div class="col-auto"><i class="fas fa-clipboard-check fa-2x text-gray-300"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if ($rpa_aguard_pgto > 0): ?>
+                        <div class="col-md-12">
+                            <a href="rpas.php?status=enviado_fin" style="text-decoration: none;">
+                                <div class="card border-left-info h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">RPAs aguardando pagamento</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $rpa_aguard_pgto; ?></div>
+                                            </div>
+                                            <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <?php endif; ?>
+
+                        <!--
                             CARD CURSOS/EXAMES A VENCER
                         -->
                         <?php foreach (select_VW_CURSOS_A_VENCER_count($id_emp_default) as $select_count_curso_exame) {

@@ -200,6 +200,7 @@ require_once "util.php";
                                 <a class="nav-item nav-link" id="nav-identificacao-tab" data-toggle="tab" href="#nav-identificacao" role="tab" aria-controls="nav-identificacao" aria-selected="true">Identificação</a>
                                 <a class="nav-item nav-link" id="nav-endereco-tab" data-toggle="tab" href="#nav-endereco" role="tab" aria-controls="nav-endereco" aria-selected="false">Endereço</a>
                                 <a class="nav-item nav-link" id="nav-gestor-tab" data-toggle="tab" href="#nav-gestor" role="tab" aria-controls="nav-outras" aria-selected="false">Gestor</a>
+                                <a class="nav-item nav-link" id="nav-rpa-tab" data-toggle="tab" href="#nav-rpa" role="tab" aria-controls="nav-rpa" aria-selected="false">RPA</a>
                             </div>
                         </nav>
                         <!-- FIM INICIO NAV -->
@@ -519,6 +520,73 @@ require_once "util.php";
 
                                 </div>
                                 <!-- INICIO FIM EMPRESAS -->
+
+                                <!-- FEA-009 Fase 6 — Aba RPA: config por empresa (valores padrão + limites + templates HTML) -->
+                                <div class="tab-pane fade" id="nav-rpa" role="tabpanel" aria-labelledby="nav-rpa-tab" style="margin-bottom: 10px;">
+                                    <?php $rpa_cfg = selectGESRPACFG($id_emp_default); ?>
+                                    <form id="form-rpa-cfg" autocomplete="off">
+                                        <div class="form-row mt-3">
+                                            <div class="form-group col-md-3">
+                                                <label for="rpa_valor_padrao">Valor líquido padrão (R$)</label>
+                                                <input type="number" step="0.01" min="0.01" class="form-control" id="rpa_valor_padrao" name="valor_liquido_padrao" value="<?php echo htmlspecialchars(number_format($rpa_cfg['valor_liquido_padrao'] ?? 150, 2, '.', '')); ?>">
+                                                <small class="form-text text-muted">Sugestão inicial no form de novo RPA.</small>
+                                            </div>
+                                            <div class="form-group col-md-3">
+                                                <label for="rpa_perc_imposto">INSS (%)</label>
+                                                <input type="number" step="0.01" class="form-control" id="rpa_perc_imposto" name="perc_imposto_padrao" value="<?php echo htmlspecialchars(number_format($rpa_cfg['perc_imposto_padrao'] ?? 12.36, 2, '.', '')); ?>" readonly>
+                                                <small class="form-text text-muted">Fixo no MVP (12,36%).</small>
+                                            </div>
+                                            <div class="form-group col-md-3">
+                                                <label for="rpa_alerta">Alerta de risco CLT (diárias)</label>
+                                                <input type="number" min="1" class="form-control" id="rpa_alerta" name="limite_dias_alerta" value="<?php echo (int) ($rpa_cfg['limite_dias_alerta'] ?? 3); ?>">
+                                                <small class="form-text text-muted">Aviso amarelo no form de novo RPA.</small>
+                                            </div>
+                                            <div class="form-group col-md-3">
+                                                <label for="rpa_bloqueio">Bloqueio CLT (diárias)</label>
+                                                <input type="number" min="1" class="form-control" id="rpa_bloqueio" name="limite_dias_bloqueio" value="<?php echo (int) ($rpa_cfg['limite_dias_bloqueio'] ?? 4); ?>">
+                                                <small class="form-text text-muted">Bloqueia novo RPA.</small>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+                                        <h6 class="text-primary">Templates HTML (deixe em branco para usar o padrão embutido do sistema)</h6>
+                                        <p class="small text-muted">Placeholders disponíveis: <code>{nome_autonomo}</code>, <code>{cpf}</code>, <code>{rg}</code>, <code>{email}</code>, <code>{pix}</code>, <code>{endereco}</code>, <code>{bairro}</code>, <code>{cidade}</code>, <code>{uf}</code>, <code>{cep}</code>, <code>{empresa_nome}</code>, <code>{empresa_cnpj}</code>, <code>{cargo}</code>, <code>{setor}</code>, <code>{data_servico}</code>, <code>{hora_ini}</code>, <code>{hora_fim}</code>, <code>{diarias}</code>, <code>{valor_bruto}</code>, <code>{valor_inss}</code>, <code>{valor_liquido}</code>, <code>{perc_imposto}</code>, <code>{justificativa}</code>, <code>{id_rpa}</code>, <code>{data_hoje}</code></p>
+
+                                        <div class="form-group mt-3">
+                                            <label for="rpa_tpl_autorizacao">Autorização</label>
+                                            <textarea class="form-control" id="rpa_tpl_autorizacao" name="texto_autorizacao_html" rows="6"><?php echo htmlspecialchars($rpa_cfg['texto_autorizacao_html'] ?? ''); ?></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="rpa_tpl_contrato">Contrato (Art. 442-B CLT)</label>
+                                            <textarea class="form-control" id="rpa_tpl_contrato" name="texto_contrato_html" rows="8"><?php echo htmlspecialchars($rpa_cfg['texto_contrato_html'] ?? ''); ?></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="rpa_tpl_recibo">Recibo</label>
+                                            <textarea class="form-control" id="rpa_tpl_recibo" name="texto_recibo_html" rows="6"><?php echo htmlspecialchars($rpa_cfg['texto_recibo_html'] ?? ''); ?></textarea>
+                                        </div>
+
+                                        <div class="textalign-right mt-3">
+                                            <button type="submit" class="btn btn-organograma btn-icon-split-organograma"><i class="fas fa-save"></i> Salvar configurações RPA</button>
+                                        </div>
+                                    </form>
+
+                                    <script>
+                                    $('#form-rpa-cfg').on('submit', function (e) {
+                                        e.preventDefault();
+                                        $.post('controller/dados_cadastrais_rpa_post.php', $(this).serialize(), function (r) {
+                                            try { r = typeof r === 'string' ? JSON.parse(r) : r; } catch (e) {}
+                                            if (r && r.status === 'sucesso') {
+                                                if (typeof Swal !== 'undefined') {
+                                                    Swal.fire({ icon: 'success', title: 'Configurações salvas.', timer: 1500, showConfirmButton: false });
+                                                } else { alert('Configurações salvas.'); }
+                                            } else {
+                                                alert((r && r.mensagem) || 'Falha ao salvar.');
+                                            }
+                                        });
+                                    });
+                                    </script>
+                                </div>
+                                <!-- FIM ABA RPA -->
 
                             </div>
                             <!-- FIM DIV TAB CONTENT -->

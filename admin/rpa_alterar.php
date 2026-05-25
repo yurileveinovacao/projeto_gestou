@@ -41,6 +41,8 @@ $pode_cancelar = !in_array($r['status'], ['pago', 'cancelado'], true);
 $is_lider_rh = checkLiderRH($id_usa_default, $id_emp_default);
 $pode_aprovar = ($r['status'] === 'rascunho') && $is_lider_rh;
 $pode_reenviar_aceite = ($r['status'] === 'autorizado');
+$pode_enviar_financeiro = ($r['status'] === 'assinado');
+$pode_marcar_pago = ($r['status'] === 'enviado_fin');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -158,6 +160,12 @@ $pode_reenviar_aceite = ($r['status'] === 'autorizado');
                             <button type="button" id="btn-recusar" class="btn btn-warning"><i class="fas fa-times-circle"></i> Recusar</button>
                             <button type="button" id="btn-aprovar" class="btn btn-success"><i class="fas fa-check-circle"></i> Aprovar</button>
                             <?php endif; ?>
+                            <?php if ($pode_enviar_financeiro): ?>
+                            <button type="button" id="btn-enviar-fin" class="btn btn-warning"><i class="fas fa-paper-plane"></i> Enviar para financeiro</button>
+                            <?php endif; ?>
+                            <?php if ($pode_marcar_pago): ?>
+                            <button type="button" id="btn-pagar" class="btn btn-success"><i class="fas fa-dollar-sign"></i> Marcar como pago</button>
+                            <?php endif; ?>
                             <?php if ($pode_cancelar): ?>
                             <button type="button" id="btn-cancelar" class="btn btn-danger"><i class="fas fa-ban"></i> Cancelar RPA</button>
                             <?php endif; ?>
@@ -252,6 +260,52 @@ document.getElementById('btn-recusar')?.addEventListener('click', async function
                 .then(function () { location.reload(); });
         } else {
             Swal.fire('Erro', (resp && resp.mensagem) || 'Falha ao recusar.', 'error');
+        }
+    });
+});
+
+document.getElementById('btn-enviar-fin')?.addEventListener('click', async function () {
+    const r = await Swal.fire({
+        title: 'Enviar para o financeiro?',
+        text: 'Status mudará para "enviado_fin" e ficará aguardando pagamento.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, enviar',
+        cancelButtonText: 'Cancelar'
+    });
+    if (!r.isConfirmed) return;
+    $.post('controller/rpa_enviar_financeiro_post.php', { id_rpa: ID_RPA_ATUAL }, function (resp) {
+        try { resp = typeof resp === 'string' ? JSON.parse(resp) : resp; } catch (e) {}
+        if (resp && resp.status === 'sucesso') {
+            Swal.fire({ icon: 'success', title: 'Enviado.', timer: 1500, showConfirmButton: false })
+                .then(function () { location.reload(); });
+        } else {
+            Swal.fire('Erro', (resp && resp.mensagem) || 'Falha.', 'error');
+        }
+    });
+});
+
+document.getElementById('btn-pagar')?.addEventListener('click', async function () {
+    const { value: data } = await Swal.fire({
+        title: 'Marcar como pago?',
+        input: 'date',
+        inputLabel: 'Data do pagamento (PIX)',
+        inputValue: new Date().toISOString().slice(0, 10),
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar pagamento',
+        cancelButtonText: 'Cancelar',
+        inputValidator: function (v) {
+            return !v ? 'Informe a data do pagamento.' : null;
+        }
+    });
+    if (!data) return;
+    $.post('controller/rpa_marcar_pago_post.php', { id_rpa: ID_RPA_ATUAL, data_pgto: data }, function (resp) {
+        try { resp = typeof resp === 'string' ? JSON.parse(resp) : resp; } catch (e) {}
+        if (resp && resp.status === 'sucesso') {
+            Swal.fire({ icon: 'success', title: 'Pagamento registrado!', timer: 1500, showConfirmButton: false })
+                .then(function () { location.reload(); });
+        } else {
+            Swal.fire('Erro', (resp && resp.mensagem) || 'Falha.', 'error');
         }
     });
 });
