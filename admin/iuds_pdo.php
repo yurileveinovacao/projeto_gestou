@@ -11948,3 +11948,52 @@ function selectGESUSA_responsaveis_aprovacao($id_emp, $id_dep = null)
     $statement->execute([':id_emp' => $id_emp]);
     return $statement->rowCount() > 0 ? $statement->fetchAll(PDO::FETCH_ASSOC) : [0];
 }
+
+// --- FEA-009 Fase 5: token de aceite digital ---------------------------------
+
+// Gera token novo (invalida o anterior se existir), validade 7 dias. Retorna o token.
+function gerarTokenAceiteRPA($id_rpa, $id_emp, $validade_dias = 7)
+{
+    global $pdo;
+    $token = bin2hex(random_bytes(32)); // 64 chars hex
+    $validade = (new DateTime("+$validade_dias days"))->format('Y-m-d H:i:s');
+
+    $sql = 'UPDATE public."GESRPA"
+            SET token_aceite =:token, token_validade =:validade, token_invalidado_em = NULL, datatu = NOW()
+            WHERE id_rpa =:id_rpa AND id_emp =:id_emp';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        ':token'    => $token,
+        ':validade' => $validade,
+        ':id_rpa'   => $id_rpa,
+        ':id_emp'   => $id_emp,
+    ]);
+    return $token;
+}
+
+// Localiza RPA pelo token (público, usado no fluxo de aceite). Sem filtro id_emp.
+// Retorna o registro completo (com JOIN GESAUT/GESDEP/GESEMP pra contexto) ou [0].
+function selectGESRPA_by_token($token)
+{
+    global $pdo;
+    $sql = 'SELECT r.*, a.nome AS autonomo_nome, a.cpf AS autonomo_cpf, a.email AS autonomo_email, a.pix AS autonomo_pix,
+                   d.nome AS setor_nome, e.nome AS empresa_nome, e.nomefantasia AS empresa_fantasia, e.cnpj AS empresa_cnpj
+            FROM public."GESRPA" r
+            INNER JOIN public."GESAUT" a ON a.id_aut = r.id_aut
+            LEFT JOIN public."GESDEP"  d ON d.id_dep = r.id_dep
+            INNER JOIN public."GESEMP" e ON e.id_emp = r.id_emp
+            WHERE r.token_aceite =:token AND r.token_invalidado_em IS NULL';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':token' => $token]);
+    return $stmt->rowCount() > 0 ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [0];
+}
+
+// Marca token como invalidado (usado ao reenviar — gera novo token na sequência)
+function invalidarTokenAceiteRPA($id_rpa, $id_emp)
+{
+    global $pdo;
+    $sql = 'UPDATE public."GESRPA"
+            SET token_invalidado_em = NOW(), datatu = NOW()
+            WHERE id_rpa =:id_rpa AND id_emp =:id_emp AND token_aceite IS NOT NULL';
+    $pdo->prepare($sql)->execute([':id_rpa' => $id_rpa, ':id_emp' => $id_emp]);
+}

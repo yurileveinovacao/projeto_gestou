@@ -319,3 +319,94 @@ function gerarPDFsRPA($id_rpa, $id_emp)
         'recibo'      => $path_rec,
     ];
 }
+
+// =============================================================================
+// FEA-009 Fase 5: PDF de evidência do aceite digital (Opção B)
+// =============================================================================
+
+function gerarPDFEvidenciaRPA($id_rpa, $id_emp, $token_hash, $ip, $user_agent, $data_aceite)
+{
+    $rpa = selectGESRPA($id_rpa, $id_emp);
+    if (!is_array($rpa) || !isset($rpa[0]['id_rpa'])) {
+        throw new Exception('RPA não encontrado para gerar evidência.');
+    }
+    $r = $rpa[0];
+
+    global $pdo;
+    $stmt = $pdo->prepare('SELECT nome, cnpj FROM public."GESEMP" WHERE id_emp =:id_emp');
+    $stmt->execute([':id_emp' => $id_emp]);
+    $emp = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['nome' => '', 'cnpj' => ''];
+
+    $raiz_cnpj = preg_replace('/\D/', '', $emp['cnpj']);
+    if (strlen($raiz_cnpj) === 14) $raiz_cnpj = substr($raiz_cnpj, 0, 8);
+
+    $cpf_fmt = preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $r['autonomo_cpf']);
+    $data_servico_fmt = date('d/m/Y', strtotime($r['data_servico']));
+    $data_aceite_fmt = date('d/m/Y \à\s H:i:s', strtotime($data_aceite));
+    $hash_partial = substr($token_hash, 0, 16) . '...' . substr($token_hash, -16);
+
+    $titulo_safe = 'Evidência de Aceite Digital — RPA #' . (int) $id_rpa;
+
+    $wrapper = '<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>' . htmlspecialchars($titulo_safe) . '</title>
+<style>
+@page { margin: 2cm; }
+body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 11pt; color: #222; line-height: 1.6; }
+h1.titulo-doc { font-size: 16pt; text-align: center; margin: 0 0 1.5em 0; padding-bottom: 0.4em; border-bottom: 2px solid #c00; color: #c00; }
+.box { border: 2px solid #888; padding: 1.5em; margin: 1.5em 0; background: #fafafa; }
+.box-titulo { font-weight: bold; color: #c00; margin-bottom: 0.8em; }
+table.dados { width: 100%; border-collapse: collapse; }
+table.dados td { padding: 6pt 8pt; border-bottom: 1px solid #ddd; vertical-align: top; }
+table.dados td:first-child { width: 35%; font-weight: bold; background: #f0f0f0; }
+.codigo { font-family: monospace; font-size: 10pt; word-break: break-all; }
+.rodape-doc { margin-top: 3em; font-size: 9pt; color: #666; text-align: center; border-top: 1px solid #ccc; padding-top: 0.5em; }
+</style></head>
+<body>
+<h1 class="titulo-doc">EVIDÊNCIA DE ACEITE DIGITAL</h1>
+
+<p>Este documento certifica que o aceite digital do Recibo de Pagamento Autônomo (RPA) identificado abaixo foi registrado eletronicamente pelo prestador de serviço, mediante autenticação por CPF + token de uso único enviado por email, marcação expressa de termo de uso e confirmação dupla.</p>
+
+<div class="box">
+  <div class="box-titulo">DECLARAÇÃO FORMAL DE ACEITE</div>
+  <p>Em <strong>' . $data_aceite_fmt . '</strong>, o(a) prestador(a) autônomo(a) abaixo identificado(a) acessou o link de aceite digital deste RPA, marcou expressamente o termo de uso, confirmou a operação em modal de confirmação dupla, e registrou seu aceite com plena ciência das informações apresentadas.</p>
+</div>
+
+<table class="dados">
+  <tr><td>RPA</td><td>#' . (int) $r['id_rpa'] . '</td></tr>
+  <tr><td>Empresa contratante</td><td>' . htmlspecialchars($emp['nome']) . ' — CNPJ ' . htmlspecialchars($emp['cnpj']) . '</td></tr>
+  <tr><td>Autônomo</td><td>' . htmlspecialchars($r['autonomo_nome']) . '</td></tr>
+  <tr><td>CPF</td><td>' . htmlspecialchars($cpf_fmt) . '</td></tr>
+  <tr><td>Email cadastrado (destinatário)</td><td>' . htmlspecialchars($r['autonomo_email']) . '</td></tr>
+  <tr><td>Data do serviço</td><td>' . $data_servico_fmt . '</td></tr>
+  <tr><td>Valor líquido pago</td><td>R$ ' . number_format($r['valor_liquido'], 2, ',', '.') . '</td></tr>
+  <tr><td>Valor bruto / INSS retido</td><td>R$ ' . number_format($r['valor_bruto'], 2, ',', '.') . ' / R$ ' . number_format($r['valor_inss'], 2, ',', '.') . ' (' . number_format($r['perc_imposto'], 2, ',', '.') . '%)</td></tr>
+</table>
+
+<h3 style="color: #c00; margin-top: 1.5em;">Trilha de evidência técnica</h3>
+<table class="dados">
+  <tr><td>Hash do token (parcial)</td><td class="codigo">' . htmlspecialchars($hash_partial) . '</td></tr>
+  <tr><td>IP de origem do aceite</td><td class="codigo">' . htmlspecialchars($ip ?? '-') . '</td></tr>
+  <tr><td>User-Agent (navegador)</td><td class="codigo">' . htmlspecialchars($user_agent ?? '-') . '</td></tr>
+  <tr><td>Timestamp do aceite</td><td>' . $data_aceite_fmt . '</td></tr>
+</table>
+
+<p style="margin-top: 2em; font-size: 10pt; color: #555;">
+Este documento constitui assinatura eletrônica simples nos termos do art. 4º, I da Lei 14.063/2020, com valor probatório aceito pela Justiça do Trabalho para documentos operacionais. O aceite foi registrado de forma auditável, com identificação dupla (CPF + token), marcação expressa de termo de uso, confirmação dupla via modal, e captura de metadados técnicos (IP, navegador, timestamp).
+</p>
+
+<div class="rodape-doc">Evidência gerada automaticamente pelo sistema GESTOU em ' . date('d/m/Y H:i:s') . '</div>
+</body></html>';
+
+    $dompdf = new Dompdf(["enable_remote" => false]);
+    $dompdf->loadHtml($wrapper, 'UTF-8');
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+    $output = $dompdf->output();
+
+    $ano_mes = date('Y-m', strtotime($r['data_servico']));
+    $path = _rpa_salvar_pdf($output, $raiz_cnpj, $ano_mes, $id_rpa, 'evidencia');
+
+    updateGESRPA_pdf_paths($id_rpa, $id_emp, ['evidencia_pdf_path' => $path]);
+
+    return $path;
+}

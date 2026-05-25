@@ -3,6 +3,7 @@
 require '../restrito.php';
 require_once "../iuds_pdo.php";
 require_once "../util2.php";
+require_once "../helpers/rpa_aceite_email.php";
 
 header('Content-Type: application/json');
 
@@ -41,7 +42,12 @@ try {
         updateGESRPA_status($id_rpa, $id_emp_default, 'autorizado', $id_usa_default, [
             'autorizado_por' => $id_usa_default,
         ]);
-        // TODO Fase 5: aqui dispara email pro autônomo com token de aceite digital
+        // FEA-009 Fase 5: dispara email com token de aceite (não-blocking)
+        try {
+            enviarEmailAceiteAutonomo($id_rpa, $id_emp_default);
+        } catch (Exception $emailErr) {
+            error_log('[FEA-009] Falha enviando email de aceite do RPA ' . $id_rpa . ': ' . $emailErr->getMessage());
+        }
         echo json_encode(['status' => 'sucesso', 'novo_status' => 'autorizado']);
         exit;
     }

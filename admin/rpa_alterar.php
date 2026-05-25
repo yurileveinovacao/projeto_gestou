@@ -40,6 +40,7 @@ $pode_cancelar = !in_array($r['status'], ['pago', 'cancelado'], true);
 // Líder RH da empresa atual pode aprovar/recusar quando status=rascunho
 $is_lider_rh = checkLiderRH($id_usa_default, $id_emp_default);
 $pode_aprovar = ($r['status'] === 'rascunho') && $is_lider_rh;
+$pode_reenviar_aceite = ($r['status'] === 'autorizado');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -150,6 +151,9 @@ $pode_aprovar = ($r['status'] === 'rascunho') && $is_lider_rh;
                         <!-- Ações -->
                         <div class="mt-4 textalign-right">
                             <a href="rpas.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+                            <?php if ($pode_reenviar_aceite): ?>
+                            <button type="button" id="btn-reenviar-aceite" class="btn btn-info"><i class="fas fa-paper-plane"></i> Reenviar email de aceite</button>
+                            <?php endif; ?>
                             <?php if ($pode_aprovar): ?>
                             <button type="button" id="btn-recusar" class="btn btn-warning"><i class="fas fa-times-circle"></i> Recusar</button>
                             <button type="button" id="btn-aprovar" class="btn btn-success"><i class="fas fa-check-circle"></i> Aprovar</button>
@@ -183,6 +187,26 @@ $pode_aprovar = ($r['status'] === 'rascunho') && $is_lider_rh;
 
 <script>
 const ID_RPA_ATUAL = <?php echo $r['id_rpa']; ?>;
+
+document.getElementById('btn-reenviar-aceite')?.addEventListener('click', async function () {
+    const r = await Swal.fire({
+        title: 'Reenviar email de aceite?',
+        text: 'Um novo link será gerado e o link anterior (caso enviado) será invalidado.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, reenviar',
+        cancelButtonText: 'Cancelar'
+    });
+    if (!r.isConfirmed) return;
+    $.post('controller/rpa_reenviar_aceite_post.php', { id_rpa: ID_RPA_ATUAL }, function (resp) {
+        try { resp = typeof resp === 'string' ? JSON.parse(resp) : resp; } catch (e) {}
+        if (resp && resp.status === 'sucesso') {
+            Swal.fire('Enviado!', resp.mensagem || '', 'success');
+        } else {
+            Swal.fire('Erro', (resp && resp.mensagem) || 'Falha ao reenviar.', 'error');
+        }
+    });
+});
 
 document.getElementById('btn-aprovar')?.addEventListener('click', async function () {
     const r = await Swal.fire({
