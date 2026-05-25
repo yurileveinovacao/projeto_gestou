@@ -36,6 +36,10 @@ function _badge_status_full($s) {
 $cpf_fmt = preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $r['autonomo_cpf']);
 $data_fmt = date('d/m/Y', strtotime($r['data_servico']));
 $pode_cancelar = !in_array($r['status'], ['pago', 'cancelado'], true);
+
+// Líder RH da empresa atual pode aprovar/recusar quando status=rascunho
+$is_lider_rh = checkLiderRH($id_usa_default, $id_emp_default);
+$pode_aprovar = ($r['status'] === 'rascunho') && $is_lider_rh;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -146,10 +150,20 @@ $pode_cancelar = !in_array($r['status'], ['pago', 'cancelado'], true);
                         <!-- Ações -->
                         <div class="mt-4 textalign-right">
                             <a href="rpas.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+                            <?php if ($pode_aprovar): ?>
+                            <button type="button" id="btn-recusar" class="btn btn-warning"><i class="fas fa-times-circle"></i> Recusar</button>
+                            <button type="button" id="btn-aprovar" class="btn btn-success"><i class="fas fa-check-circle"></i> Aprovar</button>
+                            <?php endif; ?>
                             <?php if ($pode_cancelar): ?>
                             <button type="button" id="btn-cancelar" class="btn btn-danger"><i class="fas fa-ban"></i> Cancelar RPA</button>
                             <?php endif; ?>
                         </div>
+
+                        <?php if ($r['status'] === 'rascunho' && !$is_lider_rh): ?>
+                        <div class="alert alert-info mt-3 small">
+                            <i class="fas fa-info-circle"></i> Este RPA aguarda aprovação de um Líder RH. Você (admin comum) só pode visualizar.
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -168,6 +182,56 @@ $pode_cancelar = !in_array($r['status'], ['pago', 'cancelado'], true);
 </html>
 
 <script>
+const ID_RPA_ATUAL = <?php echo $r['id_rpa']; ?>;
+
+document.getElementById('btn-aprovar')?.addEventListener('click', async function () {
+    const r = await Swal.fire({
+        title: 'Aprovar este RPA?',
+        text: 'Após aprovar, o autônomo receberá um email com link para aceite digital.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, aprovar',
+        cancelButtonText: 'Cancelar'
+    });
+    if (!r.isConfirmed) return;
+
+    $.post('controller/rpa_aprovar_post.php', { id_rpa: ID_RPA_ATUAL, acao: 'aprovar' }, function (resp) {
+        try { resp = typeof resp === 'string' ? JSON.parse(resp) : resp; } catch (e) {}
+        if (resp && resp.status === 'sucesso') {
+            Swal.fire({ icon: 'success', title: 'RPA aprovado.', timer: 1500, showConfirmButton: false })
+                .then(function () { location.reload(); });
+        } else {
+            Swal.fire('Erro', (resp && resp.mensagem) || 'Falha ao aprovar.', 'error');
+        }
+    });
+});
+
+document.getElementById('btn-recusar')?.addEventListener('click', async function () {
+    const { value: motivo } = await Swal.fire({
+        title: 'Recusar este RPA?',
+        input: 'textarea',
+        inputLabel: 'Motivo da recusa (mínimo 5 caracteres)',
+        inputPlaceholder: 'Descreva o motivo...',
+        showCancelButton: true,
+        confirmButtonText: 'Recusar',
+        cancelButtonText: 'Voltar',
+        inputValidator: function (v) {
+            return (!v || v.trim().length < 5) ? 'Informe ao menos 5 caracteres.' : null;
+        }
+    });
+    if (!motivo) return;
+
+    $.post('controller/rpa_aprovar_post.php', { id_rpa: ID_RPA_ATUAL, acao: 'recusar', motivo: motivo }, function (resp) {
+        try { resp = typeof resp === 'string' ? JSON.parse(resp) : resp; } catch (e) {}
+        if (resp && resp.status === 'sucesso') {
+            Swal.fire({ icon: 'success', title: 'RPA recusado e cancelado.', timer: 1500, showConfirmButton: false })
+                .then(function () { location.reload(); });
+        } else {
+            Swal.fire('Erro', (resp && resp.mensagem) || 'Falha ao recusar.', 'error');
+        }
+    });
+});
+
 document.getElementById('btn-cancelar')?.addEventListener('click', async function () {
     const { value: motivo } = await Swal.fire({
         title: 'Cancelar RPA?',

@@ -4,6 +4,7 @@ require '../restrito.php';
 require_once "../iuds_pdo.php";
 require_once "../util2.php";
 require_once "../helpers/rpa_pdf.php";
+require_once "../helpers/rpa_email.php";
 
 header('Content-Type: application/json');
 
@@ -98,6 +99,13 @@ try {
     } catch (Exception $pdfErr) {
         // Log mas não falha o INSERT (PDFs podem ser regerados depois)
         error_log('[FEA-009] Falha gerando PDFs do RPA ' . $id_rpa . ': ' . $pdfErr->getMessage());
+    }
+
+    // FEA-009 Fase 4: notifica Líderes RH por email (não-blocking)
+    try {
+        enviarEmailAprovacaoRPA($id_rpa, $id_emp_default);
+    } catch (Exception $emailErr) {
+        error_log('[FEA-009] Falha enviando email de aprovação do RPA ' . $id_rpa . ': ' . $emailErr->getMessage());
     }
 
     echo json_encode(['status' => 'sucesso', 'id_rpa' => $id_rpa]);
