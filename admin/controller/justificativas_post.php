@@ -10,7 +10,7 @@ if (isset($_POST['btn_visualizar'])) {
 
     foreach (selectJustificativa_id($id) as $linha) {
         $tipo_raw = $linha['tipo'];
-        $tipos = array('ausencia_ponto' => 'Ausência de Ponto', 'falta' => 'Falta', 'falta_atestado' => 'Falta com Atestado');
+        $tipos = array('ausencia_ponto' => 'Ausência de Ponto', 'falta' => 'Falta', 'falta_atestado' => 'Falta com Atestado', 'atraso' => 'Atraso');
         $tipo = isset($tipos[$tipo_raw]) ? $tipos[$tipo_raw] : $tipo_raw;
         $data_oc = (new DateTime($linha['data_ocorrencia']))->format('d/m/Y');
         $hora = $linha['hora_ocorrencia'];
@@ -61,7 +61,7 @@ if (isset($_POST['btn_aprovar'])) {
             $email_colab = $linha['colaborador_email'];
             $nome_colab = $linha['colaborador_nome'];
             $tipo_raw = $linha['tipo'];
-            $tipos = array('ausencia_ponto' => 'Ausência de Ponto', 'falta' => 'Falta', 'falta_atestado' => 'Falta com Atestado');
+            $tipos = array('ausencia_ponto' => 'Ausência de Ponto', 'falta' => 'Falta', 'falta_atestado' => 'Falta com Atestado', 'atraso' => 'Atraso');
             $tipo = isset($tipos[$tipo_raw]) ? $tipos[$tipo_raw] : $tipo_raw;
             $data_oc = (new DateTime($linha['data_ocorrencia']))->format('d/m/Y');
 
@@ -103,7 +103,7 @@ if (isset($_POST['btn_reprovar'])) {
             $email_colab = $linha['colaborador_email'];
             $nome_colab = $linha['colaborador_nome'];
             $tipo_raw = $linha['tipo'];
-            $tipos = array('ausencia_ponto' => 'Ausência de Ponto', 'falta' => 'Falta', 'falta_atestado' => 'Falta com Atestado');
+            $tipos = array('ausencia_ponto' => 'Ausência de Ponto', 'falta' => 'Falta', 'falta_atestado' => 'Falta com Atestado', 'atraso' => 'Atraso');
             $tipo = isset($tipos[$tipo_raw]) ? $tipos[$tipo_raw] : $tipo_raw;
             $data_oc = (new DateTime($linha['data_ocorrencia']))->format('d/m/Y');
 

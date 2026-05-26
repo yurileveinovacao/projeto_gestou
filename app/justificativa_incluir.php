@@ -73,6 +73,7 @@ require 'util.php';
                                                     <option value="ausencia_ponto">Ausência de batida de ponto</option>
                                                     <option value="falta">Falta</option>
                                                     <option value="falta_atestado">Falta com atestado</option>
+                                                    <option value="atraso">Atraso</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -101,10 +102,12 @@ require 'util.php';
                                             </div>
                                         </div>
 
-                                        <!-- ANEXO (só para falta_atestado) -->
+                                        <!-- ANEXO (obrigatório para falta_atestado, opcional para atraso) -->
                                         <div class="form-row" id="campo-anexo" style="display: none;">
                                             <div class="form-group col-md-12">
-                                                <label for="arquivo" class="mt-sm-3 mb-2 font-weight-bold">ATESTADO (ANEXO)</label>
+                                                <label for="arquivo" class="mt-sm-3 mb-2 font-weight-bold">
+                                                    <span id="label-anexo">ATESTADO (ANEXO)</span>
+                                                </label>
                                                 <input type="file" class="form-control" id="arquivo" name="arquivo" accept=".pdf,.png,.jpg,.jpeg">
                                             </div>
                                         </div>
@@ -191,6 +194,12 @@ require 'util.php';
             } else if (tipo == 'falta_atestado') {
                 $('#campo-mensagem').show();
                 $('#campo-anexo').show();
+                $('#label-anexo').text('ATESTADO (ANEXO)');
+            } else if (tipo == 'atraso') {
+                $('#campo-hora').show();
+                $('#campo-mensagem').show();
+                $('#campo-anexo').show();
+                $('#label-anexo').text('COMPROVANTE (OPCIONAL)');
             }
         });
     });

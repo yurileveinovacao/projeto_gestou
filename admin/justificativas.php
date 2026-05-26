@@ -127,7 +127,8 @@ require_once "util2.php";
                                     $tipos_label = array(
                                         'ausencia_ponto' => 'Ausência de Ponto',
                                         'falta' => 'Falta',
-                                        'falta_atestado' => 'Falta com Atestado'
+                                        'falta_atestado' => 'Falta com Atestado',
+                                        'atraso' => 'Atraso'
                                     );
 
                                     foreach (selectJustificativas_empresa($id_emp_default) as $linha) {

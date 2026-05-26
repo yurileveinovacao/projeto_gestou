@@ -121,7 +121,8 @@ require 'util.php';
                                 $tipos = array(
                                     'ausencia_ponto' => 'Ausência de Ponto',
                                     'falta' => 'Falta',
-                                    'falta_atestado' => 'Falta com Atestado'
+                                    'falta_atestado' => 'Falta com Atestado',
+                                    'atraso' => 'Atraso'
                                 );
                                 $tipo_formatado = isset($tipos[$tipo_raw]) ? $tipos[$tipo_raw] : $tipo_raw;
 

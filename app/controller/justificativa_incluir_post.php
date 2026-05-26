@@ -17,47 +17,49 @@ if (isset($_POST['submit_justificativa'])) {
             exit;
         }
 
-        if ($tipo == 'ausencia_ponto' && empty($hora_ocorrencia)) {
+        if (in_array($tipo, ['ausencia_ponto', 'atraso'], true) && empty($hora_ocorrencia)) {
             echo '0';
             exit;
         }
 
-        if (($tipo == 'falta' || $tipo == 'falta_atestado') && empty($mensagem)) {
+        if (in_array($tipo, ['falta', 'falta_atestado', 'atraso'], true) && empty($mensagem)) {
             echo '0';
             exit;
         }
 
-        // Upload de atestado
-        if ($tipo == 'falta_atestado') {
-            if (isset($_FILES['arquivo']) && $_FILES['arquivo']['size'] > 0) {
-                $nome_arquivo = $_FILES['arquivo']['name'];
-                $temp = $_FILES['arquivo']['tmp_name'];
-                $ext = strtolower(pathinfo($nome_arquivo, PATHINFO_EXTENSION));
+        // Anexo: obrigatório para 'falta_atestado', opcional para 'atraso', ignorado para os demais
+        $tem_anexo = isset($_FILES['arquivo']) && $_FILES['arquivo']['size'] > 0;
 
-                if (!in_array($ext, ['pdf', 'png', 'jpg', 'jpeg'])) {
-                    echo '2'; // extensão inválida
-                    exit;
-                }
+        if ($tipo == 'falta_atestado' && !$tem_anexo) {
+            echo '5'; // atestado obrigatório
+            exit;
+        }
 
-                if ($_FILES['arquivo']['size'] > 10000000) {
-                    echo '3'; // arquivo muito grande
-                    exit;
-                }
+        if (in_array($tipo, ['falta_atestado', 'atraso'], true) && $tem_anexo) {
+            $nome_arquivo = $_FILES['arquivo']['name'];
+            $temp = $_FILES['arquivo']['tmp_name'];
+            $ext = strtolower(pathinfo($nome_arquivo, PATHINFO_EXTENSION));
 
-                $pasta = '../../upload/justificativas/' . $raiz_cnpj . '/' . $id_usu_default . '/';
-                if (!file_exists($pasta)) {
-                    mkdir($pasta, 0777, true);
-                }
+            if (!in_array($ext, ['pdf', 'png', 'jpg', 'jpeg'])) {
+                echo '2'; // extensão inválida
+                exit;
+            }
 
-                $novo_nome = time() . '_' . $nome_arquivo;
-                if (move_uploaded_file($temp, $pasta . $novo_nome)) {
-                    $arquivo_path = 'justificativas/' . $raiz_cnpj . '/' . $id_usu_default . '/' . $novo_nome;
-                } else {
-                    echo '4'; // erro upload
-                    exit;
-                }
+            if ($_FILES['arquivo']['size'] > 10000000) {
+                echo '3'; // arquivo muito grande
+                exit;
+            }
+
+            $pasta = '../../upload/justificativas/' . $raiz_cnpj . '/' . $id_usu_default . '/';
+            if (!file_exists($pasta)) {
+                mkdir($pasta, 0777, true);
+            }
+
+            $novo_nome = time() . '_' . $nome_arquivo;
+            if (move_uploaded_file($temp, $pasta . $novo_nome)) {
+                $arquivo_path = 'justificativas/' . $raiz_cnpj . '/' . $id_usu_default . '/' . $novo_nome;
             } else {
-                echo '5'; // atestado obrigatório
+                echo '4'; // erro upload
                 exit;
             }
         }
