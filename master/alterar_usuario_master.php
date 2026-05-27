@@ -20,7 +20,7 @@ $id_mas_editar = $_SESSION['id_mas_editar'];
 <head>
 
     <meta charset="utf-8">
-    <link rel="icon" type="image/png" href="../img/logo.ico" />
+    <link rel="icon" type="image/png" href="/img/favicon.png">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">

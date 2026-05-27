@@ -44,7 +44,7 @@ $data_servico_fmt = $rpa ? date('d/m/Y', strtotime($rpa['data_servico'])) : '';
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link href="img/logo/logo.ico" rel="icon">
+    <link rel="icon" type="image/png" href="/img/favicon.png">
     <title>Gestou — Aceite Digital de RPA</title>
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="vendor/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css">

@@ -31,7 +31,7 @@ function _badge_status($s) {
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <link rel="icon" type="image/png" href="../img/logo.ico" />
+    <link rel="icon" type="image/png" href="/img/favicon.png">
     <title>GESTOU PORTAL - RPAs</title>
 
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">

@@ -33,7 +33,7 @@ $cep_fmt = $a['cep'] ? preg_replace('/(\d{5})(\d{3})/', '$1-$2', $a['cep']) : ''
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <link rel="icon" type="image/png" href="../img/logo.ico" />
+    <link rel="icon" type="image/png" href="/img/favicon.png">
     <title>GESTOU PORTAL - Editar Autônomo</title>
 
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">

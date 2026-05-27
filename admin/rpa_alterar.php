@@ -48,7 +48,7 @@ $pode_marcar_pago = ($r['status'] === 'enviado_fin');
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <link rel="icon" type="image/png" href="../img/logo.ico" />
+    <link rel="icon" type="image/png" href="/img/favicon.png">
     <title>GESTOU PORTAL - RPA #<?php echo $r['id_rpa']; ?></title>
 
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">

@@ -32,7 +32,7 @@ require_once __DIR__."/../config/session.php"; session_start();
 	<meta name="twitter:image" content="https://www.gestou.com.br/img/logo_gestou.png">
 
 	<!--===============================================================================================-->
-	<link rel="icon" type="image/png" href="../img/logo.png" />
+	<link rel="icon" type="image/png" href="/img/favicon.png">
 	<!--===============================================================================================-->
 	<link rel="stylesheet" type="text/css" href="vendor_login/bootstrap/css/bootstrap.min.css">
 	<!--===============================================================================================-->

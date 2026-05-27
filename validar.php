@@ -17,7 +17,7 @@ unset($_SESSION["download_raiz_validador"]);
   <meta content="" name="keywords">
 
   <!-- Favicons -->
-  <link href="img/logo.png" rel="icon">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
   <link href="img/logo.png" rel="apple-touch-icon">
 
   <!-- Google Fonts -->

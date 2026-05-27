@@ -10,7 +10,7 @@
     <meta content="" name="keywords">
 
     <!-- Favicons -->
-    <link href="img/logo.png" rel="icon">
+    <link rel="icon" type="image/png" href="/img/favicon.png">
     <link href="img/logo.png" rel="apple-touch-icon">
 
     <!-- Google Fonts -->

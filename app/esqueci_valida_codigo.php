@@ -14,7 +14,7 @@ if (isset($_SESSION['cod_liberado'])) {
 	<meta charset="UTF-8">
 	<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
 	<!--===============================================================================================-->
-	<link rel="icon" type="image/png" href="../img/logo.ico" />
+	<link rel="icon" type="image/png" href="/img/favicon.png">
 	<!--===============================================================================================-->
 	<link rel="stylesheet" type="text/css" href="vendor_login/bootstrap/css/bootstrap.min.css">
 	<!--===============================================================================================-->

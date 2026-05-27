@@ -21,7 +21,7 @@ if (isset($_SESSION["id_sol_item"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link href="img/logo/logo.ico" rel="icon">
+    <link rel="icon" type="image/png" href="/img/favicon.png">
     <title>Gestou - Minhas Solicitações</title>
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="vendor/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css">
