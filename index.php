@@ -19,12 +19,17 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.gestou.com.br">
   <meta property="og:site_name" content="Gestou">
+  <meta property="og:image" content="https://www.gestou.com.br/img/gestou-logo.png">
+  <meta property="og:image:width" content="500">
+  <meta property="og:image:height" content="200">
+  <meta property="og:image:type" content="image/png">
   <meta property="og:locale" content="pt_BR">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Gestou — Automatize seu Departamento Pessoal">
   <meta name="twitter:description" content="Elimine o papel do seu DP. Holerite digital, aceite eletrônico e gestão documental em uma plataforma simples e segura.">
+  <meta name="twitter:image" content="https://www.gestou.com.br/img/gestou-logo.png">
 
   <!-- Schema.org JSON-LD -->
   <script type="application/ld+json">
