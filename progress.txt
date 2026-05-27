@@ -45,18 +45,6 @@ PRD atualizado: prd.json (MIG-001~012 concluídas + FEA-001~006 concluídas)
 
 ---
 
-## Backlog — Aguardando informações externas
-
-| Item | Aguarda | Responsável |
-|------|---------|-------------|
-| Turnover (cálculo por setor) | Fórmula e modelo de visualização da Jéssica | Yuri coletar |
-| RPA — Recibo de Pagamento Autônomo | Fluxo completo e planilhas da Jéssica | Yuri coletar |
-| IA 1 — Compliance (Ponto vs. Convenção + Relatórios vs. Holerite) | Sessão de detalhamento dedicada | Yuri/Rafa |
-| IA 2 — Suporte Bia (landing + plataforma) | Sessão de detalhamento dedicada | Yuri/Rafa |
-| Recrutamento e Seleção | Baixa prioridade — próxima fase | — |
-
----
-
 ## Log de Atividades
 
 ### 2026-03-05 — Fase 4B: Fix IRRF templates
@@ -344,20 +332,10 @@ PRD atualizado: prd.json (MIG-001~012 concluídas + FEA-001~006 concluídas)
 - Distribuição: 5 notificações RH (CNPJ 08708780, 27/abr), 6 mensagens de mural broadcast (5 CNPJs, 29/abr), 2 fotos de aprovação de cadastro (27 e 28/abr).
 - **Nenhum upload de holerite, IRRF ou ponto** ainda — fluxo crítico não exercitado, vale acompanhar quando alguém fechar folha.
 
-## Pós-cutover (a fazer)
-- ~~Cloud Scheduler para FEA-003: criar o job~~ secret/env prontos; falta `gcloud scheduler jobs create http ...` (comando em `CLAUDE.md`)
-- Resolver/investigar SMTP `suporte@gestou.com.br` (Google Workspace?) e voltar o FROM pro domínio do Gestou
-- Rotacionar senhas Kinghost expostas no chat (DB, FTP, SMTP) e regenerar Chave 2 Azure (já feito)
-- Fase 5 Track A: sessão dedicada pra finalizar Play Console (D-U-N-S liberado em 2026-05-04)
-- Descomissionar servidor antigo Kinghost após período estável de monitoramento
-- Atualizar variantes restantes da logo (`logo_gestou_escrita_branco.png` e companhia) quando o cliente entregar
-- Monitorar primeiro upload real de holerite/IRRF/ponto (fluxo crítico ainda não exercitado pós-cutover)
+## Pendências em aberto
 
-## Backlog — Aguardando planejamento/informações
+A partir de 2026-05-27, **pendências vivem no OKR** (projeto `gestou-2026`).
+Consultar via `claude-okr call GET '/api/agent/tasks?projectToken=gestou-2026&status=PENDING'`
+ou no painel web <https://okr.leveinovacao.com.br>.
 
-| Item | Situação |
-|------|----------|
-| RPA — Recibo de Pagamento Autônomo | Documentos recebidos da Jéssica — aguarda sessão de detalhamento |
-| IA 1 — Compliance (Ponto vs. Convenção + Relatórios vs. Holerite) | Documentos recebidos — aguarda sessão dedicada |
-| IA 2 — Suporte Bia (landing + plataforma) | Aguarda sessão dedicada |
-| Recrutamento e Seleção | Baixa prioridade — próxima fase |
+Decisões "não fazer" registradas em [`docs/pendencias.md`](docs/pendencias.md).

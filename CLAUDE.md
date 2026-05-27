@@ -114,6 +114,24 @@ psql -h 127.0.0.1 -p 5434 -U gestou -d gestou
 Em produção em https://gestou.com.br desde 2026-04-24 (cutover GCP concluído).
 Fase 7 (FEA-001 a FEA-007) entregue. **Pendências em aberto vivem no OKR** (projeto `gestou-2026`) — consulte via `claude-okr call GET '/api/agent/tasks?projectToken=gestou-2026&status=PENDING'`.
 
+## Onde cada tipo de informação vive
+
+Pra evitar drift entre fontes, cada tipo de info tem **um único lugar canônico**:
+
+| Tipo de info | Onde vive | Característica |
+|---|---|---|
+| Tarefas/pendências vivas | **OKR** (`gestou-2026`) | Fonte da verdade — descrição rica + status real |
+| PRD do épico atual em planejamento | `prd.json` | Atualizado quando o escopo muda |
+| Apresentações de alto nível pra terceiros | `docs/proposta-*.md` | Vivas e atualizáveis (ex.: `proposta-onboarding-v2.md`) |
+| Histórico cronológico de entregas | `progress.txt` | Append-only — sessão entregue vira nova entrada datada |
+| Logs técnicos de sessão | `Brain/02_Logs/YYYY-MM-DD.md` | Snapshots immutable — capturam causa raiz, decisões, comandos |
+| Decisões "não fazer" registradas | `docs/pendencias.md` | Pointer pro OKR + registro de itens descartados |
+| Planos de FEAs já entregues / docs históricos | `docs/archive/` | Read-only — referência histórica |
+
+**❌ Regra crítica:** NÃO criar novos `docs/plano-fea-X.md`. Planejamento detalhado de uma tarefa vive na descrição da tarefa no OKR. Apenas apresentações de alto nível pra compartilhar com terceiros (ex.: stakeholders, cliente, jurídico) viram `.md` no repo.
+
+**Por que essa regra existe**: até 2026-05-27 mantínhamos planos de FEA em Markdown vivo. Resultado: FEA-009 e FEA-011 ficaram listadas como "aguardando MVP" por semanas depois de entregues. O OKR não tem esse problema porque o status sai automaticamente quando você marca COMPLETED.
+
 ## Referência
 
 - **OKR** (`gestou-2026`) — fonte da verdade pra pendências e tarefas em andamento (via plugin `claude-okr` ou <https://okr.leveinovacao.com.br>)
