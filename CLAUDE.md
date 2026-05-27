@@ -182,6 +182,14 @@ Ao detectar que uma tarefa (feature, fix, refactor, deploy) foi concluída e val
 
 4. **Higiene de contexto**: depois do log, recomende `/compact` se a conversa estiver longa.
 
+5. **Higiene de arquivos locais**: após gravar o log no Brain (que já preserva contexto), **apague os artefatos transitórios de validação** acumulados na raiz do projeto. Esses arquivos serviram pra inspeção da sessão, o essencial já foi capturado no log/commit, e ficar no working tree só inflate a saída do `git status` e ocupa espaço local. Apagar:
+
+   - **Screenshots/prints na raiz**: `rm -f /media/rafo/dados/IA/gestou/www/www/*.png` (preserva PNGs legítimos em `img/`, `admin/img/`, `app/img/` etc. — o glob `*.png` só pega a raiz)
+   - **Sessões do Playwright MCP**: `rm -rf /media/rafo/dados/IA/gestou/www/www/.playwright-mcp/` (console logs, page snapshots)
+   - **Pastas locais de screenshots**: `rm -rf .screenshots/ screenshots/` (se existirem)
+
+   Já existe rede de proteção no `.gitignore` (`/*.png`, `.playwright-mcp/`, `screenshots/`, `.screenshots/`) que impede commit acidental — esse passo é só pra liberar disco e manter o working tree limpo. Se o usuário pediu pra preservar algum print específico (raro), pergunte antes de apagar.
+
 **Tags por área (use combinação)**: `php`, `postgres`, `apache`, `frontend`, `backend`, `gcp`, `cloud-run`, `cloud-sql`, `gcs`, `ocr`, `azure-vision`, `smtp`, `auth`, `multi-tenant`, `session`, `migration`, `schema`, `payment`, `infra`, `docs`, `fix`, `feature`, `refactor`, `prd`, `fea`, `mig`.
 
 **O que NÃO salvar**:

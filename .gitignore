@@ -97,3 +97,17 @@ app/twa/*.jks
 app/twa/*.keystore
 app/twa/*.aab
 app/twa/*.idsig
+
+# ========================================
+# PLAYWRIGHT / SCREENSHOTS DE VALIDAÇÃO
+# ========================================
+.playwright-mcp/
+/*.png
+!img/**/*.png
+!app/img/**/*.png
+!admin/img/**/*.png
+!master/img/**/*.png
+!createaccount/img/**/*.png
+!createemployee/img/**/*.png
+screenshots/
+.screenshots/
