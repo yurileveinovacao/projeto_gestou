@@ -1,375 +1,244 @@
 {
-  "project": "Gestou",
-  "description": "Sistema de RH/folha multi-tenant. PHP 7.4 puro, PostgreSQL 17, Apache, GCP Cloud Run. Este PRD é cumulativo — as stories MIG-001 a MIG-012 estão 100% concluídas. As stories FEA-001 em diante são novas features de produto.",
-  "branches": {
-    "migration": "migration/gcp (concluída)",
-    "features": "feature/novas-funcionalidades (branch recomendada para FEA-*)"
+  "project": "Gestou — Onboarding Comercial v2",
+  "description": "PRD focado no épico de reformulação da esteira comercial da plataforma Gestou, motivado pela reunião 1:1 Rafa/Yuri de 2026-05-25 e pela decisão de ativar campanhas de Ads. O PRD histórico (MIG-001 a MIG-012, FEA-001 a FEA-013) está arquivado em docs/archive/prd-original.json.",
+  "version": "2.0",
+  "data_inicio": "2026-05-27",
+  "contexto": {
+    "motivacao": "A esteira atual depende de aprovação manual no /master/ e não captura pagamento. Antes de ligar Ads, precisamos de onboarding self-service com captura de pagamento, recuperação de checkout abandonado e pipeline de leads visível.",
+    "decisoes_arquiteturais": {
+      "ordem_cadastro_pagamento": "Cadastro mínimo ANTES do pagamento (4-5 campos). Padrão de mercado em SaaS B2B sério. Permite recuperação de abandono, antifraude e consentimento LGPD documentado.",
+      "gateway": "Asaas (alinhamento com estrutura financeira da Leve). Stripe usado no Precifica — não replicar.",
+      "modelo_de_estados": "Estender GESEMP.analise com novos status (5 a 11) em vez de criar tabela GESLEAD separada. Menos retrabalho, sem migration disruptiva.",
+      "menus_padrao_novo_admin": "Reusar config/permissions.php (FEA-013 já entregue)",
+      "lider_rh_primeiro_usuario": "Primeiro usuário criado no checkout vira Líder RH automaticamente (GESGES.gestor=1, FEA-010 já entregue)"
+    },
+    "metas_yuri": {
+      "ads": "Iniciar campanhas de Google/Meta Ads após esteira ativa",
+      "prazo_inicial": "Algo ativo até 2026-05-27 (quarta) — meta agressiva; realista é Fase 0+1 nesse prazo, esteira completa em 2-3 semanas",
+      "modelo_cobranca_novo": "Preço fixo no ato da contratação, reajuste só com Δ ≥ 15-20% no número de colaboradores ativos (a confirmar gatilho exato)"
+    }
   },
-  "migrationNote": "O dump final do banco de produção será feito no dia do cutover (Fase 6). Toda story que criar ou alterar schema de banco DEVE incluir um script DDL correspondente em scripts/migrations/ para ser executado sobre o dump no go-live. Nunca assumir que o banco de desenvolvimento já tem a estrutura — os scripts de migração são a fonte da verdade.",
+  "decisoes_pendentes": [
+    {
+      "id": "DEC-01",
+      "pergunta": "% gatilho de reajuste de cobrança",
+      "opcoes": ["15%", "20%"],
+      "impacto": "Define regra do recalculo automático. Yuri oscilou na reunião — bater martelo antes de codar."
+    },
+    {
+      "id": "DEC-02",
+      "pergunta": "Modelo de preço",
+      "opcoes": ["Preço fixo único negociado", "Planos escalonados (faixas de colaboradores)"],
+      "impacto": "Afeta UI do checkout e tabela de preços."
+    },
+    {
+      "id": "DEC-03",
+      "pergunta": "Trial",
+      "opcoes": ["Sem trial (cobra direto)", "7 dias com cartão capturado", "14 dias sem cartão"],
+      "impacto": "Trial sem cartão atrai bots; com cartão converte ~60% vs ~25%. Recomendação: pular trial no MVP, PIX baixo + preço fixo facilita experimentar."
+    },
+    {
+      "id": "DEC-04",
+      "pergunta": "Formas de pagamento no MVP",
+      "opcoes": ["Só PIX", "PIX + Cartão", "PIX + Cartão + Boleto"],
+      "impacto": "Boleto exige PAYMENT_RECEIVED (D+2), não PAYMENT_CONFIRMED. Recomendação: PIX + Cartão no MVP, boleto sob demanda na Fase 2."
+    },
+    {
+      "id": "DEC-05",
+      "pergunta": "NFS-e (nota fiscal de serviço)",
+      "opcoes": ["Adiar — recibo Asaas no MVP", "Integrar NFe.io já", "Integrar eNotas já"],
+      "impacto": "Asaas não emite NFS-e. Adiar é viável pro MVP."
+    },
+    {
+      "id": "DEC-06",
+      "pergunta": "Endereço fiscal",
+      "opcoes": ["No checkout (mais campos)", "No wizard pós-pagamento"],
+      "impacto": "Cada campo a mais no checkout custa ~7% conversão. Recomendação: pós-pagamento."
+    },
+    {
+      "id": "DEC-07",
+      "pergunta": "Setup R$500",
+      "opcoes": ["Manter junto da 1ª mensalidade", "Cobrança separada", "Eliminar"],
+      "impacto": "Cobrança separada pode aumentar atrito; eliminar afeta margem inicial."
+    },
+    {
+      "id": "DEC-08",
+      "pergunta": "CNPJs múltiplos no checkout",
+      "opcoes": ["Cliente cadastra todos no checkout", "Só principal, adiciona depois"],
+      "impacto": "Múltiplos no checkout aumenta atrito. Recomendação: só principal."
+    },
+    {
+      "id": "DEC-09",
+      "pergunta": "Aprovação manual continua existindo?",
+      "opcoes": ["Sim — pra clientes por indicação (ex: SE Hotéis foi assim)", "Não — todos pela esteira"],
+      "impacto": "Define se mantemos /master/aprovacao.php e os status analise=1..4 do fluxo legado."
+    },
+    {
+      "id": "DEC-10",
+      "pergunta": "Revisão do template de contrato",
+      "opcoes": ["Yuri fala com jurídico", "Rafa prepara minuta pra Yuri levar"],
+      "impacto": "Contrato vigente (SE Hotéis) tem R$6/colab + R$49,90/CNPJ — incompatível com modelo fixo proposto."
+    }
+  ],
+  "branches": {
+    "recomendado": "feature/onboarding-comercial-v2"
+  },
   "userStories": [
     {
-      "id": "MIG-001",
-      "title": "Criar config centralizado de banco de dados",
-      "description": "Criar /config/database.php que lê variáveis de ambiente e exporta $conn (pg_connect) e $pdo (PDO).",
+      "id": "FEA-014",
+      "title": "Schema base de onboarding (migration GESCOB + colunas billing + máquina de estados)",
+      "description": "Migration de banco que prepara o terreno pra esteira nova: estende GESEMP.analise com 7 novos status, adiciona colunas de billing em GESEMP, cria tabela GESCOB pra histórico de cobranças, faz backfill de empresas ativas, adiciona UNIQUE em CNPJ.",
       "priority": 1,
-      "passes": true,
-      "notes": "CONCLUÍDA. Consultar conexao.php.example e conexao_pdo.php.example na raiz para ver o formato original."
+      "esforco_estimado": "1 dia",
+      "depende_de": [],
+      "schema_changes": [
+        "ALTER TABLE GESEMP ADD COLUMN asaas_customer_id VARCHAR(40)",
+        "ALTER TABLE GESEMP ADD COLUMN asaas_subscription_id VARCHAR(40)",
+        "ALTER TABLE GESEMP ADD COLUMN preco_fixo_mensal NUMERIC(10,2)",
+        "ALTER TABLE GESEMP ADD COLUMN qtd_colab_contratada INTEGER",
+        "ALTER TABLE GESEMP ADD COLUMN data_contratacao DATE",
+        "ALTER TABLE GESEMP ADD COLUMN data_ativacao TIMESTAMP",
+        "ALTER TABLE GESEMP ADD COLUMN data_proxima_revisao DATE",
+        "CREATE TABLE GESCOB (id_cob SERIAL PK, id_emp FK, asaas_payment_id UNIQUE, asaas_subscription_id, tipo, valor, forma_pag, status, vencimento, data_pag, raw_payload JSONB, datinc, datatu)",
+        "UPDATE GESEMP SET analise=8 WHERE analise=2 AND situac=0 (backfill empresas ativas)",
+        "UPDATE GESEMP SET id_emp_grupo=id_emp WHERE id_emp_grupo IS NULL AND tipo='M' (backfill grupos órfãos — Yuri pediu na reunião)",
+        "ALTER TABLE GESEMP ADD CONSTRAINT uk_gesemp_cnpj UNIQUE (cnpj) — após dedup se necessário"
+      ],
+      "novos_status_analise": {
+        "0": "rascunho — conta criada, sem checkout iniciado",
+        "1": "pendente — aprovação manual (legado, mantido)",
+        "2": "liberado — pode acessar (legado, mantido)",
+        "3": "reprovado (legado)",
+        "4": "bloqueado (legado)",
+        "5": "checkout_iniciado — sessão Asaas criada",
+        "6": "pagamento_pendente — PIX/boleto gerado, aguardando",
+        "7": "pagamento_falhou — cartão recusado ou boleto vencido",
+        "8": "ativo — pagamento confirmado, acesso liberado",
+        "9": "past_due — recorrência vencida",
+        "10": "suspenso — dunning esgotado",
+        "11": "cancelado/churned"
+      },
+      "passes": false
     },
     {
-      "id": "MIG-002",
-      "title": "Migrar conexões do módulo admin/ para config centralizado",
-      "description": "Substituir todos os require de conexao.php e conexao_pdo.php em admin/ para usar /config/database.php.",
+      "id": "FEA-015",
+      "title": "Esteira pública v2 — cadastro 2-step + validação de email",
+      "description": "Refatorar /createaccount/ pra wizard de 2 steps: (1) cadastro mínimo de 5 campos com lookup de CNPJ via BrasilAPI auto-preenchendo razão social; (2) tela 'escolha do plano' com pergunta sobre CNPJs múltiplos e cálculo do preço fixo. Implementar finalmente o endpoint /validar_email?token=... (token já existe em GESUSA.token_usa há tempos sem ser usado).",
       "priority": 2,
-      "passes": true,
-      "notes": "CONCLUÍDA."
+      "esforco_estimado": "3-4 dias",
+      "depende_de": ["FEA-014"],
+      "campos_step_1": [
+        "Nome do responsável (obrigatório)",
+        "CNPJ — com lookup BrasilAPI/ReceitaWS (obrigatório)",
+        "Email corporativo (obrigatório)",
+        "Telefone (obrigatório)",
+        "Senha (obrigatório, mín 8 chars + complexidade)",
+        "Checkbox: aceito Termos + Política de Privacidade (LGPD)"
+      ],
+      "endpoints_novos": [
+        "GET /api/lookup-cnpj?cnpj=XX (proxy BrasilAPI)",
+        "GET /validar_email?token=XXX (fecha gap do GESUSA.token_usa nunca implementado)"
+      ],
+      "decisoes_dependentes": ["DEC-02 (modelo de preço)", "DEC-08 (CNPJs múltiplos no checkout)"],
+      "passes": false
     },
     {
-      "id": "MIG-003",
-      "title": "Migrar conexões de app/, master/, createemployee/, createaccount/, controller/",
-      "description": "Substituir todos os require de conexao.php e conexao_pdo.php nos módulos restantes.",
+      "id": "FEA-016",
+      "title": "Integração Asaas — Customer + Subscription + Webhook",
+      "description": "Cliente PHP que conversa com a API do Asaas (Guzzle ou cURL direto) pra criar Customer, Subscription mensal e Payment inicial. Endpoint /asaas/webhook.php com validação de header access_token, idempotência por payment.id e tratamento dos 5 eventos críticos. Sandbox primeiro, prod só após validar fluxo end-to-end.",
       "priority": 3,
-      "passes": true,
-      "notes": "CONCLUÍDA."
+      "esforco_estimado": "3-5 dias (depende da curva de aprendizado do Asaas — incógnita citada pelo Rafa)",
+      "depende_de": ["FEA-014", "FEA-015"],
+      "eventos_webhook": [
+        "PAYMENT_CREATED — cobrança gerada (analise=5 → 6)",
+        "PAYMENT_CONFIRMED — cartão/PIX aprovado (ativa se não for boleto)",
+        "PAYMENT_RECEIVED — dinheiro caiu (ativa boleto, analise=8)",
+        "PAYMENT_OVERDUE — venceu sem pagar (analise=9, dispara dunning)",
+        "PAYMENT_REFUNDED / PAYMENT_CHARGEBACK_REQUESTED — estorno (analise=11)"
+      ],
+      "secrets_novos": [
+        "ASAAS_API_KEY (Secret Manager)",
+        "ASAAS_WEBHOOK_TOKEN (Secret Manager)"
+      ],
+      "secrets_envvars": [
+        "ASAAS_BASE_URL (sandbox vs prod)"
+      ],
+      "decisoes_dependentes": ["DEC-04 (formas de pagamento)", "DEC-07 (setup)"],
+      "riscos": [
+        "Asaas Subscription não tem webhook próprio — toda lógica via Payment events",
+        "Boleto demora D+2 — não ativar conta em PAYMENT_CONFIRMED se for boleto",
+        "Chargeback tem janela de 540 dias — implementar suspensão automática",
+        "Webhook reentrega — idempotência por payment.id é obrigatória"
+      ],
+      "passes": false
     },
     {
-      "id": "MIG-004",
-      "title": "Criar config centralizado de email e migrar SMTP",
-      "description": "Criar /config/mail.php com função configureMailer() e refatorar os 24 arquivos que usam SMTP.",
+      "id": "FEA-017",
+      "title": "Recovery de checkout abandonado + Pipeline de leads no master",
+      "description": "Cron job que varre leads em analise=0/5/6 e dispara emails escalonados (1h, 24h, 72h, 7 dias). Nova tela /master/pipeline_leads.php com tabela/kanban filtrado por status, ações de reengajamento (reenviar link, marcar contatado, copiar link checkout, anotações) e métricas básicas de funil.",
       "priority": 4,
-      "passes": true,
-      "notes": "CONCLUÍDA. SMTP: smtp.gmail.com:587, contato@leveinovacao.com.br."
+      "esforco_estimado": "2 dias",
+      "depende_de": ["FEA-014", "FEA-015"],
+      "componentes": [
+        "scripts/cron_recovery_onboarding.php — job que roda a cada 30min via Cloud Scheduler",
+        "templates de email transacional (PHPMailer já configurado)",
+        "master/pipeline_leads.php — tabela com filtros e ações",
+        "Após 30 dias sem ação → anonimizar (hash do email) pra LGPD compliance"
+      ],
+      "passes": false
     },
     {
-      "id": "MIG-005",
-      "title": "Criar config de URL e converter referências hardcoded",
-      "description": "Criar /config/app.php com $app_url e converter referências a gestou.com.br para caminhos relativos ou $app_url.",
+      "id": "FEA-018",
+      "title": "Cadastro direto no master (substitui FEA-012)",
+      "description": "Substitui o plano original da FEA-012 (que estava em rascunho). Em vez de adicionar 'modo novo' ao alterar_empresa.php, REUSAR o componente de cadastro da esteira pública (FEA-015) numa rota interna do /master/, sem step de pagamento. Garante um único formulário de cadastro em todo o sistema — atende ao pedido do Rafa de 'padronizar a página de cadastro'.",
       "priority": 5,
-      "passes": true,
-      "notes": "CONCLUÍDA."
+      "esforco_estimado": "1-2 dias",
+      "depende_de": ["FEA-015"],
+      "substitui": "FEA-012 (estava em rascunho)",
+      "passes": false
     },
     {
-      "id": "MIG-006",
-      "title": "Implementar sessões via PostgreSQL",
-      "description": "Criar PgSessionHandler e integrar nos arquivos que usam session_start().",
+      "id": "FEA-019",
+      "title": "Wizard pós-pagamento — completar perfil + onboarding guiado",
+      "description": "Tela exibida no primeiro login após pagamento confirmado: completa endereço fiscal, dados bancários (se necessário pra notas), foto/logo, e mostra tutorial guiado básico ('cadastre seu primeiro colaborador'). Time to value < 5 minutos.",
       "priority": 6,
-      "passes": true,
-      "notes": "CONCLUÍDA. Fix aplicado em 2026-03-14 para controllers de recuperação de senha (global $pdo)."
+      "esforco_estimado": "2 dias",
+      "depende_de": ["FEA-016"],
+      "decisoes_dependentes": ["DEC-06 (endereço fiscal no checkout ou pós)"],
+      "passes": false
     },
     {
-      "id": "MIG-007",
-      "title": "Criar Dockerfile e docker-compose.yml",
-      "description": "Criar Dockerfile para Cloud Run (PHP 7.4 + Apache + extensões) e docker-compose para dev local.",
+      "id": "FEA-020",
+      "title": "Revisão do template de contrato pra modelo de preço fixo",
+      "description": "Trilho jurídico/administrativo paralelo às FEAs técnicas. Cláusula 5ª do contrato vigente (R$6/colab + R$49,90/CNPJ + R$500 setup) precisa ser reescrita pra modelo fixo no ato + reajuste por Δ ≥ 15-20%. Cláusula 7ª (rescisão) e modelo de assinatura digital também precisam revisão pra reduzir campos no checkout.",
       "priority": 7,
-      "passes": true,
-      "notes": "CONCLUÍDA. memory_limit=512M, Cloud Run 2Gi RAM."
-    },
-    {
-      "id": "MIG-008",
-      "title": "Criar camada de abstração de storage",
-      "description": "Criar /config/storage.php com funções storageUpload, storageDelete, storageUrl, storageExists.",
-      "priority": 8,
-      "passes": true,
-      "notes": "CONCLUÍDA."
-    },
-    {
-      "id": "MIG-009",
-      "title": "OCR — Azure Computer Vision (envio binário)",
-      "description": "Azure Computer Vision como OCR definitivo. PDF enviado como application/octet-stream. Google Vision revertido e mantido como legado em config/ocr.php (NÃO USADO).",
-      "priority": 9,
-      "passes": true,
-      "notes": "CONCLUÍDA. Validado 64/64 valores idênticos à produção. Custo ~$0.50/mês. Branch ocr/azure-test contém implementação final."
-    },
-    {
-      "id": "MIG-010",
-      "title": "Criar documentação de setup GCP",
-      "description": "Criar /docs/gcp-setup.md com comandos gcloud CLI para provisionar toda a infraestrutura.",
-      "priority": 10,
-      "passes": true,
-      "notes": "CONCLUÍDA."
-    },
-    {
-      "id": "MIG-011",
-      "title": "Criar scripts de migração de dados",
-      "description": "Scripts para migrar banco, uploads e validar a migração.",
-      "priority": 11,
-      "passes": true,
-      "notes": "CONCLUÍDA."
-    },
-    {
-      "id": "MIG-012",
-      "title": "Criar checklist de testes",
-      "description": "Criar /docs/test-checklist.md com checklist completo de testes por módulo.",
-      "priority": 12,
-      "passes": true,
-      "notes": "CONCLUÍDA."
-    },
-    {
-      "id": "FEA-001",
-      "title": "Adicionar campo data_demissao na tabela de colaboradores",
-      "description": "Criar campo data_demissao (DATE, nullable) na tabela de colaboradores. Ao desativar um colaborador no admin, o sistema registra automaticamente a data atual como data de demissão. O campo deve ser editável na ficha do colaborador para casos onde a data real de desligamento difere da data de processamento no sistema.",
-      "acceptanceCriteria": [
-        "Script scripts/migrations/add_data_demissao.sql existe com: ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS data_demissao DATE NULL",
-        "Ao clicar em 'desativar colaborador' no admin, data_demissao é preenchida automaticamente com CURRENT_DATE via UPDATE",
-        "Campo data_demissao aparece editável na ficha do colaborador no admin (input type=date)",
-        "Campo exibe valor atual se já preenchido, em branco se ainda ativo",
-        "Salvar a ficha do colaborador persiste alterações em data_demissao",
-        "Colaboradores ativos (data_demissao IS NULL) não são afetados",
-        "Reativar colaborador NÃO apaga data_demissao automaticamente — gestor deve limpar manualmente se necessário"
-      ],
-      "priority": 13,
-      "passes": true,
-      "notes": "CONCLUÍDA. Coluna datarescisao já existia na tabela GESUSU. Preenchimento automático adicionado nos 3 pontos de desativação: tabela_colaboradores_post.php, colaboradores_post.php, index_post.php. Função updateGESUSU_DATARESCISAO() criada em iuds_pdo.php. Script de migração não necessário."
-    },
-    {
-      "id": "FEA-002",
-      "title": "Vencimento de experiências — cálculo e contadores no dashboard",
-      "description": "Calcular vencimento dos períodos de experiência (45 e 90 dias) a partir da data de admissão. Exibir contadores separados no dashboard do admin (tela inicial). Ao clicar no contador, listar os colaboradores com experiências vencendo ou já vencidas. Contadores permanecem visíveis até o gestor tomar uma ação (renovar ou rescindir) — não somem automaticamente.",
-      "acceptanceCriteria": [
-        "Dashboard do admin exibe dois novos contadores: 'Exp. 45 dias' e 'Exp. 90 dias'",
-        "Contador 'Exp. 45 dias' exibe quantidade de colaboradores cuja data_admissao + 45 dias <= CURRENT_DATE e ainda estão ativos (data_demissao IS NULL)",
-        "Contador 'Exp. 90 dias' exibe quantidade de colaboradores cuja data_admissao + 90 dias <= CURRENT_DATE e ainda estão ativos",
-        "Apenas colaboradores admitidos há até 90 dias entram nos contadores (data_admissao >= CURRENT_DATE - 90)",
-        "Clicar em qualquer contador abre listagem com: nome, setor, data admissão, data vencimento 45d, data vencimento 90d, dias em atraso",
-        "Listagem é filtrada pelo CNPJ da sessão atual (multi-tenant)",
-        "Contadores são recalculados a cada acesso ao dashboard (sem cache)",
-        "Cards do dashboard são redimensionados para acomodar os novos contadores sem quebrar layout mobile"
-      ],
-      "priority": 14,
-      "passes": true,
-      "notes": "CONCLUÍDA. Dois cards no dashboard (border-left-warning para 45d, border-left-danger para 90d) com contadores recalculados a cada acesso. Clique abre modal com tabela detalhada (nome, admissão, vencimentos, dias). Funções: selectGESUSU_experiencia_45d_count, selectGESUSU_experiencia_90d_count, selectGESUSU_experiencia_lista em iuds_pdo.php. Handler btn_experiencia em index_post.php."
-    },
-    {
-      "id": "FEA-003",
-      "title": "Vencimento de experiências — alertas por email e popup",
-      "description": "Enviar alerta por email e exibir popup no admin quando um colaborador estiver a 7 dias ou menos do vencimento de cada período de experiência (45d ou 90d). Alertas permanecem ativos até o gestor tomar uma ação.",
-      "acceptanceCriteria": [
-        "Email enviado automaticamente quando data_admissao + 45 - 7 = CURRENT_DATE (ou seja, faltam 7 dias para o 45º dia)",
-        "Email enviado automaticamente quando data_admissao + 90 - 7 = CURRENT_DATE (faltam 7 dias para o 90º dia)",
-        "Email usa configureMailer() de config/mail.php — mesmo padrão do sistema",
-        "Email destinatário: email do gestor admin do CNPJ correspondente",
-        "Assunto do email: 'Gestou — Vencimento de experiência: [Nome do colaborador]'",
-        "Corpo do email: nome do colaborador, data de admissão, data de vencimento e dias restantes",
-        "Popup exibido no admin ao fazer login quando há colaboradores com experiência vencendo em até 7 dias",
-        "Popup lista todos os colaboradores em alerta com nome e dias restantes",
-        "Popup pode ser dispensado (botão fechar) mas reaparece no próximo acesso enquanto o alerta estiver ativo",
-        "Script scripts/cron/check_experiencias.php existe e pode ser chamado por cron job diário",
-        "Cron job configurado no GCP Cloud Scheduler para executar check_experiencias.php diariamente às 08:00 BRT"
-      ],
-      "priority": 15,
-      "passes": true,
-      "notes": "CONCLUÍDA. Popup SweetAlert no dashboard com tabela de alertas (colaboradores com experiência vencendo em até 7 dias). Endpoint cron: admin/cron_check_experiencias.php protegido por CRON_SECRET. Envia email individual por colaborador ao admin da empresa. Funções: selectGESUSU_experiencia_alerta, selectGESEMP_ativas_com_admin. Cloud Scheduler pendente de configuração (requer criação do secret CRON_SECRET)."
-    },
-    {
-      "id": "FEA-004",
-      "title": "Observações do colaborador — nova aba com categorias por empresa",
-      "description": "Adicionar aba 'Observações' na ficha do colaborador no admin. Permite registrar observações textuais com data e categoria. Cada empresa (CNPJ) gerencia suas próprias categorias — categorias não são compartilhadas entre empresas. Visível apenas para admin e master.",
-      "acceptanceCriteria": [
-        "Script scripts/migrations/create_observacoes_colaborador.sql existe com CREATE TABLE IF NOT EXISTS observacoes_colaborador (id SERIAL PRIMARY KEY, colaborador_id INTEGER NOT NULL, cnpj_empresa VARCHAR(20) NOT NULL, categoria_id INTEGER, descricao TEXT NOT NULL, data_observacao DATE NOT NULL DEFAULT CURRENT_DATE, criado_em TIMESTAMP DEFAULT NOW(), criado_por INTEGER)",
-        "Script scripts/migrations/create_categorias_observacao.sql existe com CREATE TABLE IF NOT EXISTS categorias_observacao (id SERIAL PRIMARY KEY, cnpj_empresa VARCHAR(20) NOT NULL, nome VARCHAR(100) NOT NULL, ativo BOOLEAN DEFAULT TRUE, criado_em TIMESTAMP DEFAULT NOW())",
-        "Nova aba 'Observações' aparece na ficha do colaborador no admin, visível apenas para perfis admin e master",
-        "Aba lista observações existentes do colaborador em ordem decrescente de data_observacao: data, categoria (nome ou 'Sem categoria'), descrição",
-        "Botão 'Nova observação' abre modal com campos: data (input date, default hoje), categoria (select com opções do CNPJ + opção 'Sem categoria'), descrição (textarea, obrigatório)",
-        "Botão 'Gerenciar categorias' na aba abre modal para CRUD de categorias do CNPJ atual",
-        "Modal de categorias lista categorias ativas do CNPJ, permite adicionar nova (nome, máx 100 chars) e desativar existentes",
-        "Categorias de outros CNPJs nunca aparecem — queries sempre filtradas por cnpj_empresa",
-        "Observação pode ser deletada pelo admin (soft delete ou hard delete — definir com Rafa)",
-        "Observações de colaboradores inativos (demitidos) continuam visíveis para histórico"
-      ],
-      "priority": 16,
-      "passes": true,
-      "notes": "CONCLUÍDA. Aba Observações na ficha do colaborador (alterar_colaborador.php). Modal nova observação (data + categoria + descrição). Modal gerenciar categorias (CRUD por CNPJ). 6 funções DAL em iuds_pdo.php. 4 handlers POST em alterar_colaborador_post.php. Scripts de migração: create_categorias_observacao.sql e create_observacoes_colaborador.sql."
-    },
-    {
-      "id": "FEA-005",
-      "title": "Justificativas no Fale com RH — módulo do colaborador",
-      "description": "Adicionar seção 'Justificativas' no módulo Fale com RH do app do colaborador. Três tipos: ausência de batida de ponto (requer data e hora), falta (requer mensagem), falta com atestado (requer mensagem e arquivo). Admin pode aprovar ou reprovar cada justificativa, e o colaborador recebe notificação do resultado.",
-      "acceptanceCriteria": [
-        "Script scripts/migrations/create_justificativas.sql existe com CREATE TABLE IF NOT EXISTS justificativas (id SERIAL PRIMARY KEY, colaborador_id INTEGER NOT NULL, cnpj_empresa VARCHAR(20) NOT NULL, tipo VARCHAR(30) NOT NULL CHECK (tipo IN ('ausencia_ponto', 'falta', 'falta_atestado')), status VARCHAR(20) NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'aprovada', 'reprovada')), data_ocorrencia DATE NOT NULL, hora_ocorrencia TIME NULL, mensagem TEXT NULL, arquivo_path VARCHAR(500) NULL, resposta_admin TEXT NULL, criado_em TIMESTAMP DEFAULT NOW(), respondido_em TIMESTAMP NULL, respondido_por INTEGER NULL)",
-        "Nova seção 'Justificativas' aparece no Fale com RH do app do colaborador, no mesmo nível visual das solicitações existentes",
-        "Colaborador vê listagem de suas justificativas com: tipo, data, status (badge colorido: amarelo=pendente, verde=aprovada, vermelho=reprovada)",
-        "Botão 'Nova justificativa' abre modal com select de tipo",
-        "Tipo 'Ausência de batida de ponto': campos data (obrigatório) e hora (obrigatório), sem anexo",
-        "Tipo 'Falta': campos data (obrigatório) e mensagem (obrigatório), sem anexo",
-        "Tipo 'Falta com atestado': campos data (obrigatório), mensagem (obrigatório) e upload de arquivo (obrigatório, PDF ou imagem)",
-        "Arquivo de atestado salvo via storageUpload() de config/storage.php no path: justificativas/{cnpj}/{colaborador_id}/{filename}",
-        "Admin visualiza todas as justificativas do CNPJ no painel admin, filtradas por status",
-        "Admin pode aprovar ou reprovar cada justificativa com campo opcional de resposta",
-        "Ao aprovar ou reprovar, status é atualizado e email de notificação é enviado ao colaborador via configureMailer()",
-        "Email de notificação inclui: tipo da justificativa, data, status (aprovada/reprovada) e resposta do admin se houver",
-        "Justificativas são filtradas por cnpj_empresa em todas as queries"
-      ],
-      "priority": 17,
-      "passes": true,
-      "notes": "CONCLUÍDA. Seção Justificativas no Fale com RH do app. 3 tipos: ausencia_ponto (data+hora), falta (data+mensagem), falta_atestado (data+mensagem+arquivo). App: listagem com cards/badges + form com campos condicionais + upload de atestado. Admin: tabela com filtro + modais visualizar/aprovar/reprovar + email ao colaborador via PHPMailer. Tabela: justificativas (criada via migration)."
-    },
-    {
-      "id": "FEA-006",
-      "title": "Turnover mensal — card no dashboard com controle de acesso via master",
-      "description": "Calcular e exibir a taxa de turnover mensal no dashboard do admin. Fórmula: (Admissões + Demissões) ÷ 2 ÷ Ativos × 100. O card exibe a taxa geral do CNPJ para o mês atual. Ao clicar, abre modal com taxa % e os números brutos do cálculo (admissões, demissões, ativos totais) com breakdown por departamento, mais filtro por mês. A feature é controlada por permissão de menu no módulo master — desabilitada por padrão, habilitada manualmente para cada empresa.",
-      "acceptanceCriteria": [
-        "PASSO 0 — Verificar campo departamento: executar SELECT column_name FROM information_schema.columns WHERE table_name = 'GESUSU' AND (column_name ILIKE '%setor%' OR column_name ILIKE '%departamento%' OR column_name ILIKE '%cargo%'); — SE não existir campo compatível: criar script scripts/migrations/add_departamento_colaborador.sql com ALTER TABLE \"GESUSU\" ADD COLUMN IF NOT EXISTS departamento VARCHAR(100) NULL e adicionar o campo ao formulário de cadastro/edição do colaborador no admin",
-        "PASSO 0b — Verificar estrutura da tabela de menus: executar SELECT column_name, data_type FROM information_schema.columns WHERE table_name ILIKE '%menu%' ORDER BY table_name, ordinal_position; para identificar nome exato da tabela e colunas antes de escrever qualquer INSERT",
-        "Criar script scripts/migrations/insert_menu_turnover.sql com INSERT na tabela de menus: nova categoria 'Indicadores' (verificar campo de ordem/pai para posicionamento correto) e item filho 'Turnover' com liberado = FALSE por padrão para todos os perfis existentes — usar o formato exato dos INSERTs já existentes na tabela",
-        "No módulo master, a tela de Permissão de Telas exibe o novo item 'Indicadores -> Turnover' na listagem, permitindo habilitar ou desabilitar por empresa/usuário",
-        "Card 'Turnover' no dashboard do admin só renderiza se o menu 'Turnover' estiver liberado para o usuário da sessão — usar a mesma verificação de permissão já usada pelos demais cards/menus do sistema",
-        "Card exibe: rótulo 'Turnover', mês/ano de referência (ex: 'Abr/2026'), taxa geral do CNPJ em % com 1 casa decimal (ex: '8,5%') — mesmo padrão visual dos cards de Exp. 45d e Exp. 90d já implementados",
-        "Fórmula: turnover = (admissoes_mes + demissoes_mes) / 2.0 / ativos_fim_mes * 100 — retornar 0 se ativos_fim_mes = 0",
-        "Admissões do mês = COUNT de colaboradores com dataadmissao::date dentro do mês/ano de referência, filtrado por id_emp da sessão",
-        "Demissões do mês = COUNT de colaboradores com datarescisao::date dentro do mês/ano de referência, filtrado por id_emp da sessão",
-        "Ativos fim do mês = COUNT de colaboradores onde dataadmissao::date <= último dia do mês AND (datarescisao IS NULL OR datarescisao::date > último dia do mês), filtrado por id_emp da sessão",
-        "Funções DAL novas em admin/iuds_pdo.php: selectTurnover_geral($id_emp, $mes, $ano), selectTurnover_por_departamento($id_emp, $mes, $ano)",
-        "Clicar no card abre modal com: título 'Turnover — [Mês Ano]', taxa geral em destaque, tabela com colunas Departamento | Admissões | Demissões | Ativos | Turnover % — linha de totais no rodapé",
-        "Modal tem seletor de mês/ano — ao alterar, recalcula via POST/AJAX e re-renderiza sem fechar o modal",
-        "Breakdown por departamento agrupa colaboradores com campo departamento NULL ou vazio como 'Sem departamento'",
-        "Se ativos_fim_mes = 0 para um departamento específico, exibir 'N/A' na coluna Turnover % daquele departamento",
-        "Card não renderiza se permissão 'Turnover' não estiver habilitada — sem mensagem de erro, simplesmente omitido"
-      ],
-      "priority": 18,
-      "passes": true,
-      "notes": "CONCLUÍDA. Card Turnover no carrossel do dashboard admin exibindo taxa % do mês atual (fórmula (Admissões + Demissões) ÷ 2 ÷ Ativos × 100). Modal com resumo geral + breakdown por departamento (via tabela GESDEP) + filtro mês/ano via POST/AJAX. Permissão via GESMNU/GESMPR: menu 'Indicadores > Turnover' criado via scripts/migrations/insert_menu_turnover.sql, desabilitado por padrão, habilitado pelo master na tela de Permissão de Telas. Menu redireciona ao dashboard com hash #turnover que abre modal direto. Funções DAL: selectTurnover_geral, selectTurnover_por_departamento em admin/iuds_pdo.php. Handler btn_turnover em admin/controller/index_post.php."
-    },
-    {
-      "id": "FEA-007",
-      "title": "Dias de experiência personalizáveis por empresa",
-      "description": "Antes os contadores e alertas de experiência usavam 45 e 90 dias fixos. Agora cada empresa configura o final da 1ª fase e o final da prorrogação na tela de dados cadastrais (admin/dados_cadastrais.php). Defaults 45/90 mantidos, suporta fase única (90 direto, 60 direto, etc.) quando os dois valores são iguais. Cards do dashboard, modal de listagem, popup e email do cron passam a refletir os dias configurados da empresa.",
-      "acceptanceCriteria": [
-        "Migration scripts/migrations/add_dias_experiencia_gesemp.sql idempotente: ALTER TABLE GESEMP ADD COLUMN dias_exp_1 INT NOT NULL DEFAULT 45, dias_exp_2 INT NOT NULL DEFAULT 90 com IF NOT EXISTS",
-        "Nova função DAL selectGESEMP_dias_experiencia($id_emp) retornando array com dias_exp_1 e dias_exp_2 (fallback 45/90 se empresa não encontrada)",
-        "Refatorar selectGESUSU_experiencia_45d_count, _90d_count, _lista, _alerta em admin/iuds_pdo.php para fazer JOIN com GESEMP e usar e.dias_exp_1 / e.dias_exp_2 nas comparações de BETWEEN",
-        "selectGESUSU_experiencia_lista passa a receber $fase (1 ou 2) ao invés de 45/90 fixos; retorna campos vencimento_fase1 e vencimento_fase2 + dias_exp_1, dias_exp_2 da empresa",
-        "selectGESUSU_experiencia_90d_count e _lista para fase 2 retornam vazio quando dias_exp_2 == dias_exp_1 (empresa em fase única)",
-        "selectGESUSU_experiencia_alerta retorna tipo_alerta dinâmico (valor de dias_exp_1 ou dias_exp_2 da empresa, não mais 45 ou 90 fixos)",
-        "admin/dados_cadastrais.php: nova seção \"Período de Experiência (CLT)\" na aba Identificação com 2 inputs numéricos (dias_exp_1_update e dias_exp_2_update, min=1, max=90, required) + texto explicativo cobrindo o caso fase única (90 direto)",
-        "admin/controller/dados_cadastrais_post.php: ler $_POST['dias_exp_1_update'] e dias_exp_2_update com sanitização 1 <= dias_exp_1 <= dias_exp_2 <= 90, passar como 2 últimos argumentos de updateGESEMP_CAMPOS",
-        "updateGESEMP_CAMPOS recebe 2 novos parâmetros opcionais (defaults 45/90 pra compatibilidade) e atualiza as colunas dias_exp_1 e dias_exp_2 no UPDATE",
-        "admin/index.php: labels dos cards exp-45/exp-90 dinâmicos (\"Exp. <dias_exp_1> dias\", \"Exp. <dias_exp_2> dias\"); 2º card escondido quando dias_exp_2 == dias_exp_1 (fase única); JS handlers passam tipo_experiencia: 1 ou 2; títulos do modal e mensagens count=0 dinâmicos",
-        "admin/controller/index_post.php handler btn_experiencia: cabeçalhos da tabela usam dias_exp_1/dias_exp_2 do primeiro registro; coluna \"Venc. <dias_exp_2> dias\" escondida em fase única",
-        "admin/cron_check_experiencias.php: seleção da data de vencimento usa $alerta['dias_exp_1'] como referência (não 45 hardcoded); campos vencimento_fase1/vencimento_fase2",
-        "Popup FEA-003 no dashboard (admin/index.php linhas ~2400+) usa vencimento_fase1/vencimento_fase2 e compara tipo_alerta com $alerta['dias_exp_1']",
-        "Empresas existentes ficam automaticamente com 45/90 graças ao DEFAULT da migration"
-      ],
-      "priority": 19,
-      "passes": true,
-      "notes": "CONCLUÍDA. Migration aplicada em 2026-04-29 no Cloud SQL — todas as 45 empresas existentes ficam com 45/90 (defaults). DAL refatorado, form de dados cadastrais com seção nova, dashboard/cron/popup/modal todos dinâmicos. Suporta fase única quando dias_exp_1 == dias_exp_2 (caso 90 direto sem prorrogação). Validação no controller: 1 <= dias_exp_1 <= dias_exp_2 <= 90. Commit: 7bae98b feat(FEA-002/003): dias de experiência personalizáveis por empresa."
-    },
-    {
-      "id": "FEA-010",
-      "title": "Líder RH — papel com autonomia de gestão de admins",
-      "description": "Criar o papel de Líder RH (GESGES.gestor=1, por empresa) que pode gerenciar admins da própria empresa direto no /admin/, sem precisar do módulo master. Cada empresa tem por padrão 2 Líderes (configurável pelo master). Líder cadastra/edita/desativa admins, com a restrição de manter pelo menos 1 Líder ativo. Master deixa de ser ferramenta do cliente — vira uso interno Leve. Auditoria completa: cada usuário guarda quem criou, alterou e desativou. Estrutura pronta para limitar admins ativos por empresa no futuro (precificação por tier).",
-      "acceptanceCriteria": [
-        "Migration scripts/migrations/add_lider_rh_gesusa.sql idempotente: ALTER TABLE GESUSA ADD COLUMN IF NOT EXISTS id_usa_inc INTEGER NULL, ADD COLUMN IF NOT EXISTS id_usa_desativado INTEGER NULL, ADD COLUMN IF NOT EXISTS data_desativacao TIMESTAMP NULL. GESUSA.gestor (já existe) passa a marcar Líder RH",
-        "Migration scripts/migrations/add_limites_admins_gesemp.sql idempotente: ALTER TABLE GESEMP ADD COLUMN IF NOT EXISTS limite_lideres INT NOT NULL DEFAULT 2, ADD COLUMN IF NOT EXISTS limite_admins_ativos INT NULL (NULL = sem teto)",
-        "Função DAL nova em admin/iuds_pdo.php: selectGESUSA_lideres_ativos($id_emp) — retorna COUNT(*) de admins ativos com gestor=1 na empresa",
-        "Função DAL nova: selectGESEMP_limites($id_emp) — retorna array com limite_lideres e limite_admins_ativos",
-        "admin/cadastro_usuario.php: passa a ser acessível também por Líder RH (gestor=1), não só por master. Restrito a usuários com gestor=1 OR tipo master. Checkbox 'Líder RH' visível, com contador 'X de Y Líderes ativos' ao lado",
-        "admin/cadastro_usuario.php: ao salvar, grava GESUSA.id_usa_inc = $_SESSION['id_usa']. Se marcar gestor=1, valida selectGESUSA_lideres_ativos < limite_lideres da empresa — bloqueia com mensagem se atingiu",
-        "Permissões do admin recém-criado: chama updateGESMPR_menus() (já existente em master/iuds_pdo.php) — herda a lista padrão atual de 26 menus. Sem escolha tela a tela na criação pelo Líder",
-        "admin/alterar_usuario.php: ao alterar, grava id_usa_atu = $_SESSION['id_usa'] (campo já existe). Validação igual ao cadastro se promover/despromover Líder",
-        "Desativação de Líder RH: valida selectGESUSA_lideres_ativos > 1 antes de permitir — bloqueia com mensagem 'É necessário manter pelo menos 1 Líder RH ativo'. Grava id_usa_desativado e data_desativacao",
-        "admin/tabela_usuarios.php: nova coluna 'Criado por' (JOIN com GESUSA pelo id_usa_inc). Filtro 'Ativos | Inativos | Todos'. Badge 'Líder RH' nos usuários com gestor=1",
-        "master/alterar_empresa.php: nova seção 'Limites de usuários' com inputs limite_lideres (numeric, min=1, default 2) e limite_admins_ativos (numeric, opcional, vazio = NULL/sem teto)",
-        "Helper checkLiderRH($id_usa): função utilitária que retorna true se o usuário da sessão é Líder RH ativo. Usar em telas restritas",
-        "Backfill em produção: empresas existentes ficam com limite_lideres=2 e limite_admins_ativos=NULL graças aos DEFAULTs. Admins existentes não recebem gestor=1 automaticamente — atribuição manual via master/admin",
-        "Documento docs/proposta-lider-e-rpa.md reflete escopo final"
-      ],
-      "priority": 20,
-      "passes": true,
-      "notes": "CONCLUÍDA em 2026-05-21. 5 migrations aplicadas no Cloud SQL (add_lider_rh_gesusa, add_limites_admins_gesemp, normalizar_links_gesmnu, reativar_gestus_admin, renomear_menu_usuarios_admin). Decisão arquitetural: Líder RH é POR EMPRESA via GESGES.gestor (não GESUSA.gestor — esta virou coluna zumbi, registrada em memory/gesusa_gestor_zumbi.md). DAL nova: checkLiderRH, upsertGESMPR_lider_menus (id_mnu 34+36), selectGESUSA_admins_ativos (exclui id_tus=1), variantes _lider isoladas por tenant, adminAcessaEmpresa/unlinkAdminFromEmpresa para visitantes. UI: tabela_usuarios admin renomeada pra 'Usuários Admin', com filtro Ativos/Inativos/Todos, coluna 'Criado por', badge 'Líder RH', badges duplos de contagem, ação Desvincular (remove GESVIN+GESGES+GESMPR só da empresa atual) pra admins de outra empresa. master/alterar_usuario2 com toggle Líder por empresa e Tipo ADMIN editável (apenas no master). Backfill de Líderes em produção é manual via /master/ (Yuri optou por não automatizar). Deploy: revisão gestou-00138-bvp (imagem sha 27fa0797). Pré-requisito da FEA-009 (RPA) destravado."
-    },
-    {
-      "id": "FEA-009",
-      "title": "Módulo RPA — Recibo de Pagamento Autônomo (MVP)",
-      "description": "Implementar gestão digital completa do fluxo de RPA (Recibo de Pagamento Autônomo) para serviços pontuais de prestadores autônomos (art. 442-B CLT). Substitui o controle atual em Word + Excel + papel da cliente Jéssica (TRYP Hotel Ribeirão Preto). Inclui cadastro de autônomos (separado de GESUSU porque não são CLT), lançamento por serviço com aprovação do responsável no app, geração automática de 3 PDFs (autorização, contrato, recibo com INSS discriminado), fluxo de status (rascunho → autorizado → assinado → enviado financeiro → pago), aceite digital pelo autônomo (reutiliza mecanismo do holerite), alerta de risco CLT (>3 diárias/mês) e export Excel mensal pra contabilidade.",
-      "acceptanceCriteria": [
-        "Migration scripts/migrations/create_gesaut.sql: CREATE TABLE GESAUT (id_aut SERIAL PK, id_emp INT NOT NULL, nome VARCHAR(200), cpf VARCHAR(14), rg VARCHAR(20), data_nasc DATE, etnia VARCHAR(30), endereco TEXT, cep VARCHAR(10), bairro VARCHAR(100), cidade VARCHAR(100), uf CHAR(2), email VARCHAR(200), pix VARCHAR(100) NOT NULL, ativo SMALLINT DEFAULT 1, datinc TIMESTAMP DEFAULT NOW(), id_usa_inc INT, datatu TIMESTAMP, id_usa_atu INT). Index em (id_emp, ativo) e UNIQUE em (id_emp, cpf). Campo email é obrigatório pra envio do token de aceite digital (SMS está fora do MVP)",
-        "Migration scripts/migrations/create_gesrpa.sql: CREATE TABLE GESRPA (id_rpa SERIAL PK, id_emp INT NOT NULL, id_aut INT NOT NULL REFERENCES GESAUT, id_dep INT REFERENCES GESDEP, cargo VARCHAR(100), data_servico DATE, hora_ini TIME, hora_fim TIME, diarias INT DEFAULT 1, valor_liquido NUMERIC(10,2), perc_imposto NUMERIC(5,2) DEFAULT 12.36, valor_bruto NUMERIC(10,2), valor_inss NUMERIC(10,2), justificativa TEXT, status VARCHAR(20) DEFAULT 'rascunho' CHECK (status IN ('rascunho','autorizado','assinado','enviado_fin','pago','cancelado')), autorizado_por INT, data_autorizacao TIMESTAMP, assinado_por INT, ip_assinatura VARCHAR(45), user_agent_assinatura TEXT, data_assinatura TIMESTAMP, data_envio_fin DATE, data_pgto DATE, motivo_cancelamento TEXT, contrato_pdf_path VARCHAR(500), recibo_pdf_path VARCHAR(500), autorizacao_pdf_path VARCHAR(500), evidencia_pdf_path VARCHAR(500), datinc, id_usa_inc, datatu, id_usa_atu)",
-        "Migration scripts/migrations/create_gesrpacfg.sql: CREATE TABLE GESRPACFG (id_emp INT PK, valor_liquido_padrao NUMERIC(10,2) DEFAULT 150.00, perc_imposto_padrao NUMERIC(5,2) DEFAULT 12.36, texto_autorizacao_html TEXT, texto_contrato_html TEXT, texto_recibo_html TEXT, limite_dias_alerta INT DEFAULT 3, limite_dias_bloqueio INT DEFAULT 4) com seed dos 3 textos baseados nos modelos da Jéssica",
-        "Migrations de menu: insert_menu_rpa.sql cria categoria 'Folha' (se ainda não existir) + itens 'Autônomos' e 'RPA' em GESMNU; insert default ON CONFLICT em GESMPR pra usuários existentes. ATENÇÃO pós-FEA-010: os novos id_mnu precisam ser adicionados na lista hardcoded de menus padrão em 5 lugares (master/adicionar_permissao.php, master/alterar_usuario.php, master/controller/adicionar_novo_usuario_post.php, master/iuds_pdo.php updateGESMPR_menus, admin/iuds_pdo.php updateGESMPR_menus). Se os menus forem visíveis ao Líder, incluir também em upsertGESMPR_lider_menus. Avaliar antes centralizar essa lista (débito técnico nº 1 em docs/pendencias.md) pra não repetir o problema",
-        "Tela admin/autonomos.php — listagem (nome, CPF, PIX, ativo, total_diarias_mes) com busca e filtro ativo/inativo. Botões: 'Novo autônomo', 'Exportar (CSV)', 'Importar (CSV)'",
-        "Tela admin/autonomo_incluir.php / admin/autonomo_alterar.php — form com validação CPF e PIX obrigatórios. Alerta na edição quando o autônomo tem RPAs anteriores (modal 'mudança não afeta documentos já assinados')",
-        "Export/Import CSV: admin/controller/autonomos_exportar_get.php gera CSV via PhpSpreadsheet com cabeçalho padronizado (nome, cpf, rg, data_nasc, etnia, endereco, cep, bairro, cidade, uf, email, pix). admin/autonomos_importar.php + controller fazem upload, preview com validação por linha (CPF formato+dígito+não-duplicado, email formato, PIX não-vazio), botão Confirmar só habilita se 100% válidas, INSERT em massa com ON CONFLICT (id_emp, cpf) DO NOTHING. Limite: 500 autônomos por arquivo, UTF-8. Permite rollout inicial em massa e cópia entre empresas (com ou sem grupo) preservando multi-tenant",
-        "Tela admin/rpas.php — listagem por mês com filtro por status e setor. Colunas: data, autônomo, setor, justificativa, valor bruto, status (badge colorido), ações",
-        "Tela admin/rpa_incluir.php — selecionar autônomo (autocomplete), setor (select GESDEP), data, horário, valor (default GESRPACFG.valor_liquido_padrao), justificativa. Cálculo automático do bruto e INSS via JS",
-        "Validação de risco CLT: antes de salvar, contar diárias do autônomo no mês via selectGESRPA_diarias_mes($id_aut, $mes, $ano). Se >= limite_dias_alerta (3): exibe aviso amarelo. Se >= limite_dias_bloqueio (4): bloqueia salvamento com mensagem",
-        "Geração de PDFs: usa biblioteca já presente no projeto (verificar mPDF/Dompdf/PHPWord). 3 documentos: autorizacao_servico.pdf, contrato_442B.pdf, recibo_rpa.pdf. O recibo precisa discriminar 3 linhas: 'Valor bruto: R$ X', 'INSS retido (12,36%): R$ Y', 'Valor líquido pago: R$ Z'. Salvos via storageUpload em upload/rpa/{cnpj}/{ano-mes}/{id_rpa}_{tipo}.pdf",
-        "Fluxo de aprovação no app: notificação ao responsável (Líder RH OU admin com id_dep igual ao setor do RPA). IMPORTANTE pós-FEA-010: 'Líder RH' = GESGES.gestor=1 POR EMPRESA (não GESUSA.gestor — coluna zumbi). Query base: SELECT u.id_usa, u.nome, u.email FROM GESUSA u INNER JOIN GESGES g ON g.id_usa=u.id_usa AND g.id_emp=:id_emp AND g.gestor=1 WHERE u.situac=1 AND (u.id_tus IS NULL OR u.id_tus<>1). Reaproveitar/estender selectGESUSA_lideres_ativos em admin/iuds_pdo.php:11402. Tela app/rpa_aprovar.php exibe dados do RPA + PDFs + botões Aprovar/Recusar. Aprovação muda status para 'autorizado', grava autorizado_por e data_autorizacao. Comportamento quando a empresa não tem nenhum Líder RH cadastrado (backfill em produção é manual): default proposto = permitir cadastro do RPA, aprovação fica em fila até alguém ser promovido (a confirmar com Jéssica)",
-        "Aceite digital pelo autônomo (Opção B — assinatura eletrônica simples robusta, decisão Yuri 2026-05-24): tela app/rpa_aceite.php (autônomo entra com CPF + token enviado por email — sem login, SMS fora do MVP). Reforços: (1) checkbox de termo de uso explícito 'Li e aceito os termos do art. 442-B CLT...' obrigatório antes do submit; (2) confirmação dupla via modal 'Você está prestes a assinar digitalmente este RPA. Confirma?'; (3) ao aceitar, grava assinado_por (id_aut), ip_assinatura ($_SERVER['REMOTE_ADDR']), user_agent_assinatura ($_SERVER['HTTP_USER_AGENT']), data_assinatura. Status vira 'assinado'; (4) gera PDF de evidência (evidencia_pdf_path) com declaração formal incluindo hash do token, IP, user-agent, timestamp — anexado ao RPA; (5) botão 'Reenviar email de aceite' em /admin/rpas.php pra gerar novo token (invalida o anterior, registra evento). Email obrigatório em GESAUT (NOT NULL) — autônomo sem email não pode ser pago via RPA digital",
-        "Botões de status no admin: 'Enviar para financeiro' (grava data_envio_fin, status='enviado_fin'), 'Marcar como pago' (grava data_pgto, status='pago'), 'Cancelar' (status='cancelado' com motivo)",
-        "Export Excel mensal: admin/rpa_export_excel.php gera xlsx no formato exato da planilha 'RPA.MARÇO.xlsx' da Jéssica (colunas: envio financeiro, data início, data fim, diárias, valor, valor c/ imp., HRS, nome, cargo, setor, data pgto, justificativa, assinado, endereço, CPF, RG, nascimento, etnia)",
-        "Tela admin/dados_cadastrais.php: nova aba 'RPA' com inputs para valor_liquido_padrao, perc_imposto_padrao e editor dos 3 templates (HTML). Salva em GESRPACFG via INSERT ON CONFLICT",
-        "Permissões por menu via GESMNU/GESMPR. Cards no dashboard de quem tem acesso: 'RPAs pendentes de aprovação' e 'RPAs aguardando pagamento'",
-        "Multi-tenant: todas as queries de GESAUT, GESRPA, GESRPACFG filtradas por id_emp da sessão"
-      ],
-      "priority": 21,
-      "passes": false,
-      "notes": "Depende de FEA-010 (Líder RH) — ENTREGUE em 2026-05-21. Decisões fechadas com Jéssica/Yuri (2026-05-19): gross-up 12,36% fixo (INSS), PIX obrigatório, aprovação no app desde MVP, aceite digital tipo holerite (sem ClickSign), alerta CLT amarelo no 3º dia + bloqueio no 4º, contabilidade cuida de DIRF/SEFIP por fora. Esforço estimado 2-3 semanas. Material de referência da TRYP Hotel: Autorização de RPA.pdf, Modelo Contrato RPA.docx, RPA.MARÇO.xlsx. Fase 2 (UX refinements + notif push + dashboard pagamentos) e Fase 3 (assinatura eletrônica jurídica ClickSign/D4Sign) ficam fora deste MVP — abrir FEA-009b e FEA-009c quando chegar a hora. RECONCILIAÇÃO PÓS-FEA-010 (2026-05-22): (1) Líder RH é GESGES.gestor=1 POR EMPRESA, não GESUSA.gestor — esta virou coluna zumbi. Toda query funcional de 'quem é Líder' deve JOIN em GESGES e filtrar id_tus<>1 (internos da Leve fora). (2) Lista de menus padrão agora hardcoded em 5 lugares — extraído como FEA-013 separada (recomendado entregar ANTES da FEA-009). (3) Config do RPA em /admin/dados_cadastrais.php (não /master/) já alinhado com decisão FEA-010 de master virar uso interno Leve. DECISÕES YURI (2026-05-22, sessão 4): (a) empresas sem Líder RH cadastrado → RPA fica em rascunho sem bloqueio nem auto-aprovação (fila desbloqueia quando alguém for promovido); (b) email obrigatório em GESAUT (NOT NULL) — sem bypass, sem SMS no MVP. DECISÕES YURI (2026-05-24, sessão 2): (c) aceite digital via Opção B — assinatura eletrônica simples ROBUSTA (sem login pro autônomo, mas com termo de uso explícito + confirmação dupla + PDF de evidência + reenvio de token). Login completo seria overkill pra autônomos pontuais; (d) cadastro de autônomos com export/import CSV pra rollout inicial em massa e cópia entre empresas (com ou sem grupo) — multi-tenant preservado, cada empresa mantém sua cópia; (e) edição livre de dados do autônomo com alerta quando há RPAs anteriores (não afeta documentos já assinados — evidência fica em GESRPA snapshot via ip/user-agent/timestamp do aceite). Plano detalhado em docs/plano-fea-009-rpa-mvp.md (6 fases, ~3 semanas com deploys intermediários). FASE 1 ENTREGUE em 2026-05-24 (commit f438372, deploy gestou-00142-26h): 4 migrations aplicadas em prod (GESAUT, GESRPA, GESRPACFG, menus Folha/Autônomos/RPA com id_mnu 59/60/61), DAL base em admin/iuds_pdo.php (12 funções), config/permissions.php atualizado com 60+61. Backfill em GESMPR pra grupo da Jéssica: SE SERVICOS (id_emp=106, 8 usuários) + SE HOTEIS (id_emp=107, 11 usuários). Smoke test E2E local passou. FASE 2 ENTREGUE em 2026-05-25 (commits a543196 + df8b58f, deploy gestou-00143-n8k): cadastro completo de autônomos: lista com filtro+busca+badge de diárias, form de inclusão e edição (com validação client+server de CPF, alerta de RPAs anteriores na edição), toggle ativo/inativo, export CSV (fputcsv nativo, BOM UTF-8, separador ;), import CSV com preview (validação por linha: CPF formato+dígitos+unicidade no banco e no próprio CSV, email formato, PIX obrigatório) e confirmação em 2 passos. Limite 500 linhas/1MB. Em prod: acesso restrito a 3 internos (Yuri id_usa=39, Rafael id_usa=131, Teste Rafa id_usa=129) nas empresas 106 e 107 — Jéssica e equipe ainda não veem menus. FASE 3 ENTREGUE em 2026-05-25 (commit d5ada23, deploy gestou-00144-47r): cadastro de RPA + cálculo INSS gross-up + geração de 3 PDFs via Dompdf. Helper admin/helpers/rpa_pdf.php com templates HTML padrão embutidos como fallback (autorização, contrato 442-B com cláusulas, recibo com tabela de valores) e placeholders {nome_autonomo}/{cpf}/{valor_*}/etc — sobrescrevíveis via GESRPACFG.texto_*_html (Fase 6 cria UI). Tela rpas.php com filtro mês/ano/status/setor. rpa_incluir.php com cálculo em tempo real via JS, autocomplete de autônomo mostrando diárias do mês, validação CLT client+server (alerta 3 diárias, bloqueio 4 diárias). rpa_alterar.php com trilha cronológica, download dos 3 PDFs, botão cancelar com motivo. Smoke test E2E local OK (PDFs ~880KB cada, paths em GESRPA, cleanup). FASE 4 ENTREGUE em 2026-05-25 (commit c790119, deploy gestou-00145-k7l): aprovação por Líder RH integrada em /admin/ (não /app/ como planejado originalmente — decisão arquitetural: Líder RH é admin id_usa, não colaborador id_usu). Helper rpa_email.php envia email HTML via PHPMailer para cada Líder RH ativo da empresa (filtra id_tus=1) quando RPA é criado, não-blocking. Controller rpa_aprovar_post.php: ações aprovar/recusar com validação multi-tenant + checkLiderRH. Botões integrados em rpa_alterar.php (verde/amarelo) quando status=rascunho E usuário é Líder. Recusa exige motivo ≥5 chars. FASES 5 e 6 ENTREGUES em 2026-05-25/26 (commits dc3d0e8 + a4c07c3 + deploy gestou-00146-m5g em 2026-05-26): Fase 5 = aceite digital pelo autônomo (Opção B robusta): tela /app/rpa_aceite.php SEM login, token único (SHA-256 64 chars, validade 7 dias) enviado por email, autenticação dupla CPF+token, checkbox de termo de uso obrigatório, confirmação dupla via modal, captura de IP+user_agent+timestamp, PDF de evidência com declaração formal Lei 14.063/2020. Migration alter_gesrpa_add_token_aceite.sql aplicada em prod (token_aceite/token_validade/token_invalidado_em). Fase 6 = botões status financeiro (enviar pra fin, marcar pago com data), export XLSX mensal via PhpSpreadsheet com 18 colunas no formato da planilha da Jéssica + resumo, aba RPA em /admin/dados_cadastrais (valor padrão + INSS readonly + limites alerta/bloqueio + 3 templates HTML), cards no dashboard (RPAs pendentes de aprovação + aguardando pagamento). Teste E2E completo via Playwright em 2026-05-26 (fluxo: cadastrar autônomo → criar RPA → aprovar como Líder → aceitar como autônomo → enviar fin → marcar pago → exportar XLSX → cards dashboard → aba config). 4 bugs encontrados e documentados (pasta upload/rpa permissão root, sidebar não mostra Folha, PDF evidência sem botão na tela, SweetAlert input date default). Roteiro de teste pra equipe em docs/teste-fea-009-rpa-roteiro.md. Em prod: acesso ainda restrito aos 3 internos (Yuri/Rafael/Teste Rafa) nas empresas 106+107 até equipe validar — Yuri vai liberar empresa de teste manualmente pelo /master/. STATUS GERAL: MVP completo deployado em prod, aguardando teste da equipe (passes=false até validação)."
-    },
-    {
-      "id": "FEA-011",
-      "title": "Download em lote de documentos do colaborador (ZIP)",
-      "description": "Permitir que o RH baixe múltiplos documentos de um colaborador de uma vez, compactados em ZIP, direto da aba 'Documentos' em /admin/alterar_colaborador. Cliente reportou necessidade de baixar todos os docs (holerites, IRRF, ponto, recibos diversos, documentos cadastrais, atestados) para entregar fisicamente ou arquivar — hoje o download é um a um. Solução síncrona com checkbox por linha + 'selecionar todos' + botão 'Baixar selecionados (.zip)' que gera ZIP em streaming. Escopo limitado a UM colaborador por operação (volume típico 40-60 PDFs / 50-200MB).",
-      "acceptanceCriteria": [
-        "UI na aba Documentos de admin/alterar_colaborador.php: adicionar coluna <th>/<td> com checkbox em cada linha (na <thead> e em cada linha do <tbody class=\"recibos\">). Checkbox guarda o token (já existente em data-token) como value",
-        "Checkbox 'selecionar todos' no <thead> que marca/desmarca todas as linhas via JS",
-        "Botão 'Baixar selecionados (.zip)' ao lado do botão 'Incluir' existente (linha 935), inicialmente desabilitado, habilita quando >=1 checkbox marcado. Mostra contador 'X selecionado(s)' ao lado",
-        "Endpoint novo admin/controller/documentos_zip_post.php: recebe POST com array tokens[]. Valida cada token contra $_SESSION['alterar_colaborador']['token'][$token] — se algum não existir na sessão, aborta com HTTP 400. Padrão de segurança igual ao usado hoje pelo botão 'Anexo' visualizar_pdf",
-        "Mapeamento de path por tipo (função nova em admin/iuds_pdo.php ou helper em config/storage.php): Holerite → upload/beneficios/holerite/{raiz_cnpj}/{arquivo}, IRRF → upload/beneficios/irrf/{raiz_cnpj}/{arquivo}, Ponto → upload/beneficios/ponto/{raiz_cnpj}/{arquivo}, Diversos (GESREC) → upload/beneficios/recibo/{raiz_cnpj}/{arquivo} (verificar convenção real lendo recibo_diverso.php), Documento (GESDCOL) → upload/cadastro/{arquivo} (verificar), Atestado → arquivo_path direto (já é caminho completo). Path base resolvido pelo /var/www/html montado via gcsfuse",
-        "Geração do ZIP via ZipArchive nativo do PHP (extensão padrão, sem instalação nova): cria arquivo temporário em tempnam(sys_get_temp_dir(), 'docs_zip_'), adiciona cada PDF com ZipArchive::addFile usando nome interno '{competencia}_{tipo}_{descricao_sanitizada}.pdf' (sanitizar removendo /, \\, : e caracteres não-ASCII)",
-        "Streaming do download: header('Content-Type: application/zip'), header('Content-Disposition: attachment; filename=\"{nome_colaborador_sanitizado}_documentos_{YYYY-MM-DD}.zip\"'), readfile() do temp e unlink() ao final. Wrapper em try/finally garante limpeza mesmo em erro",
-        "Guardrails: limite máximo 200 arquivos OU 500MB no total selecionado. Validar tamanho ANTES de iniciar o ZIP somando filesize() de cada arquivo. Se exceder, retornar HTTP 413 com JSON {erro: 'Limite excedido. Selecione menos arquivos ou um período menor.', max_arquivos: 200, max_mb: 500, atual_arquivos: N, atual_mb: M}. Mostrar mensagem amigável no JS",
-        "Timeout do endpoint: set_time_limit(180) + ini_set('memory_limit', '512M') no início do script. Aceitável bloquear 1 das 3 instâncias Cloud Run por até 3min para esta operação",
-        "JS no alterar_colaborador.php: form POST submit normal (não AJAX — download de arquivo binário). Em caso de erro 413/400, exibir toast. Loading spinner no botão durante a operação",
-        "Permissão: respeitar o id_mnu da aba Documentos existente (sem novo menu, sem novo GESMNU). Líder RH e admins comuns com acesso à aba Documentos do colaborador já têm acesso ao botão",
-        "Multi-tenant: id_emp da sessão SEMPRE validado no endpoint. select_DOCUMENTOS já filtra por id_emp — endpoint deve refazer essa validação na resolução de path (não confiar só na sessão de tokens)",
-        "Log no endpoint: registrar em error_log (Cloud Logging) operação com id_emp, id_usu (colaborador), id_usa (admin que executou), qtd_arquivos, tamanho_total_mb. Útil pra auditoria e detecção de uso anômalo"
-      ],
-      "priority": 22,
-      "passes": true,
-      "notes": "Cliente solicitou. Escopo enxuto e independente da FEA-009 — pode ser entregue antes do RPA. Esforço estimado: 1-2 dias. Plano detalhado em docs/plano-fea-011-download-documentos.md. Decisões fechadas: (1) síncrono em vez de assíncrono (volume típico de 1 colaborador cabe em <30s); (2) checkbox por linha em vez de modal de seleção avançada (UX padrão Gmail/Drive); (3) limite duro de 200 arquivos / 500MB; (4) sem novo menu/permissão — reusa acesso à aba Documentos. NÃO ESCOPO: download em lote da empresa inteira, download de múltiplos colaboradores ao mesmo tempo, agendamento, formato ZIP criptografado, envio por email. ENTREGUE 2026-05-22 (commit 5fe0c3d, deploy gestou-00140-dj2). Validação local feita antes do deploy."
-    },
-    {
-      "id": "FEA-012",
-      "title": "Cadastro manual de empresa no /master/",
-      "description": "Disponibilizar porta de entrada manual no /master/ para cadastrar empresa nova fora do fluxo de aprovação de leads (auto-registro). Hoje master/tabela_empresas.php não tem botão 'Incluir Empresa' — só 'Adicionar Grupo' (que cria via insertGESEMP_NOVA_GRUPO) e 'Adicionar Filial' (que cria filial de matriz existente). Por isso as últimas empresas foram cadastradas via SQL direto, deixando campos NULL e gerando problemas reativos. cadastro_empresa.php existe mas está órfão e o controller tem bugs estruturais (lê POST['cnpj'] mas form envia 'CNPJ', lê resp_rh/resp_ouvidoria inexistentes, usa variáveis não declaradas, mkdir em diretórios que em prod são gcsfuse). Estratégia: reusar alterar_empresa.php em modo 'novo' em vez de consertar o legado — uma única fonte da verdade, aproveita 5 abas já estáveis (Identificação/Endereço/Integração/Gestor/Limites) e AJAX já funcionando.",
-      "acceptanceCriteria": [
-        "Botão 'Incluir Empresa' em master/tabela_empresas.php (entre 'Adicionar Grupo' e 'Adicionar Filial'), sempre habilitado, apontando para alterar_empresa?al=novo",
-        "alterar_empresa.php detecta $_GET['al'] === 'novo' e entra em modo novo: zera variáveis, habilita CNPJ e tipo (M/F) que hoje são disabled, esconde aba Gestor, mostra aba Limites com defaults (limite_lideres=2, limite_admins_ativos=NULL)",
-        "Campos id_emp_h/p/i, tipo_h/p/i, lay_h/p/i ficam OPCIONAIS no insert (sem required) — admin completa configuração de integração depois em modo edição",
-        "id_emp_grupo em modo novo vira select dinâmico com 3 opções: 'Sem grupo' (NULL), 'Vincular a grupo existente' (carrega empresas tipo='M' via nova selectGESEMP_matrizes_grupo), 'Criar novo grupo (esta empresa será a matriz)' (após INSERT faz UPDATE GESEMP SET id_emp_grupo = id_emp via auto-FK). Em modo edição mantém input atual",
-        "controller/alterar_empresa_post.php ganha branch INSERT no btn_adicionar: quando sessão indica modo novo, chama insertGESEMP_MASTER + insertGESLAY('VIS','VIS','VIS' por padrão) + updateGESEMP_limites + upsertGESMPR_lider_menus + auto-FK de grupo se aplicável. Retorna JSON com id_emp do novo registro",
-        "Validações no servidor: CNPJ formato XX.XXX.XXX/XXXX-XX + unicidade (nova função selectGESEMP_cnpj_exists), tipo ∈ {M,F}, nome ≥3 chars, nomefantasia ≥3 chars, id_mun obrigatório, id_per_imp e id_per_ace obrigatórios, limite_lideres ≥1, limite_admins_ativos ≥1 ou NULL",
-        "alterar_empresa.js após resposta de sucesso em modo novo: mostra toast 'Empresa criada!' e redireciona para alterar_empresa?al={novo_id} (modo edição, aba Gestor passa a aparecer)",
-        "Bug pré-existente do id_usa_atu (FK pra GESUSA mas controller gravava id_mas de GESMAS): reaproveitar mitigação da FEA-010 com selectGESUSA_id_usa_by_master + fallback id_usa=1",
-        "Sem criação de diretórios de upload via mkdir (em prod o bucket é gcsfuse, falha silenciosamente). Diretórios são criados sob demanda pelo primeiro upload",
-        "CNPJ duplicado retorna mensagem clara antes do INSERT — sem depender de constraint UNIQUE (que não existe hoje em GESEMP.cnpj)",
-        "Fluxo de aprovação de lead (aprovacao.php → alterar_aprovacao.php) continua funcionando sem regressão — apenas adicionamos uma porta nova de entrada",
-        "cadastro_empresa.php, cadastro_empresa_post.php e tabela_empresas_antigo.php permanecem intocados (dead code documentado em docs/pendencias.md para cleanup futuro)"
-      ],
-      "priority": 23,
-      "passes": false,
-      "notes": "Motivado pelo Yuri após FEA-011. Plano detalhado em docs/plano-fea-012-cadastro-empresa-master.md. Esforço estimado: 1-2 dias. Independente da FEA-009 — pode ser entregue antes ou em paralelo. NÃO ESCOPO: correção de empresas já cadastradas com NULL (fica para FEA futura ou script de manutenção), refatorar fluxo de aprovação de leads, deletar legado cadastro_empresa.php (cleanup posterior), cadastro em massa/CSV, validação de CNPJ via API externa (só formato + unicidade local). Decisão arquitetural: reusar alterar_empresa.php em modo 'novo' em vez de consertar cadastro_empresa.php legado (que tem bugs estruturais e cobre <60% dos campos)."
-    },
-    {
-      "id": "FEA-013",
-      "title": "Centralizar lista de \"menus padrão\" de novos admins",
-      "description": "Refactor para extrair o array de 26 IDs de menu (que define o conjunto de telas liberadas por padrão para qualquer admin recém-criado) que hoje está hardcoded em 5 lugares diferentes (master/adicionar_permissao.php, master/alterar_usuario.php, master/controller/adicionar_novo_usuario_post.php, master/iuds_pdo.php::updateGESMPR_menus e admin/iuds_pdo.php::updateGESMPR_menus). Toda FEA nova que cria uma tela precisa lembrar de adicionar o id_mnu nos 5 pontos — já houve esquecimento histórico (commit 311c2a7 corrigiu id_mnu=58 esquecido na FEA-008). A FEA-009 (RPA) vai adicionar 2 menus novos (Folha > Autônomos, Folha > RPA), aumentando o risco. Esta FEA centraliza tudo em config/permissions.php numa constante MENUS_PADRAO_NOVOS_ADMINS, mantendo comportamento idêntico. Originalmente listado como 'débito técnico nº 1' em docs/pendencias.md.",
-      "acceptanceCriteria": [
-        "Arquivo novo config/permissions.php com constante MENUS_PADRAO_NOVOS_ADMINS = [1,2,3,4,5,6,7,8,9,10,11,12,13,15,16,17,20,21,22,23,31,32,33,37,57,58] e comentário explicando que toda FEA que adiciona tela ao kit básico de admin deve atualizar a lista",
-        "master/adicionar_permissao.php:33 substitui $menus_padrao = [...] por require_once __DIR__.'/../config/permissions.php' + uso de MENUS_PADRAO_NOVOS_ADMINS",
-        "master/alterar_usuario.php:1133 substitui $menus_padrao_acesso = [...] da mesma forma",
-        "master/controller/adicionar_novo_usuario_post.php:111 substitui o array literal embutido pela constante",
-        "master/iuds_pdo.php::updateGESMPR_menus reescrita: constrói VALUES dinamicamente a partir da constante (implode com 26 placeholders) em vez de 26 linhas hardcoded no INSERT batch",
-        "admin/iuds_pdo.php::updateGESMPR_menus (réplica da FEA-010) reescrita da mesma forma",
-        "Comportamento idêntico ao atual: criar admin novo gera os mesmos 26 registros em GESMPR com situac=1, vincular admin a nova empresa também",
-        "Validação local: comparar SELECT COUNT(*) + lista de id_mnu em GESMPR antes e depois do refactor — diff zero",
-        "Item 'Débito técnico nº 1' removido de docs/pendencias.md",
-        "CLAUDE.md atualizado: adicionar config/permissions.php na tabela de 'Configs centralizados (config/)'",
-        "id_mnu 34 e 36 (exclusivos do Líder RH) NÃO entram nesta constante — continuam em upsertGESMPR_lider_menus (função separada, escopo diferente)",
-        "Deploy em prod com smoke test: criar 1 admin de teste, verificar acesso aos menus padrão"
-      ],
-      "priority": 24,
-      "passes": true,
-      "notes": "Refactor isolado, baixo risco, comportamento idêntico. Extraído do 'débito técnico nº 1' em docs/pendencias.md. Yuri (2026-05-22) optou por tratar como FEA separada em vez de Fase 0 da FEA-009. Esforço estimado: ~½ dia (3-4 horas). Plano detalhado em docs/plano-fea-013-centralizar-menus-padrao.md. Decisão arquitetural: constante PHP (const MENUS_PADRAO_NOVOS_ADMINS em config/permissions.php) em vez de tabela GESMNU_PADRAO — sem migration, sem custo de leitura no banco, lista evolui junto com o código no diff. Auditoria pré-implementação (2026-05-24) confirmou: 5 listas idênticas, achou 6º lugar com semântica diferente ($menus_suporte em alterar_aprovacao_post:278 — fora do escopo). ENTREGUE 2026-05-24 (commit fc638e1, deploy gestou-00141-hhx). Validação local: lint OK, função refatorada produz 26 IDs corretos com situac=1, ON CONFLICT DO NOTHING preservado (não reativa menu desabilitado)."
+      "esforco_estimado": "Externo — depende jurídico",
+      "depende_de": [],
+      "responsavel": "Yuri (jurídico) — pode rodar em paralelo com FEAs técnicas",
+      "decisoes_dependentes": ["DEC-01", "DEC-02", "DEC-10"],
+      "passes": false
     }
+  ],
+  "fora_de_escopo_v2": [
+    "Antifraude avançado (score de risco, fingerprinting) — fica pra v3",
+    "Recrutamento e Seleção (FEA futura)",
+    "IA 1 Compliance, IA 2 Suporte Bia — backlog separado",
+    "Integração NFS-e (NFe.io / eNotas) — DEC-05 pode adiar pra fase 2",
+    "Trial e PLG (product-led growth) — DEC-03 propõe pular no MVP",
+    "Dashboards de métricas avançadas — MVP terá só funil básico"
+  ],
+  "metricas_de_sucesso": [
+    "Tempo de cadastro até primeiro acesso < 10 minutos (self-service)",
+    "Taxa de conversão landing → cadastro_iniciado ≥ 5%",
+    "Taxa de conversão cadastro_iniciado → pagamento_confirmado ≥ 40%",
+    "Taxa de recuperação de abandono via email ≥ 15%",
+    "Zero cadastros via SQL direto no banco após go-live"
+  ],
+  "referencias": [
+    "docs/archive/prd-original.json — PRD histórico (MIG-001..012, FEA-001..013)",
+    "Brain/02_Logs/2026-05-26.md — log da sessão de levantamento e do plugin OKR",
+    "docs/proposta-onboarding-v2.md — documento de apresentação dessa esteira",
+    "Reunião Rafa/Yuri de 2026-05-25 (transcrição em /home/rafo/Downloads/)",
+    "Contrato SE Hotéis (set/2025) — referência do modelo de cobrança vigente a ser substituído"
   ]
 }
