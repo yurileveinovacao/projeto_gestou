@@ -112,14 +112,16 @@ psql -h 127.0.0.1 -p 5434 -U gestou -d gestou
 ## Status
 
 Em produção em https://gestou.com.br desde 2026-04-24 (cutover GCP concluído).
-Fase 7 (FEA-001 a FEA-007) entregue. Pendências abertas em [`docs/pendencias.md`](docs/pendencias.md).
+Fase 7 (FEA-001 a FEA-007) entregue. **Pendências em aberto vivem no OKR** (projeto `gestou-2026`) — consulte via `claude-okr call GET '/api/agent/tasks?projectToken=gestou-2026&status=PENDING'`.
 
 ## Referência
 
-- [`docs/pendencias.md`](docs/pendencias.md) — pendências em aberto (operacional, Fase 5 Play Console, backlog)
+- **OKR** (`gestou-2026`) — fonte da verdade pra pendências e tarefas em andamento (via plugin `claude-okr` ou <https://okr.leveinovacao.com.br>)
+- [`docs/pendencias.md`](docs/pendencias.md) — pointer pro OKR + registro de itens descartados (não-tarefas)
 - [`progress.txt`](progress.txt) — log cronológico de entregas (vivo)
-- [`prd.json`](prd.json) — PRD cumulativo: MIG-001~012 (concluídas) + FEA-001~007 (entregues)
-- [`docs/archive/`](docs/archive/) — documentação histórica da migração Kinghost → GCP
+- [`prd.json`](prd.json) — PRD do épico Onboarding Comercial v2 (FEA-014..020). PRD histórico (MIG + FEA-001..013) em `docs/archive/prd-original.json`
+- [`docs/proposta-onboarding-v2.md`](docs/proposta-onboarding-v2.md) — apresentação do épico atual
+- [`docs/archive/`](docs/archive/) — documentação histórica da migração Kinghost → GCP + PRD original arquivado
 - [`scripts/migrations/archive/`](scripts/migrations/archive/) — migrações de schema já aplicadas (FEA-004~007)
 - [`Brain/`](Brain/) — cofre Obsidian versionado para logs técnicos de sessão (ver protocolo abaixo)
 
