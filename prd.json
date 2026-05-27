@@ -1,87 +1,180 @@
 {
   "project": "Gestou — Onboarding Comercial v2",
   "description": "PRD focado no épico de reformulação da esteira comercial da plataforma Gestou, motivado pela reunião 1:1 Rafa/Yuri de 2026-05-25 e pela decisão de ativar campanhas de Ads. O PRD histórico (MIG-001 a MIG-012, FEA-001 a FEA-013) está arquivado em docs/archive/prd-original.json.",
-  "version": "2.0",
+  "version": "2.1",
   "data_inicio": "2026-05-27",
+  "ultima_atualizacao": "2026-05-27 — Yuri fechou 8 das 10 decisões pendentes; 3 itens novos em aberto",
   "contexto": {
     "motivacao": "A esteira atual depende de aprovação manual no /master/ e não captura pagamento. Antes de ligar Ads, precisamos de onboarding self-service com captura de pagamento, recuperação de checkout abandonado e pipeline de leads visível.",
     "decisoes_arquiteturais": {
       "ordem_cadastro_pagamento": "Cadastro mínimo ANTES do pagamento (4-5 campos). Padrão de mercado em SaaS B2B sério. Permite recuperação de abandono, antifraude e consentimento LGPD documentado.",
-      "gateway": "Asaas (alinhamento com estrutura financeira da Leve). Stripe usado no Precifica — não replicar.",
+      "gateway": "Asaas (alinhamento com estrutura financeira da Leve, já emitindo NFS-e via Asaas). Stripe usado no Precifica — não replicar.",
       "modelo_de_estados": "Estender GESEMP.analise com novos status (5 a 11) em vez de criar tabela GESLEAD separada. Menos retrabalho, sem migration disruptiva.",
       "menus_padrao_novo_admin": "Reusar config/permissions.php (FEA-013 já entregue)",
       "lider_rh_primeiro_usuario": "Primeiro usuário criado no checkout vira Líder RH automaticamente (GESGES.gestor=1, FEA-010 já entregue)"
     },
     "metas_yuri": {
       "ads": "Iniciar campanhas de Google/Meta Ads após esteira ativa",
-      "prazo_inicial": "Algo ativo até 2026-05-27 (quarta) — meta agressiva; realista é Fase 0+1 nesse prazo, esteira completa em 2-3 semanas",
-      "modelo_cobranca_novo": "Preço fixo no ato da contratação, reajuste só com Δ ≥ 15-20% no número de colaboradores ativos (a confirmar gatilho exato)"
+      "modelo_cobranca_novo": "Preço fixo no ato, reajuste por Δ ≥ 15% no número de colaboradores ativos. Promoções comerciais flexíveis (ex: 50% off nos 3 primeiros meses, isenção da taxa de setup) negociadas caso a caso."
     }
   },
-  "decisoes_pendentes": [
+  "decisoes_fechadas": [
     {
       "id": "DEC-01",
       "pergunta": "% gatilho de reajuste de cobrança",
-      "opcoes": ["15%", "20%"],
-      "impacto": "Define regra do recalculo automático. Yuri oscilou na reunião — bater martelo antes de codar."
+      "decisao": "15%",
+      "data": "2026-05-27"
     },
     {
       "id": "DEC-02",
       "pergunta": "Modelo de preço",
-      "opcoes": ["Preço fixo único negociado", "Planos escalonados (faixas de colaboradores)"],
-      "impacto": "Afeta UI do checkout e tabela de preços."
+      "decisao": "Fixo único, com possibilidade de descontos promocionais (ex: 50% off nos 3 primeiros meses, isenção do setup). Não terá faixas escalonadas pré-definidas.",
+      "data": "2026-05-27",
+      "implicacao": "Tabela de preços não estatica — preco_fixo_mensal por empresa permite flexibilidade comercial."
     },
     {
       "id": "DEC-03",
       "pergunta": "Trial",
-      "opcoes": ["Sem trial (cobra direto)", "7 dias com cartão capturado", "14 dias sem cartão"],
-      "impacto": "Trial sem cartão atrai bots; com cartão converte ~60% vs ~25%. Recomendação: pular trial no MVP, PIX baixo + preço fixo facilita experimentar."
+      "decisao": "Sem trial. Cancelamento a qualquer momento (sem fidelidade rígida).",
+      "data": "2026-05-27",
+      "implicacao": "Reflete no contrato (cláusula 7ª precisa ser ajustada — hoje exige multa 50% se cancelar antes de 12m)."
     },
     {
       "id": "DEC-04",
       "pergunta": "Formas de pagamento no MVP",
-      "opcoes": ["Só PIX", "PIX + Cartão", "PIX + Cartão + Boleto"],
-      "impacto": "Boleto exige PAYMENT_RECEIVED (D+2), não PAYMENT_CONFIRMED. Recomendação: PIX + Cartão no MVP, boleto sob demanda na Fase 2."
+      "decisao": "SOMENTE CARTÃO de crédito.",
+      "data": "2026-05-27",
+      "implicacao": "Asaas Subscription via cartão recorrente. Não terá PIX nem boleto no MVP. Cuidado: cartão expirado / recusado → suspensão automática, precisa de flow robusto de 'atualizar cartão' e dunning por email. Perdemos clientes B2B que preferem boleto/PIX (~30% do mercado), aceito como tradeoff."
     },
     {
       "id": "DEC-05",
       "pergunta": "NFS-e (nota fiscal de serviço)",
-      "opcoes": ["Adiar — recibo Asaas no MVP", "Integrar NFe.io já", "Integrar eNotas já"],
-      "impacto": "Asaas não emite NFS-e. Adiar é viável pro MVP."
-    },
-    {
-      "id": "DEC-06",
-      "pergunta": "Endereço fiscal",
-      "opcoes": ["No checkout (mais campos)", "No wizard pós-pagamento"],
-      "impacto": "Cada campo a mais no checkout custa ~7% conversão. Recomendação: pós-pagamento."
+      "decisao": "Via Asaas (já está emitindo NFS-e por lá hoje).",
+      "data": "2026-05-27",
+      "implicacao": "Não precisa integrar NFe.io / eNotas. Validar que Asaas Subscription emite NFS-e automaticamente — pode exigir habilitar feature na conta."
     },
     {
       "id": "DEC-07",
       "pergunta": "Setup R$500",
-      "opcoes": ["Manter junto da 1ª mensalidade", "Cobrança separada", "Eliminar"],
-      "impacto": "Cobrança separada pode aumentar atrito; eliminar afeta margem inicial."
+      "decisao": "Cobrado junto da 1ª mensalidade (mesma transação).",
+      "data": "2026-05-27",
+      "implicacao": "Primeira cobrança = setup + mensalidade. Asaas suporta via Payment com items separados ou valor consolidado."
     },
     {
       "id": "DEC-08",
       "pergunta": "CNPJs múltiplos no checkout",
-      "opcoes": ["Cliente cadastra todos no checkout", "Só principal, adiciona depois"],
-      "impacto": "Múltiplos no checkout aumenta atrito. Recomendação: só principal."
+      "decisao": "Apenas 1 CNPJ no checkout. Demais cadastrados depois (no /admin/ após ativação).",
+      "data": "2026-05-27",
+      "implicacao": "Reduz atrito significativamente. Step 2 não precisa de pergunta sobre 'grupo'. Funcionalidade de cadastrar CNPJs adicionais via /admin/ continua existindo."
     },
     {
       "id": "DEC-09",
       "pergunta": "Aprovação manual continua existindo?",
-      "opcoes": ["Sim — pra clientes por indicação (ex: SE Hotéis foi assim)", "Não — todos pela esteira"],
-      "impacto": "Define se mantemos /master/aprovacao.php e os status analise=1..4 do fluxo legado."
+      "decisao": "Sim — pra clientes por indicação (modelo do SE Hotéis, contratação fora da esteira self-service).",
+      "data": "2026-05-27",
+      "implicacao": "Mantém /master/aprovacao.php e status analise=1..4 do fluxo legado. Esteira nova (5..11) coexiste sem conflito."
     },
     {
       "id": "DEC-10",
       "pergunta": "Revisão do template de contrato",
-      "opcoes": ["Yuri fala com jurídico", "Rafa prepara minuta pra Yuri levar"],
-      "impacto": "Contrato vigente (SE Hotéis) tem R$6/colab + R$49,90/CNPJ — incompatível com modelo fixo proposto."
+      "decisao": "Usar o mesmo modelo do SE Hoteis com ajustes propostos pelo Claude (parecer técnico-jurídico abaixo). Yuri valida cada ajuste.",
+      "data": "2026-05-27",
+      "implicacao": "Vide seção 'parecer_juridico_contrato' deste PRD."
     }
   ],
+  "decisoes_pendentes": [
+    {
+      "id": "DEC-06",
+      "pergunta": "Endereço fiscal — coletar no checkout ou no wizard pós-pagamento?",
+      "opcoes": ["No checkout (mais campos, ~7% perda de conversão)", "No wizard pós-pagamento"],
+      "recomendacao": "Pós-pagamento. Asaas precisa só de CPF/CNPJ + email do customer pra emitir NFS-e nominal — endereço fiscal completo entra no wizard quando o cliente já comprometeu (pagou).",
+      "responsavel": "Yuri"
+    },
+    {
+      "id": "DEC-11",
+      "pergunta": "Conta sandbox Asaas — em nome de quem (Leve PJ ou Yuri pessoal)?",
+      "opcoes": ["Leve Inovação (PJ — usa CNPJ 53.094.687/0001-38)", "Yuri pessoal (CPF)"],
+      "recomendacao": "Leve PJ — ambiente sandbox usa as mesmas credenciais que produção quando promover, e a conta prod definitivamente precisa estar na PJ. Cria a conta no domínio empresarial e cadastra Yuri como usuário admin.",
+      "responsavel": "Yuri"
+    },
+    {
+      "id": "DEC-12",
+      "pergunta": "Reajuste anual por IGP-M — manter (proteção contra inflação) ou substituir totalmente pela regra de gatilho de headcount ≥ 15%?",
+      "opcoes": [
+        "Substituir totalmente: só reajusta se headcount variar ≥ 15% (preço fica congelado se cliente não crescer)",
+        "Cumulativo: gatilho de 15% por headcount + IGP-M anual mantido (proteção contra inflação independente)"
+      ],
+      "recomendacao": "Cumulativo. Cliente sem variação de headcount em 18 meses não pode segurar preço congelado enquanto inflação corrói 10%+. Substituir totalmente compromete margem em horizonte longo.",
+      "responsavel": "Yuri"
+    }
+  ],
+  "parecer_juridico_contrato": {
+    "contexto": "Yuri pediu pra usar o modelo do SE Hotéis como base e aplicar ajustes técnico-jurídicos. Análise comparativa do contrato vigente (CONTRATO GESTOU - SE HOTEIS.docx, set/2025) × modelo novo de cobrança fixa + cancelamento livre + cadastro online.",
+    "pontos_criticos": [
+      {
+        "clausula": "5ª — Retribuição (preço)",
+        "texto_atual": "R$ 6,00/colab + R$ 49,90/CNPJ + R$ 500 setup, vencimento dia 12",
+        "problema": "Modelo novo é preço fixo único; não há mais variável por colaborador ou por CNPJ.",
+        "ajuste_proposto": "Reescrever: \"valor mensal fixo de R$ X,XX referente ao plano contratado, conforme proposta comercial anexa\". Manter setup R$500 (cobrado junto da 1ª mensalidade). Remover vencimento fixo dia 12 — vencimento conforme data de contratação (recorrência mensal via cartão recorrente)."
+      },
+      {
+        "clausula": "6ª — Reajuste",
+        "texto_atual": "Reajuste anual pelo IGP-M FGV",
+        "problema": "Modelo novo prevê gatilho por variação de headcount ≥ 15%.",
+        "ajuste_proposto": "Decisão pendente em DEC-12. Recomendação técnica: cumulativo (IGP-M anual + gatilho 15% headcount extraordinário). Manter IGP-M sozinho compromete o motivo do modelo novo; remover IGP-M expõe a Leve à inflação."
+      },
+      {
+        "clausula": "7ª — Vigência e Rescisão",
+        "texto_atual": "Vigência 12 meses + multa 50% se cancelar antes",
+        "problema": "DEC-03 fechou em 'cancelamento a qualquer momento' (sem fidelidade rígida). Cláusula atual obriga 12 meses com penalidade — incompatível.",
+        "ajuste_proposto": "Substituir por: \"Contrato por prazo indeterminado, podendo ser rescindido por qualquer das partes a qualquer momento, mediante notificação por escrito (email aceito) com antecedência mínima de 30 (trinta) dias. Não haverá multa rescisória. Valores pagos antecipadamente serão proporcionalmente devolvidos ou aplicados em meses subsequentes, à escolha do CONTRATANTE\". Considerar exceção: clientes por indicação (DEC-09) que negociem desconto em troca de fidelidade — preservar como exceção contratual separada."
+      },
+      {
+        "clausula": "Nova — Aceite eletrônico",
+        "texto_atual": "(não existe — contrato pressupõe assinatura física)",
+        "problema": "Esteira self-service exige aceite eletrônico (checkbox no cadastro) com força legal equivalente.",
+        "ajuste_proposto": "Adicionar cláusula: \"A contratação será formalizada por aceite eletrônico do CONTRATANTE no portal https://gestou.com.br, mediante marcação de checkbox de aceite dos Termos de Uso e Política de Privacidade, com registro de IP, data/hora e hash do conteúdo aceito. O aceite eletrônico tem mesma validade jurídica de assinatura manuscrita, nos termos do art. 10 da MP 2.200-2/2001\"."
+      },
+      {
+        "clausula": "Nova — Direito de arrependimento (CDC art. 49)",
+        "texto_atual": "(não existe)",
+        "problema": "Contratações online a distância dão ao consumidor 7 dias pra desistir, conforme CDC. Aplicável a B2B em casos específicos — risco baixo mas vale documentar política. Importante: Asaas precisa permitir estorno automatizado.",
+        "ajuste_proposto": "Adicionar: \"Considerando que a contratação se dá em ambiente online, o CONTRATANTE tem 7 (sete) dias corridos contados do pagamento da 1ª mensalidade para solicitar o cancelamento com restituição integral dos valores pagos, exceto o valor de setup já consumido em parametrização inicial\". Operacional: alinhar com Asaas o fluxo de refund nesse prazo."
+      },
+      {
+        "clausula": "5ª III — Mora",
+        "texto_atual": "Multa 2% + juros 1% ao mês",
+        "problema": "Compatível, mas precisa alinhar com Asaas. Asaas aplica encargos próprios em Payment OVERDUE — ou usamos os do Asaas (não exige alteração) ou customizamos.",
+        "ajuste_proposto": "Manter texto, definir operacionalmente se usaremos config padrão do Asaas (recomendado pra MVP). Documentar em \"Política de cobrança\" anexa."
+      },
+      {
+        "clausula": "8ª — LGPD",
+        "texto_atual": "Compromisso de sigilo + Lei 13.709/18",
+        "problema": "Genérico. Pra esteira self-service, precisa detalhar coleta de dados pessoais no cadastro online e retenção pós-cancelamento.",
+        "ajuste_proposto": "Expandir: \"Os dados pessoais coletados no cadastro online (nome, email, telefone, CNPJ) serão tratados conforme a Política de Privacidade vigente, aceita pelo CONTRATANTE no ato. Em caso de rescisão, os dados serão mantidos pelo prazo legal de 5 (cinco) anos (obrigação fiscal) e depois eliminados, exceto dados anonimizados para fins estatísticos. O CONTRATANTE pode exercer seus direitos de titular conforme art. 18 da LGPD via contato@leveinovacao.com.br\"."
+      },
+      {
+        "clausula": "Nova — Promoções e descontos",
+        "texto_atual": "(não existe — desconto era negociado por contrato)",
+        "problema": "Yuri quer flexibilidade pra dar 50% off nos 3 primeiros meses, isentar setup, etc, sem refazer contrato a cada promoção.",
+        "ajuste_proposto": "Adicionar cláusula geral: \"A CONTRATADA pode oferecer descontos promocionais, cupons ou condições especiais ao CONTRATANTE, sempre por prazo determinado, registrados em proposta comercial assinada eletronicamente. Findo o prazo da promoção, o valor retorna ao plano contratado\"."
+      }
+    ],
+    "proximos_passos": [
+      "Yuri decide DEC-12 (IGP-M cumulativo ou substituído)",
+      "Rafa prepara minuta v2 do contrato baseada nessa análise",
+      "Minuta passa por advogado da Leve antes de virar template oficial",
+      "Template novo só entra em uso quando esteira self-service for ao ar (FEA-016 deployed)"
+    ]
+  },
   "branches": {
     "recomendado": "feature/onboarding-comercial-v2"
+  },
+  "sinal_verde_para_codar": {
+    "decisoes_bloqueantes_status": "8 de 10 fechadas (DEC-06 e sandbox Asaas pendem; DEC-12 aberta mas não bloqueia código, só contrato)",
+    "pode_iniciar_hoje": ["FEA-014 (schema base — não depende de nenhuma decisão pendente)", "FEA-015 step 1 (cadastro mínimo — não depende de modelo de preço final, só de DEC-02 que está fechada)"],
+    "depende_de_sandbox_asaas": ["FEA-016 (integração Asaas)"],
+    "depende_de_DEC-06": ["FEA-019 (wizard pós-pagamento)"]
   },
   "userStories": [
     {
@@ -91,6 +184,7 @@
       "priority": 1,
       "esforco_estimado": "1 dia",
       "depende_de": [],
+      "bloqueado_por_decisao": false,
       "schema_changes": [
         "ALTER TABLE GESEMP ADD COLUMN asaas_customer_id VARCHAR(40)",
         "ALTER TABLE GESEMP ADD COLUMN asaas_subscription_id VARCHAR(40)",
@@ -106,15 +200,15 @@
       ],
       "novos_status_analise": {
         "0": "rascunho — conta criada, sem checkout iniciado",
-        "1": "pendente — aprovação manual (legado, mantido)",
+        "1": "pendente — aprovação manual (legado, mantido — DEC-09)",
         "2": "liberado — pode acessar (legado, mantido)",
         "3": "reprovado (legado)",
         "4": "bloqueado (legado)",
         "5": "checkout_iniciado — sessão Asaas criada",
-        "6": "pagamento_pendente — PIX/boleto gerado, aguardando",
-        "7": "pagamento_falhou — cartão recusado ou boleto vencido",
+        "6": "pagamento_pendente — cartão capturado, aguardando confirmação",
+        "7": "pagamento_falhou — cartão recusado",
         "8": "ativo — pagamento confirmado, acesso liberado",
-        "9": "past_due — recorrência vencida",
+        "9": "past_due — recorrência vencida (cartão expirado ou recusado)",
         "10": "suspenso — dunning esgotado",
         "11": "cancelado/churned"
       },
@@ -123,37 +217,37 @@
     {
       "id": "FEA-015",
       "title": "Esteira pública v2 — cadastro 2-step + validação de email",
-      "description": "Refatorar /createaccount/ pra wizard de 2 steps: (1) cadastro mínimo de 5 campos com lookup de CNPJ via BrasilAPI auto-preenchendo razão social; (2) tela 'escolha do plano' com pergunta sobre CNPJs múltiplos e cálculo do preço fixo. Implementar finalmente o endpoint /validar_email?token=... (token já existe em GESUSA.token_usa há tempos sem ser usado).",
+      "description": "Refatorar /createaccount/ pra wizard de 2 steps: (1) cadastro mínimo de 5 campos com lookup de CNPJ via BrasilAPI auto-preenchendo razão social; (2) tela 'escolha do plano' com cálculo do preço fixo. Implementar finalmente o endpoint /validar_email?token=... (token já existe em GESUSA.token_usa há tempos sem ser usado). DEC-08 fechou em apenas 1 CNPJ no checkout — Step 2 não terá pergunta sobre grupo.",
       "priority": 2,
       "esforco_estimado": "3-4 dias",
       "depende_de": ["FEA-014"],
+      "bloqueado_por_decisao": false,
       "campos_step_1": [
         "Nome do responsável (obrigatório)",
-        "CNPJ — com lookup BrasilAPI/ReceitaWS (obrigatório)",
+        "CNPJ — com lookup BrasilAPI/ReceitaWS (obrigatório, UNIQUE)",
         "Email corporativo (obrigatório)",
         "Telefone (obrigatório)",
         "Senha (obrigatório, mín 8 chars + complexidade)",
-        "Checkbox: aceito Termos + Política de Privacidade (LGPD)"
+        "Checkbox: aceito Termos + Política de Privacidade (LGPD) — registra IP + hash"
       ],
       "endpoints_novos": [
         "GET /api/lookup-cnpj?cnpj=XX (proxy BrasilAPI)",
         "GET /validar_email?token=XXX (fecha gap do GESUSA.token_usa nunca implementado)"
       ],
-      "decisoes_dependentes": ["DEC-02 (modelo de preço)", "DEC-08 (CNPJs múltiplos no checkout)"],
       "passes": false
     },
     {
       "id": "FEA-016",
-      "title": "Integração Asaas — Customer + Subscription + Webhook",
-      "description": "Cliente PHP que conversa com a API do Asaas (Guzzle ou cURL direto) pra criar Customer, Subscription mensal e Payment inicial. Endpoint /asaas/webhook.php com validação de header access_token, idempotência por payment.id e tratamento dos 5 eventos críticos. Sandbox primeiro, prod só após validar fluxo end-to-end.",
+      "title": "Integração Asaas — Customer + Subscription cartão + Webhook",
+      "description": "Cliente PHP que conversa com a API do Asaas (Guzzle ou cURL direto) pra criar Customer, Subscription mensal via CARTÃO DE CRÉDITO (DEC-04 — só cartão no MVP) e Payment inicial. Endpoint /asaas/webhook.php com validação de header access_token, idempotência por payment.id. Inclui fluxos de dunning (cartão recusado/expirado), atualização de cartão e suspensão automática. Setup R$500 vai junto na 1ª cobrança (DEC-07). NFS-e emitida via Asaas (DEC-05). Sandbox primeiro, prod só após validar fluxo end-to-end.",
       "priority": 3,
-      "esforco_estimado": "3-5 dias (depende da curva de aprendizado do Asaas — incógnita citada pelo Rafa)",
+      "esforco_estimado": "3-5 dias (incógnita do gateway)",
       "depende_de": ["FEA-014", "FEA-015"],
+      "bloqueado_por": "Conta sandbox Asaas em nome de quem? (DEC-11)",
       "eventos_webhook": [
         "PAYMENT_CREATED — cobrança gerada (analise=5 → 6)",
-        "PAYMENT_CONFIRMED — cartão/PIX aprovado (ativa se não for boleto)",
-        "PAYMENT_RECEIVED — dinheiro caiu (ativa boleto, analise=8)",
-        "PAYMENT_OVERDUE — venceu sem pagar (analise=9, dispara dunning)",
+        "PAYMENT_CONFIRMED — cartão aprovado (ativa direto, analise=8 — não tem boleto/PIX no MVP)",
+        "PAYMENT_OVERDUE — cartão recusado/expirado (analise=9, dispara dunning)",
         "PAYMENT_REFUNDED / PAYMENT_CHARGEBACK_REQUESTED — estorno (analise=11)"
       ],
       "secrets_novos": [
@@ -163,22 +257,23 @@
       "secrets_envvars": [
         "ASAAS_BASE_URL (sandbox vs prod)"
       ],
-      "decisoes_dependentes": ["DEC-04 (formas de pagamento)", "DEC-07 (setup)"],
       "riscos": [
         "Asaas Subscription não tem webhook próprio — toda lógica via Payment events",
-        "Boleto demora D+2 — não ativar conta em PAYMENT_CONFIRMED se for boleto",
+        "Cartão expirado/recusado é a falha mais comum (~5% mensal) — flow de update_card obrigatório no /app/ ou /admin/",
         "Chargeback tem janela de 540 dias — implementar suspensão automática",
-        "Webhook reentrega — idempotência por payment.id é obrigatória"
+        "Webhook reentrega — idempotência por payment.id é obrigatória",
+        "Validar que Asaas Subscription emite NFS-e automaticamente — pode exigir habilitar feature na conta (DEC-05)"
       ],
       "passes": false
     },
     {
       "id": "FEA-017",
       "title": "Recovery de checkout abandonado + Pipeline de leads no master",
-      "description": "Cron job que varre leads em analise=0/5/6 e dispara emails escalonados (1h, 24h, 72h, 7 dias). Nova tela /master/pipeline_leads.php com tabela/kanban filtrado por status, ações de reengajamento (reenviar link, marcar contatado, copiar link checkout, anotações) e métricas básicas de funil.",
+      "description": "Cron job que varre leads em analise=0/5/6/7 e dispara emails escalonados (1h, 24h, 72h, 7 dias). Nova tela /master/pipeline_leads.php com tabela/kanban filtrado por status, ações de reengajamento (reenviar link, marcar contatado, copiar link checkout, anotações) e métricas básicas de funil. Caso especial: analise=7 (cartão recusado) dispara email específico 'atualize seu cartão' direto pro /app/.",
       "priority": 4,
       "esforco_estimado": "2 dias",
       "depende_de": ["FEA-014", "FEA-015"],
+      "bloqueado_por_decisao": false,
       "componentes": [
         "scripts/cron_recovery_onboarding.php — job que roda a cada 30min via Cloud Scheduler",
         "templates de email transacional (PHPMailer já configurado)",
@@ -190,41 +285,43 @@
     {
       "id": "FEA-018",
       "title": "Cadastro direto no master (substitui FEA-012)",
-      "description": "Substitui o plano original da FEA-012 (que estava em rascunho). Em vez de adicionar 'modo novo' ao alterar_empresa.php, REUSAR o componente de cadastro da esteira pública (FEA-015) numa rota interna do /master/, sem step de pagamento. Garante um único formulário de cadastro em todo o sistema — atende ao pedido do Rafa de 'padronizar a página de cadastro'.",
+      "description": "Substitui o plano original da FEA-012 (que estava em rascunho). Em vez de adicionar 'modo novo' ao alterar_empresa.php, REUSAR o componente de cadastro da esteira pública (FEA-015) numa rota interna do /master/, sem step de pagamento. Garante um único formulário de cadastro em todo o sistema — atende ao pedido do Rafa de 'padronizar a página de cadastro' e ao caso de uso de indicação (DEC-09).",
       "priority": 5,
       "esforco_estimado": "1-2 dias",
       "depende_de": ["FEA-015"],
+      "bloqueado_por_decisao": false,
       "substitui": "FEA-012 (estava em rascunho)",
       "passes": false
     },
     {
       "id": "FEA-019",
       "title": "Wizard pós-pagamento — completar perfil + onboarding guiado",
-      "description": "Tela exibida no primeiro login após pagamento confirmado: completa endereço fiscal, dados bancários (se necessário pra notas), foto/logo, e mostra tutorial guiado básico ('cadastre seu primeiro colaborador'). Time to value < 5 minutos.",
+      "description": "Tela exibida no primeiro login após pagamento confirmado: completa endereço fiscal (se DEC-06 = pós-pagamento, recomendação), dados bancários (se necessário pra notas), foto/logo, e mostra tutorial guiado básico ('cadastre seu primeiro colaborador'). Time to value < 5 minutos.",
       "priority": 6,
       "esforco_estimado": "2 dias",
       "depende_de": ["FEA-016"],
-      "decisoes_dependentes": ["DEC-06 (endereço fiscal no checkout ou pós)"],
+      "bloqueado_por": "DEC-06 (endereço fiscal — checkout ou pós-pagamento?)",
       "passes": false
     },
     {
       "id": "FEA-020",
-      "title": "Revisão do template de contrato pra modelo de preço fixo",
-      "description": "Trilho jurídico/administrativo paralelo às FEAs técnicas. Cláusula 5ª do contrato vigente (R$6/colab + R$49,90/CNPJ + R$500 setup) precisa ser reescrita pra modelo fixo no ato + reajuste por Δ ≥ 15-20%. Cláusula 7ª (rescisão) e modelo de assinatura digital também precisam revisão pra reduzir campos no checkout.",
+      "title": "Minuta v2 do contrato com ajustes técnico-jurídicos",
+      "description": "Trilho jurídico paralelo. Rafa prepara minuta v2 baseado no contrato SE Hotéis (DEC-10) com 8 ajustes: cláusula 5ª (preço fixo), 6ª (IGP-M+gatilho 15% — depende DEC-12), 7ª (cancelamento livre), nova cláusula de aceite eletrônico, nova cláusula de arrependimento (CDC art. 49), 5ª III (mora), 8ª (LGPD expandida), nova cláusula de promoções. Minuta passa por advogado da Leve antes de virar template oficial. Vide seção 'parecer_juridico_contrato' deste PRD.",
       "priority": 7,
-      "esforco_estimado": "Externo — depende jurídico",
+      "esforco_estimado": "Externo (Yuri valida cada ajuste + advogado revisa)",
       "depende_de": [],
-      "responsavel": "Yuri (jurídico) — pode rodar em paralelo com FEAs técnicas",
-      "decisoes_dependentes": ["DEC-01", "DEC-02", "DEC-10"],
+      "bloqueado_por": "DEC-12 (IGP-M cumulativo ou substituído pelo gatilho de headcount?)",
+      "responsavel": "Rafa minuta → Yuri valida → Advogado Leve revisa",
       "passes": false
     }
   ],
   "fora_de_escopo_v2": [
     "Antifraude avançado (score de risco, fingerprinting) — fica pra v3",
+    "PIX e Boleto como forma de pagamento — DEC-04 fechou em só cartão; podem entrar na Fase 2 se demanda comercial justificar",
     "Recrutamento e Seleção (FEA futura)",
     "IA 1 Compliance, IA 2 Suporte Bia — backlog separado",
-    "Integração NFS-e (NFe.io / eNotas) — DEC-05 pode adiar pra fase 2",
-    "Trial e PLG (product-led growth) — DEC-03 propõe pular no MVP",
+    "Integração NFS-e externa (NFe.io / eNotas) — DEC-05 vai pelo Asaas",
+    "Trial e PLG (product-led growth) — DEC-03 confirmou sem trial",
     "Dashboards de métricas avançadas — MVP terá só funil básico"
   ],
   "metricas_de_sucesso": [
@@ -232,11 +329,13 @@
     "Taxa de conversão landing → cadastro_iniciado ≥ 5%",
     "Taxa de conversão cadastro_iniciado → pagamento_confirmado ≥ 40%",
     "Taxa de recuperação de abandono via email ≥ 15%",
+    "Taxa de cartão recusado/expirado < 8% mensal (com flow de update funcional)",
     "Zero cadastros via SQL direto no banco após go-live"
   ],
   "referencias": [
     "docs/archive/prd-original.json — PRD histórico (MIG-001..012, FEA-001..013)",
     "Brain/02_Logs/2026-05-26.md — log da sessão de levantamento e do plugin OKR",
+    "Brain/02_Logs/2026-05-27.md — log com decisões batidas e parecer jurídico",
     "docs/proposta-onboarding-v2.md — documento de apresentação dessa esteira",
     "Reunião Rafa/Yuri de 2026-05-25 (transcrição em /home/rafo/Downloads/)",
     "Contrato SE Hotéis (set/2025) — referência do modelo de cobrança vigente a ser substituído"
