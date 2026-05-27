@@ -11,6 +11,26 @@ require_once __DIR__."/../config/session.php"; session_start();
 	<title>GESTOU APP</title>
 	<meta charset="UTF-8">
 	<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
+	<meta name="description" content="Acesse seu holerite, espelho de ponto, recibos e demais documentos do DP pelo app Gestou.">
+
+	<!-- Open Graph (WhatsApp, Facebook, LinkedIn) -->
+	<meta property="og:type" content="website">
+	<meta property="og:site_name" content="Gestou">
+	<meta property="og:title" content="Gestou — App do Colaborador">
+	<meta property="og:description" content="Acesse seu holerite, espelho de ponto, recibos e demais documentos do DP pelo app Gestou.">
+	<meta property="og:image" content="https://www.gestou.com.br/app/icons/icon-512x512.png">
+	<meta property="og:image:width" content="512">
+	<meta property="og:image:height" content="512">
+	<meta property="og:image:type" content="image/png">
+	<meta property="og:url" content="https://www.gestou.com.br/app/login">
+	<meta property="og:locale" content="pt_BR">
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Gestou — App do Colaborador">
+	<meta name="twitter:description" content="Acesse seu holerite, espelho de ponto, recibos e demais documentos do DP pelo app Gestou.">
+	<meta name="twitter:image" content="https://www.gestou.com.br/app/icons/icon-512x512.png">
+
 	<!--===============================================================================================-->
 	<link rel="icon" type="image/png" href="../img/logo.png" />
 	<!--===============================================================================================-->
