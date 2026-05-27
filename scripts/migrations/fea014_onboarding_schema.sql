@@ -25,9 +25,17 @@
 --   10 = suspenso (dunning esgotado)
 --   11 = cancelado / churned
 --
--- IMPORTANTE: empresas legadas (analise=2) NÃO são migradas pra analise=8.
--- analise=8 representa "ativa pela esteira nova"; analise=2 continua sendo "ativa por indicação" (DEC-09).
--- /master/aprovacao.php continua operando exclusivamente com 1..4.
+-- IMPORTANTE: empresas legadas (45 em prod, todas com analise=0 e situac=0|1) NÃO são alteradas.
+-- A distinção entre legado e esteira nova é feita pela coluna NOVA `origem`:
+--   origem='legacy'        → 45 empresas pré-esteira (DEFAULT, preservadas intactas)
+--   origem='self_service'  → leads vindos por /createaccount/ (esteira pública v2)
+--   origem='master'        → cadastrados direto pelo /master/ (indicações, DEC-09)
+--
+-- Por que coluna `origem` em vez de migrar `analise`: dry-check em prod (2026-05-27) revelou que
+-- todas as 45 empresas existentes estão com analise=0 (a coluna nunca foi populada além disso).
+-- O operacional usa GESEMP.situac pra decidir "ativa". O controller/iuds_pdo.php:47
+-- (updateGESEMP) faz UPDATE SET analise=0 WHERE analise=2 — migrar legadas pra analise=2
+-- ativaria essa transição inesperadamente. Coluna origem isola riscos.
 --
 -- Idempotente. Pode rodar várias vezes sem efeito colateral.
 
@@ -38,6 +46,7 @@ BEGIN;
 -- ============================================================================
 
 ALTER TABLE public."GESEMP"
+    ADD COLUMN IF NOT EXISTS origem                 VARCHAR(20)   NOT NULL DEFAULT 'legacy',
     ADD COLUMN IF NOT EXISTS asaas_customer_id      VARCHAR(40),
     ADD COLUMN IF NOT EXISTS asaas_subscription_id  VARCHAR(40),
     ADD COLUMN IF NOT EXISTS preco_fixo_mensal      NUMERIC(10,2),
@@ -46,6 +55,7 @@ ALTER TABLE public."GESEMP"
     ADD COLUMN IF NOT EXISTS data_ativacao          TIMESTAMP,
     ADD COLUMN IF NOT EXISTS data_proxima_revisao   DATE;
 
+COMMENT ON COLUMN public."GESEMP".origem                IS 'FEA-014: origem do cadastro. Valores: legacy (pré-esteira, 45 empresas atuais), self_service (esteira pública v2 — /createaccount/), master (cadastro pelo /master/, ex: indicações DEC-09). DEFAULT legacy preserva todas as empresas existentes intactas. Esteira nova distingue leads novos vs legados sem precisar mexer em GESEMP.analise das empresas pré-esteira.';
 COMMENT ON COLUMN public."GESEMP".asaas_customer_id     IS 'FEA-014: ID do Customer no Asaas (1:1 com a empresa).';
 COMMENT ON COLUMN public."GESEMP".asaas_subscription_id IS 'FEA-014: ID da Subscription mensal recorrente no Asaas.';
 COMMENT ON COLUMN public."GESEMP".preco_fixo_mensal     IS 'FEA-014/DEC-02: valor mensal fixo contratado. Promoções aplicadas em GESCOB.';
@@ -53,6 +63,8 @@ COMMENT ON COLUMN public."GESEMP".qtd_colab_contratada  IS 'FEA-014/DEC-01: base
 COMMENT ON COLUMN public."GESEMP".data_contratacao      IS 'FEA-014: data do aceite eletrônico no checkout (não confundir com data_ativacao).';
 COMMENT ON COLUMN public."GESEMP".data_ativacao         IS 'FEA-014: data/hora do PAYMENT_CONFIRMED — quando o acesso foi liberado.';
 COMMENT ON COLUMN public."GESEMP".data_proxima_revisao  IS 'FEA-014: data agendada da revisão anual (IGP-M + verificação do gatilho de 15%).';
+
+CREATE INDEX IF NOT EXISTS idx_gesemp_origem ON public."GESEMP" (origem);
 
 -- ============================================================================
 -- 2. Tabela GESCOB — histórico de cobranças
