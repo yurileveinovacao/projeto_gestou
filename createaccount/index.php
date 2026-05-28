@@ -90,7 +90,7 @@ require_once "iuds_pdo.php";
                                     <i class="fa fa-users text-muted"></i>
                                 </span>
                             </div>
-                            <input id="qtdcolaboradores" type="number" name="qtdcolaboradores" placeholder="Quantidade de colaboradores" class="form-control bg-white border-left-0 border-md">
+                            <input id="qtdcolaboradores" type="number" name="qtdcolaboradores" placeholder="Quantidade de colaboradores" class="form-control bg-white border-left-0 border-md" min="1" required>
                         </div>
 
                         <!-- Divider Text -->
@@ -421,6 +421,29 @@ Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.
     $(document).ready(function() {
         // Máscara para o campo 'cnpj' no formato '00.000.000/0000-00'
         $('#cnpj').mask('00.000.000/0000-00');
+
+        // FEA-015: auto-preenche a razão social consultando o CNPJ na BrasilAPI (via proxy /api/lookup-cnpj.php)
+        $('#cnpj').on('blur', function() {
+            var digitos = $(this).val().replace(/\D/g, '');
+            if (digitos.length !== 14) {
+                return;
+            }
+            var $razao = $('#razaosocial');
+            // Não sobrescreve se o usuário já digitou algo manualmente
+            if ($.trim($razao.val()) !== '') {
+                return;
+            }
+            $razao.attr('placeholder', 'Consultando CNPJ...').prop('disabled', true);
+            $.getJSON('../api/lookup-cnpj.php', { cnpj: digitos })
+                .done(function(resp) {
+                    if (resp && resp.ok && resp.razao_social) {
+                        $razao.val(resp.razao_social);
+                    }
+                })
+                .always(function() {
+                    $razao.attr('placeholder', 'Razão social').prop('disabled', false);
+                });
+        });
     });
 
     $(document).ready(function() {

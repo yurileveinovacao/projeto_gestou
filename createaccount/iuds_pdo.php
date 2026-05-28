@@ -142,11 +142,12 @@ function insertGESEMP(
     $quant_colab,
     $datinc,
     $datatu,
-    $situac
+    $situac,
+    $origem = 'self_service'
 ) {
     global $pdo;
     $query =
-        'INSERT INTO public."GESEMP"(nome, cnpj, email, telefone, quant_colab, datinc, datatu, situac) VALUES (:nome, :cnpj, :email, :telefone, :quant_colab, :datinc, :datatu, :situac) RETURNING id_emp as pk';
+        'INSERT INTO public."GESEMP"(nome, cnpj, email, telefone, quant_colab, datinc, datatu, situac, origem) VALUES (:nome, :cnpj, :email, :telefone, :quant_colab, :datinc, :datatu, :situac, :origem) RETURNING id_emp as pk';
     $statement = $pdo->prepare($query);
     $statement->bindParam(':nome', $nome, PDO::PARAM_STR);
     $statement->bindParam(':cnpj', $cnpj, PDO::PARAM_STR);
@@ -156,6 +157,7 @@ function insertGESEMP(
     $statement->bindParam(':datinc', $datinc, PDO::PARAM_STR);
     $statement->bindParam(':datatu', $datatu, PDO::PARAM_STR);
     $statement->bindParam(':situac', $situac, PDO::PARAM_INT);
+    $statement->bindParam(':origem', $origem, PDO::PARAM_STR);
     $statement->execute();
     $id_emp = $statement->fetch(PDO::FETCH_ASSOC);
 

@@ -46,6 +46,12 @@ if (isset($_POST["btn_submit"])) {
         $cnpj = $cnpj;
         $qtdcolaboradores = formatarValor("NUM", $qtdcolaboradores);
 
+        // FEA-015: quantidade de colaboradores é obrigatória (base do cálculo de preço fixo — DEC-02)
+        if (empty($qtdcolaboradores) || intval($qtdcolaboradores) < 1) {
+            echo json_encode(0);
+            exit;
+        }
+
         $nome = formatarValor("UPPER", $nome);
         $cpf = formatarValor("NUM", $cpf);
         $email = formatarValor("LOWER", $email);
@@ -111,7 +117,7 @@ if (isset($_POST["btn_submit"])) {
 
                 // Inserts
 
-                $id_emp_insert = insertGESEMP($razaosocial, $cnpj, $email, $telefone, $qtdcolaboradores, $datinc, $datatu, $situac);
+                $id_emp_insert = insertGESEMP($razaosocial, $cnpj, $email, $telefone, $qtdcolaboradores, $datinc, $datatu, $situac, 'self_service');
                 $id_emp = $id_emp_insert["pk"];
 
                 $id_usa_insert = insertGESUSA($nome, $cpf, $email, $telefone, $senha, $datinc, $id_emp, $situac, $analise, $id_per);
